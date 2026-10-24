@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
-  <!-- ========================================== -->
-  <!-- GAMBAR SHARE (OPEN GRAPH) - TERKUNCI STATIS -->
-  <!-- ========================================== -->
+  <!-- META TAG UNTUK SHARE (OPEN GRAPH) -->
   <meta property="og:title" content="Economic Insight - Global Economic Intelligence">
   <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
-  <!-- Gambar di bawah ini yang akan muncul saat link di-share -->
   <meta property="og:image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
@@ -63,6 +60,12 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .chat-popup { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Animasi Loading AI (Tiga Titik) */
+    .dot { animation: bounce 1.4s infinite ease-in-out both; width: 6px; height: 6px; background-color: #64748b; border-radius: 50%; display: inline-block; margin: 0 2px;}
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -176,7 +179,7 @@
         </div>
       </div>
 
-      <!-- BARIS KEDUA: MATA UANG LAIN & EMAS (Diperbaiki untuk Mobile) -->
+      <!-- BARIS KEDUA: MATA UANG LAIN & EMAS -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mt-4">
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
           <div class="text-sm text-slate-500 font-bold">JPY / IDR</div>
@@ -290,7 +293,7 @@
     <div id="content-inflasi" class="tab-content hidden space-y-6">
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Data Inflasi</h1>
-        <p class="text-sm text-slate-500 mt-1 font-medium" id="inflasi-source">Menghubungkan ke Backend BPS...</p>
+        <p class="text-sm text-slate-500 mt-1 font-medium" id="inflasi-source">Menghubungkan ke Backend Vercel...</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
@@ -368,8 +371,8 @@
            <i class="fa-solid fa-robot text-sm"></i>
         </div>
         <div>
-           <div class="font-bold text-sm leading-tight">AI Economic Bot</div>
-           <div class="text-[10px] text-blue-100">Online</div>
+           <div class="font-bold text-sm leading-tight">DeepSeek AI</div>
+           <div class="text-[10px] text-blue-100">Economic Analyst</div>
         </div>
       </div>
       <button onclick="toggleAIChat()" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
@@ -378,19 +381,19 @@
     </div>
     
     <!-- Chat Body -->
-    <div class="p-4 h-64 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
+    <div class="p-4 h-72 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
-        Halo! Saya AI dari Economic Insight. Silakan tanya apa saja terkait kondisi ekonomi, kurs, atau berita terbaru hari ini.
+        Halo! Saya DeepSeek AI. Silakan tanya apa saja terkait kondisi ekonomi, kurs, atau berita terbaru hari ini.
       </div>
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
         Anda bisa bertanya: <br>
-        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana kondisi kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana kondisi kurs hari ini?"</span>
+        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap kurs hari ini?"</span>
       </div>
     </div>
 
     <!-- Chat Input -->
     <div class="p-3 border-t border-slate-200 bg-white flex gap-2 shrink-0">
-      <input type="text" id="chat-input" placeholder="Tanya AI..." class="flex-grow px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors">
+      <input type="text" id="chat-input" placeholder="Tanya AI..." class="flex-grow px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors" onkeypress="if(event.key === 'Enter') sendAIMessage()">
       <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm">
         <i class="fa-solid fa-paper-plane text-sm"></i>
       </button>
@@ -460,6 +463,9 @@
   </div>
 
   <script>
+    // ==========================================
+    // KONFIGURASI SUPABASE (Untuk hitung pengunjung)
+    // ==========================================
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     let supabaseClient = null;
@@ -529,14 +535,14 @@
       sessionStorage.setItem('weekendModalSeen', 'true');
     }
 
-    // === LOGIKA CHATBOT AI ===
+    // === LOGIKA CHATBOT DEEPSEEK AI (TERHUBUNG KE VERCEL) ===
     function toggleAIChat() {
       const chat = document.getElementById('ai-chat-window');
       const fab = document.getElementById('ai-fab');
       if (chat.classList.contains('hidden')) {
         chat.classList.remove('hidden');
         chat.classList.add('flex');
-        fab.classList.add('scale-0'); // Sembunyikan tombol kecil saat chat terbuka
+        fab.classList.add('scale-0');
       } else {
         chat.classList.add('hidden');
         chat.classList.remove('flex');
@@ -544,7 +550,7 @@
       }
     }
 
-    function sendAIMessage() {
+    async function sendAIMessage() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
       if (!text) return;
@@ -553,7 +559,7 @@
       
       // Tampilkan pesan user
       chatBody.innerHTML += `
-        <div class="bg-blue-600 text-white p-3 rounded-xl rounded-tr-sm shadow-sm mb-3 ml-8 text-sm">
+        <div class="bg-blue-600 text-white p-3 rounded-xl rounded-tr-sm shadow-sm mb-3 ml-8 text-sm leading-relaxed">
           ${text}
         </div>
       `;
@@ -561,23 +567,66 @@
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      // Simulasi balasan AI (Setelah 1 detik)
-      setTimeout(() => {
-        let reply = "Pasar keuangan hari ini bergerak fluktuatif dipengaruhi oleh data inflasi dan pergerakan suku bunga. Ada indikator spesifik yang ingin Anda ketahui?";
-        
-        if (text.toLowerCase().includes('kurs') || text.toLowerCase().includes('dolar')) {
-          reply = "Kurs USD/IDR saat ini berada di level " + document.getElementById('usd-rate').innerText + ". Rupiah cenderung stabil terhadap dolar AS hari ini.";
-        } else if (text.toLowerCase().includes('emas')) {
-          reply = "Harga emas global saat ini berada di kisaran " + document.getElementById('gold-rate').innerText + " per gram. Tren emas masih dipengaruhi oleh ekspektasi suku bunga The Fed.";
-        }
+      // Tampilkan indikator loading
+      const loadingId = 'loading-' + Date.now();
+      chatBody.innerHTML += `
+        <div id="${loadingId}" class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-12 text-slate-700 flex items-center gap-1">
+           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+      `;
+      chatBody.scrollTop = chatBody.scrollHeight;
 
+      try {
+        // 1. Kumpulkan data real-time dari layar untuk dikirim ke AI
+        const contextData = `
+          Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
+          Harga Emas: ${document.getElementById('gold-rate').innerText}
+          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
+          BI Rate: ${document.getElementById('bi-rate').innerText}
+          US Treasury 10Y: ${document.getElementById('us-10y').innerText}
+          Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : 'Belum ada berita'}"
+        `;
+
+        // 2. Tembak API Vercel Anda (BUKAN DeepSeek langsung)
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: text,
+            context: contextData
+          })
+        });
+
+        const data = await response.json();
+        
+        // Hapus indikator loading
+        document.getElementById(loadingId).remove();
+
+        if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
+
+        // Format respons
+        let reply = data.reply.replace(/\n/g, '<br>');
+        
         chatBody.innerHTML += `
-          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-8 text-slate-700 text-sm">
+          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-8 text-slate-700 text-sm leading-relaxed">
             ${reply}
           </div>
         `;
-        chatBody.scrollTop = chatBody.scrollHeight;
-      }, 1000);
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById(loadingId).remove();
+        
+        chatBody.innerHTML += `
+          <div class="bg-rose-50 p-3 rounded-xl rounded-tl-sm border border-rose-200 shadow-sm mb-3 mr-8 text-rose-700 text-sm leading-relaxed">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Error: ${error.message}
+          </div>
+        `;
+      }
+      
+      chatBody.scrollTop = chatBody.scrollHeight;
     }
 
     // === NAVIGASI & STATE ===
@@ -933,9 +982,12 @@
     async function fetchInflasi() {
       const sourceEl = document.getElementById('inflasi-source');
       try {
+        // Memanggil backend Python Vercel untuk Inflasi
         const res = await fetch('/api/inflasi'); 
         if (!res.ok) throw new Error("Backend Error");
         const data = await res.json();
+        
+        // Asumsi backend Python mengembalikan { nilai: 2.56, tahun: 2026 }
         if (data.raw_data || data.detail) throw new Error("Format Error");
         
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
