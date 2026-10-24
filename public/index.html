@@ -195,7 +195,7 @@
       </div>
     </div>
 
-    <!-- ================= TAB 2: BERITA ================= -->
+    <!-- ================= TAB 2: BERITA (DESAIN BARU PREMIUM) ================= -->
     <div id="content-berita" class="tab-content hidden space-y-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-6">
         <div>
@@ -208,7 +208,7 @@
         </div>
       </div>
 
-      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="col-span-full text-center py-10 text-slate-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-blue-500"></i><br>Memuat berita...</div>
       </div>
     </div>
@@ -221,7 +221,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Card 1 -->
         <div class="relative overflow-hidden bg-gradient-to-br from-white to-amber-50 rounded-2xl p-5 sm:p-6 border border-amber-100 shadow-sm hover:shadow-md transition-all group">
           <i class="fa-solid fa-arrow-trend-up absolute -right-4 -bottom-4 text-8xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -233,7 +232,6 @@
           </div>
         </div>
         
-        <!-- Card 2 -->
         <div class="relative overflow-hidden bg-gradient-to-br from-white to-rose-50 rounded-2xl p-5 sm:p-6 border border-rose-100 shadow-sm hover:shadow-md transition-all group">
           <i class="fa-solid fa-calculator absolute -right-4 -bottom-4 text-8xl text-rose-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -245,7 +243,6 @@
           </div>
         </div>
 
-        <!-- Card 3 -->
         <div class="relative overflow-hidden bg-gradient-to-br from-white to-blue-50 rounded-2xl p-5 sm:p-6 border border-blue-100 shadow-sm hover:shadow-md transition-all group">
           <i class="fa-solid fa-chart-line absolute -right-4 -bottom-4 text-8xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -272,7 +269,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- Card 1 -->
         <div class="relative overflow-hidden bg-gradient-to-br from-white to-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-5">
           <i class="fa-solid fa-users absolute -right-4 -bottom-4 text-8xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30 shrink-0 z-10">
@@ -285,7 +281,6 @@
           </div>
         </div>
 
-        <!-- Card 2 -->
         <div class="relative overflow-hidden bg-gradient-to-br from-white to-indigo-50 rounded-2xl p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-5">
           <i class="fa-solid fa-arrow-trend-down absolute -right-4 -bottom-4 text-8xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-500/30 shrink-0 z-10">
@@ -313,7 +308,6 @@
       </div>
 
       <div id="kebijakan-list" class="bg-white rounded-2xl p-5 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-        <!-- Aksen background -->
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"></div>
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
            <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-500"></i>Memuat kebijakan terbaru...</div>
@@ -343,7 +337,7 @@
   </footer>
 
   <!-- FLOATING WINDOW (MODAL) UNTUK BERITA -->
-  <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
+  <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative animate-fade-in" onclick="event.stopPropagation()">
       
       <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
@@ -375,7 +369,6 @@
   </div>
 
   <script>
-    // (JAVASCRIPT SAMA SEPERTI SEBELUMNYA, TIDAK ADA YANG DIUBAH)
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
       menu.classList.toggle('hidden');
@@ -504,6 +497,7 @@
       }
     }
 
+    // DESAIN KARTU BERITA BARU + TOMBOL BUKA
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
       if (newsArray.length === 0) {
@@ -515,17 +509,29 @@
 
       container.innerHTML = newsArray.map((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
-        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
+        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...' : '';
         
         return `
-          <div onclick="openNewsModal(${index})" class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col h-full group relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md self-start mb-3 border border-blue-100">Ekonomi</span>
-            <h3 class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-3 line-clamp-3">${item.title}</h3>
-            <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-4 flex-grow font-medium">${cleanDesc}</p>
-            <div class="mt-auto pt-4 border-t border-slate-100 text-[11px] sm:text-xs text-slate-400 font-bold flex items-center justify-between">
-              <div class="flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
-              <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded-md flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1">Baca <i class="fa-solid fa-arrow-right"></i></span>
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
+            <!-- Garis Gradien Atas -->
+            <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="p-5 sm:p-6 flex flex-col flex-grow">
+              <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ekonomi</span>
+                <div class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
+              </div>
+              
+              <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
+              
+              <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-5 flex-grow font-medium">${cleanDesc}</p>
+              
+              <!-- Tombol Buka Berita -->
+              <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
+                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md group-hover:scale-105">
+                  Buka Berita <i class="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -559,7 +565,6 @@
 
         html += `
           <div class="ml-5 sm:ml-8 relative group">
-            <!-- Timeline Dot -->
             <span class="absolute -left-[31px] sm:-left-[41px] top-1 w-6 h-6 rounded-full bg-${color}-100 border-4 border-white shadow-sm flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
                <span class="w-2 h-2 bg-${color}-500 rounded-full"></span>
             </span>
