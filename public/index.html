@@ -11,7 +11,7 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Font Awesome (Ikon) -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Chart.js -->
@@ -55,7 +55,7 @@
       </div>
     </div>
     
-    <!-- Menu Mobile (Scrollable) -->
+    <!-- Menu Mobile -->
     <div class="md:hidden border-t border-slate-100 bg-white">
       <div class="flex overflow-x-auto hide-scrollbar px-4 py-3 space-x-2">
         <button onclick="switchTab('kurs')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-active" data-tab="kurs">Kurs & Pasar</button>
@@ -80,7 +80,6 @@
         </div>
       </div>
 
-      <!-- Kartu Kurs -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
           <div class="flex justify-between items-center mb-4">
@@ -119,7 +118,6 @@
         </div>
       </div>
 
-      <!-- Chart & Analisis -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-800 text-lg mb-4">Tren USD / IDR</h3>
@@ -134,7 +132,6 @@
         </div>
       </div>
 
-      <!-- Berita Container -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -156,7 +153,7 @@
     <div id="content-inflasi" class="tab-content hidden space-y-6">
       <div class="mb-4">
         <h1 class="text-2xl font-bold text-slate-900">Data Inflasi</h1>
-        <p class="text-sm text-slate-500 mt-1">Berdasarkan data resmi World Bank Open Data.</p>
+        <p class="text-sm text-slate-500 mt-1" id="inflasi-source">Menghubungkan ke Backend BPS...</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -265,7 +262,6 @@
         activeBtn.classList.add('tab-active');
       });
 
-      // Resize Chart agar tidak gepeng saat tab dibuka
       if (tabId === 'inflasi' && inflationChart) inflationChart.resize();
       if (tabId === 'naker' && nakerChart) nakerChart.resize();
     }
@@ -307,7 +303,7 @@
     });
 
     // ==========================================
-    // FETCH KURS (API TERBARU & AKURAT)
+    // FETCH KURS
     // ==========================================
     async function fetchCurrencies() {
       try {
@@ -330,12 +326,11 @@
         currencyChart.update();
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
-        document.getElementById('last-updated').innerText = 'Gagal memuat kurs';
       }
     }
 
     // ==========================================
-    // FETCH BERITA (INFO EKONOMI API)
+    // FETCH BERITA
     // ==========================================
     const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=8';
     let allNews = [];
@@ -345,12 +340,11 @@
       try {
         const res = await fetch(NEWS_API_URL);
         const data = await res.json();
-        
         allNews = data.results || [];
         renderNews(allNews);
       } catch (err) {
         console.error(err);
-        container.innerHTML = `<div class="p-6 text-center text-rose-500 text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat berita.</div>`;
+        container.innerHTML = `<div class="p-6 text-center text-rose-500 text-sm">Gagal memuat berita.</div>`;
       }
     }
 
@@ -364,7 +358,6 @@
       container.innerHTML = newsArray.map(item => {
         const date = new Date(item.published_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : '';
-        
         return `
           <div class="p-5 hover:bg-slate-50 transition-colors group">
             <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
@@ -384,7 +377,6 @@
       }).join('');
     }
 
-    // Fitur Pencarian Berita
     document.getElementById('search-news').addEventListener('input', (e) => {
       const keyword = e.target.value.toLowerCase();
       const filtered = allNews.filter(item => 
@@ -395,85 +387,116 @@
     });
 
     // ==========================================
-    // FETCH WORLD BANK DATA (INFLASI & NAKER)
+    // FETCH DATA MAKRO (BPS & WORLD BANK)
     // ==========================================
-    async function fetchWorldBankData() {
+    
+    // 1. Ambil Inflasi dari Backend Python Vercel (dengan Fallback ke World Bank)
+    async function fetchInflasi() {
+      const sourceEl = document.getElementById('inflasi-source');
+      
       try {
-        // Ambil 60 data historis untuk memastikan kita mendapat 10 tahun terakhir yang valid
-        const [inflasiRes, nakerRes] = await Promise.all([
-          fetch('https://api.worldbank.org/v2/country/IDN/indicator/FP.CPI.TOTL.ZG?format=json&per_page=60'),
-          fetch('https://api.worldbank.org/v2/country/IDN/indicator/SL.UEM.TOTL.ZS?format=json&per_page=60')
-        ]);
+        // Memanggil file api/index.py di Vercel
+        const res = await fetch('/api/inflasi'); 
+        
+        // Jika backend Python belum siap atau error (404/500)
+        if (!res.ok) throw new Error("Backend Python merespons dengan error");
 
-        const inflasiJson = await inflasiRes.json();
-        const nakerJson = await nakerRes.json();
+        const data = await res.json();
 
-        // --- PROSES DATA INFLASI ---
-        if (inflasiJson && inflasiJson.length > 1 && Array.isArray(inflasiJson[1])) {
-          const validInflasi = inflasiJson[1]
-            .filter(d => d.value !== null) // Buang tahun yang datanya kosong
-            .sort((a, b) => parseInt(a.date) - parseInt(b.date)) // Urutkan dari terlama ke terbaru
-            .slice(-10); // Ambil 10 tahun terakhir
+        // Karena struktur JSON BPS asli sangat berlapis, kita asumsikan 
+        // backend Python Anda mengembalikan format { nilai: 2.56, tahun: 2026 }.
+        // JIKA backend masih mengembalikan raw_data, kita tangkap error agar pindah ke fallback
+        if (data.raw_data || data.detail) {
+           throw new Error("Data dari backend belum diformat dengan benar");
+        }
 
-          if (validInflasi.length > 0) {
-            const latest = validInflasi[validInflasi.length - 1];
+        // Tampilkan Data Asli BPS
+        document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
+        document.getElementById('inflasi-tahun').innerText = `Data Tahun ${data.tahun}`;
+        sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
+        sourceEl.className = "text-sm text-emerald-600 font-semibold mt-1";
+
+      } catch (error) {
+        console.warn("Gagal ambil BPS, beralih ke World Bank:", error.message);
+        sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
+        sourceEl.className = "text-sm text-amber-500 mt-1";
+        
+        // Fallback: Panggil World Bank
+        fetchWorldBankInflasi();
+      }
+    }
+
+    async function fetchWorldBankInflasi() {
+      try {
+        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/FP.CPI.TOTL.ZG?format=json&per_page=60');
+        const json = await res.json();
+        
+        if (json && json.length > 1 && Array.isArray(json[1])) {
+          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
+          
+          if (validData.length > 0) {
+            const latest = validData[validData.length - 1];
             document.getElementById('inflasi-terakhir').innerText = latest.value.toFixed(2) + '%';
             document.getElementById('inflasi-tahun').innerText = `Data Tahun ${latest.date}`;
             
-            const sum = validInflasi.reduce((a, b) => a + b.value, 0);
-            document.getElementById('inflasi-avg').innerText = (sum / validInflasi.length).toFixed(2) + '%';
+            const sum = validData.reduce((a, b) => a + b.value, 0);
+            document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
 
-            if (validInflasi.length > 1) {
-              const prev = validInflasi[validInflasi.length - 2];
+            if (validData.length > 1) {
+              const prev = validData[validData.length - 2];
               const diff = latest.value - prev.value;
               document.getElementById('inflasi-tren').innerHTML = diff > 0 
                 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` 
                 : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
             }
 
-            inflationChart.data.labels = validInflasi.map(d => d.date);
-            inflationChart.data.datasets[0].data = validInflasi.map(d => d.value);
+            inflationChart.data.labels = validData.map(d => d.date);
+            inflationChart.data.datasets[0].data = validData.map(d => d.value);
             inflationChart.update();
           }
         }
+      } catch (err) {
+        console.error("World Bank Error:", err);
+      }
+    }
 
-        // --- PROSES DATA NAKER ---
-        if (nakerJson && nakerJson.length > 1 && Array.isArray(nakerJson[1])) {
-          const validNaker = nakerJson[1]
-            .filter(d => d.value !== null)
-            .sort((a, b) => parseInt(a.date) - parseInt(b.date))
-            .slice(-10);
+    // 2. Ambil Naker (Tetap pakai World Bank karena belum ada backend BPS untuk Naker)
+    async function fetchNaker() {
+      try {
+        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/SL.UEM.TOTL.ZS?format=json&per_page=60');
+        const json = await res.json();
 
-          if (validNaker.length > 0) {
-            const latest = validNaker[validNaker.length - 1];
+        if (json && json.length > 1 && Array.isArray(json[1])) {
+          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
+
+          if (validData.length > 0) {
+            const latest = validData[validData.length - 1];
             document.getElementById('naker-terakhir').innerText = latest.value.toFixed(2) + '%';
             document.getElementById('naker-tahun').innerText = `Data Tahun ${latest.date}`;
 
-            if (validNaker.length > 1) {
-              const prev = validNaker[validNaker.length - 2];
+            if (validData.length > 1) {
+              const prev = validData[validData.length - 2];
               const diff = latest.value - prev.value;
               document.getElementById('naker-tren').innerHTML = diff > 0 
                 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` 
                 : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
             }
 
-            nakerChart.data.labels = validNaker.map(d => d.date);
-            nakerChart.data.datasets[0].data = validNaker.map(d => d.value);
+            nakerChart.data.labels = validData.map(d => d.date);
+            nakerChart.data.datasets[0].data = validData.map(d => d.value);
             nakerChart.update();
           }
         }
-
-      } catch (error) {
-        console.error("Gagal mengambil data World Bank:", error);
+      } catch (err) {
+        console.error("Gagal ambil Naker:", err);
       }
     }
 
-    // ==========================================
-    // JALANKAN SEMUA FUNGSI SAAT HALAMAN DIBUKA
-    // ==========================================
+    // Jalankan Semua Fungsi
     fetchCurrencies();
     fetchNews();
-    fetchWorldBankData();
+    fetchInflasi(); // Memanggil backend Python dulu, kalau gagal otomatis ke World Bank
+    fetchNaker();
   </script>
 </body>
 </html>
