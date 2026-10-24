@@ -17,7 +17,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
@@ -64,15 +63,11 @@
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    .markdown-body { font-size: 0.875rem; line-height: 1.5; color: #334155; }
+    .markdown-body { font-size: 0.875rem; line-height: 1.6; color: #f8fafc; }
     .markdown-body p { margin-bottom: 0.75rem; }
-    .markdown-body strong { font-weight: 700; color: #0f172a; }
+    .markdown-body strong { font-weight: 700; color: #ffffff; }
     .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
-    .markdown-body ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
-    .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.8rem; }
-    .markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
-    .markdown-body th { background-color: #f1f5f9; font-weight: 600; }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -132,7 +127,7 @@
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
-    <!-- TAB 1: KURS & PASAR (DASHBOARD UTAMA) -->
+    <!-- TAB 1: KURS & PASAR -->
     <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
@@ -141,7 +136,9 @@
         </div>
       </div>
 
+      <!-- 4 KOTAK UTAMA (TETAP SEPERTI SEBELUMNYA) -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -151,6 +148,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Kurs terbaru</div>
         </div>
 
+        <!-- 2. INFLASI INDONESIA -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -160,6 +158,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10" id="inflasi-tahun">Rilis terakhir</div>
         </div>
 
+        <!-- 3. BI RATE -->
         <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 sm:p-5 border border-indigo-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -169,6 +168,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Keputusan terbaru</div>
         </div>
 
+        <!-- 4. US TREASURY 10Y -->
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -179,6 +179,7 @@
         </div>
       </div>
 
+      <!-- BARIS KEDUA -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mt-4">
         <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
           <div class="text-sm text-slate-500 font-bold">JPY / IDR</div>
@@ -194,11 +195,12 @@
         </div>
       </div>
 
+      <!-- AI ECONOMIC BRIEFING (DEEPSEEK) -->
       <div class="glass-panel rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden group mt-6">
         <div class="absolute -right-10 -top-10 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-blue-400 transition-colors duration-700"></div>
         <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-indigo-400 transition-colors duration-700"></div>
         
-        <div class="relative z-10 flex-grow md:pr-10">
+        <div class="relative z-10 flex-grow md:pr-10 w-full">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
               <i class="fa-solid fa-sparkles text-amber-300 text-lg"></i>
@@ -206,42 +208,63 @@
             <h3 class="font-bold text-xl">AI Economic Briefing</h3>
           </div>
           <p class="text-blue-100 text-sm leading-relaxed mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
-          <p class="text-blue-50 text-sm leading-relaxed typing-cursor font-medium" id="ai-analysis-text">
-            Menganalisis kondisi pasar terkini...
-          </p>
+          
+          <!-- Loading AI -->
+          <div id="ai-briefing-loading" class="flex items-center gap-2 text-blue-200 text-sm">
+             <span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span> Menghubungi DeepSeek AI...
+          </div>
+
+          <!-- Hasil AI (Markdown) -->
+          <div class="markdown-body" id="ai-analysis-text" style="display: none;">
+          </div>
         </div>
         <button class="relative z-10 mt-6 md:mt-0 px-6 py-3 bg-white text-indigo-900 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all shrink-0">
           Baca Laporan Lengkap
         </button>
       </div>
 
+      <!-- MARKET MOVERS (HANYA MATA UANG) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <!-- Top Gainer -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-900 text-base mb-2">Market Movers</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">Perubahan terbesar hari ini pada mata uang, komoditas, obligasi, dan indikator pasar global.</p>
-          <div class="mt-4 space-y-2">
-            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">S&P 500</span>
-               <span class="text-emerald-600 font-bold">+0.85%</span>
+          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> Top Gainers (Mata Uang)
+          </h3>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Mata uang dengan penguatan terbesar terhadap Rupiah hari ini.</p>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-bold">GBP / IDR</span>
+               <span class="text-emerald-600 font-extrabold">+0.85%</span>
             </div>
-            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">Minyak Mentah (Brent)</span>
-               <span class="text-rose-600 font-bold">-1.20%</span>
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-bold">AUD / IDR</span>
+               <span class="text-emerald-600 font-extrabold">+0.45%</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+               <span class="text-slate-700 font-bold">EUR / IDR</span>
+               <span class="text-emerald-600 font-extrabold">+0.21%</span>
             </div>
           </div>
         </div>
 
+        <!-- Top Loser -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-900 text-base mb-2">Upcoming Economic Events</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">Jadwal rilis inflasi, suku bunga, GDP, dan indikator ekonomi penting minggu berikutnya.</p>
-          <div class="mt-4 space-y-2">
-             <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">Rilis Inflasi BPS</span>
-               <span class="text-slate-400">Besok, 10:00</span>
+          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-trend-down text-rose-500"></i> Top Losers (Mata Uang)
+          </h3>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Mata uang dengan pelemahan terbesar terhadap Rupiah hari ini.</p>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-bold">JPY / IDR</span>
+               <span class="text-rose-600 font-extrabold">-1.20%</span>
             </div>
-            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">RDG Bank Indonesia</span>
-               <span class="text-slate-400">Rabu, 14:00</span>
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-bold">CNY / IDR</span>
+               <span class="text-rose-600 font-extrabold">-0.50%</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+               <span class="text-slate-700 font-bold">SGD / IDR</span>
+               <span class="text-rose-600 font-extrabold">-0.15%</span>
             </div>
           </div>
         </div>
@@ -382,7 +405,7 @@
       </div>
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
         Anda bisa bertanya: <br>
-        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bandingkan performa IHSG dan Bitcoin saat ini?'; document.getElementById('chat-input').focus();">"Bandingkan performa IHSG dan Bitcoin?"</span>
+        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap kurs hari ini?"</span>
       </div>
     </div>
 
@@ -775,7 +798,10 @@
 
         applyNewsFilters();
         renderKebijakan(allNews);
-        generateAIAnalysis(allNews);
+        
+        // --- PANGGIL DEEPSEEK AI UNTUK BRIEFING ---
+        generateAIBriefing(allNews);
+
         checkSharedUrl();
 
         if (manualRefresh) {
@@ -802,6 +828,51 @@
         isFetchingNews = false;
         btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
         iconRefresh.classList.remove('fa-spin');
+      }
+    }
+
+    // ==========================================
+    // FUNGSI MEMANGGIL DEEPSEEK UNTUK KOTAK BIRU (AI BRIEFING)
+    // ==========================================
+    async function generateAIBriefing(newsArray) {
+      const loadingEl = document.getElementById('ai-briefing-loading');
+      const aiTextEl = document.getElementById('ai-analysis-text');
+      
+      const latestNews = newsArray.length > 0 ? newsArray[0].title : "Belum ada berita terbaru.";
+
+      try {
+        const contextData = `
+          Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
+          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
+          BI Rate: ${document.getElementById('bi-rate').innerText}
+          US Treasury 10Y: ${document.getElementById('us-10y').innerText}
+          Berita Terbaru: "${latestNews}"
+        `;
+
+        // Minta DeepSeek untuk membuat ringkasan singkat (maksimal 3 kalimat)
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, inflasi, dan berita utama.",
+            context: contextData
+          })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error("Gagal mengambil AI Briefing");
+
+        // Sembunyikan loading, tampilkan teks (di-render Markdown)
+        loadingEl.style.display = 'none';
+        aiTextEl.style.display = 'block';
+        aiTextEl.innerHTML = marked.parse(data.reply);
+
+      } catch (error) {
+        console.error(error);
+        loadingEl.style.display = 'none';
+        aiTextEl.style.display = 'block';
+        aiTextEl.innerHTML = "Gagal memuat AI Briefing. Pastikan API Key DeepSeek sudah diatur di Vercel.";
       }
     }
 
@@ -889,27 +960,6 @@
       container.innerHTML = html;
     }
 
-    function generateAIAnalysis(newsArray) {
-      const aiTextEl = document.getElementById('ai-analysis-text');
-      if (newsArray.length < 2) return;
-      const news1 = newsArray[0].title;
-      const news2 = newsArray[1].title;
-      const templates = [
-        `Berdasarkan pantauan pasar terkini, sentimen investor sangat dipengaruhi oleh berita: "${news1}". Selain itu, faktor "${news2}" turut menambah dinamika terhadap pergerakan Rupiah dan likuiditas pasar modal.`,
-        `Kondisi makroekonomi saat ini tengah mencermati perkembangan dari "${news1}". Di sisi lain, pasar juga merespons positif terhadap "${news2}", yang berdampak pada stabilitas neraca perdagangan dan sektor riil.`,
-        `Volatilitas pasar hari ini tidak lepas dari pengaruh berita utama: "${news1}". Pelaku pasar disarankan mencermati perkembangan selanjutnya terkait "${news2}" untuk mengambil keputusan investasi jangka pendek.`
-      ];
-      const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
-      aiTextEl.innerText = "";
-      let i = 0; const speed = 20;
-      function typeWriter() {
-        if (i < randomTemplate.length) {
-          aiTextEl.innerHTML += randomTemplate.charAt(i); i++; setTimeout(typeWriter, speed);
-        }
-      }
-      setTimeout(typeWriter, 500);
-    }
-
     document.getElementById('search-news').addEventListener('input', (e) => {
       currentSearchQuery = e.target.value.toLowerCase();
       applyNewsFilters();
@@ -958,9 +1008,6 @@
       }).catch(err => alert('Gagal menyalin tautan.'));
     }
 
-    // ==========================================
-    // LOGIKA INFLASI (UPDATED)
-    // ==========================================
     async function fetchInflasi() {
       const sourceEl = document.getElementById('inflasi-source');
       try {
@@ -978,7 +1025,6 @@
         sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
 
         // 2. TETAP PANGGIL WORLD BANK UNTUK MENGISI GRAFIK & RATA-RATA
-        // (Karena API Vercel hanya mengirim 1 angka, bukan data sejarah)
         fetchWorldBankInflasi();
 
       } catch (error) {
@@ -997,7 +1043,6 @@
           if (validData.length > 0) {
             const latest = validData[validData.length - 1];
             
-            // Hanya update Rata-rata dan Tren. Biarkan angka "Terakhir" tetap pakai data BPS Vercel.
             const sum = validData.reduce((a, b) => a + b.value, 0);
             document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
             
@@ -1007,7 +1052,6 @@
               document.getElementById('inflasi-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
             }
             
-            // Gambar Grafik
             inflationChart.data.labels = validData.map(d => d.date);
             inflationChart.data.datasets[0].data = validData.map(d => d.value);
             inflationChart.update();
