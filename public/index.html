@@ -229,22 +229,26 @@
       <!-- IHSG & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         
-        <!-- KIRI: IHSG -->
+        <!-- KIRI: IHSG dengan Grafik Mini -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
           <div>
             <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-emerald-500"></i> IHSG (Indeks Harga Saham Gabungan)
+              <i class="fa-solid fa-chart-line text-emerald-500"></i> IHSG
             </h3>
-            <p class="text-slate-500 text-xs leading-relaxed mb-4">Pergerakan indeks saham gabungan Bursa Efek Indonesia hari ini.</p>
+            <p class="text-slate-500 text-xs leading-relaxed mb-2">Pergerakan Indeks Harga Saham Gabungan hari ini.</p>
           </div>
           
-          <div class="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-xl border border-slate-100">
-            <div class="text-4xl font-extrabold text-slate-900" id="ihsg-price">-</div>
-            <div class="mt-2 text-sm font-bold flex items-center gap-1" id="ihsg-change">
-              <!-- Change indicator -->
+          <div class="flex items-end justify-between">
+            <div>
+              <div class="text-3xl font-extrabold text-slate-900" id="ihsg-price">-</div>
+              <div class="mt-1 text-sm font-bold" id="ihsg-change"></div>
+            </div>
+            <!-- Canvas untuk Grafik Mini IHSG -->
+            <div class="w-1/2 h-16 relative">
+              <canvas id="ihsgMiniChart"></canvas>
             </div>
           </div>
-          <div class="text-center text-[10px] text-slate-400 mt-3">Sumber: Yahoo Finance</div>
+          <div class="text-[10px] text-slate-400 mt-2 text-right">Sumber: Yahoo Finance</div>
         </div>
 
         <!-- KANAN: Upcoming Economic Events -->
@@ -641,6 +645,7 @@
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     let sentimentGaugeChart = null;
+    let ihsgMiniChart = null; // Variabel global untuk grafik IHSG
 
     const categoryKeywords = {
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
@@ -723,6 +728,24 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
+    // Setup Mini Chart untuk IHSG
+    const ctxIhsg = document.getElementById('ihsgMiniChart').getContext('2d');
+    let gradientIhsg = ctxIhsg.createLinearGradient(0, 0, 0, 100);
+    gradientIhsg.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); // Default hijau
+    gradientIhsg.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    ihsgMiniChart = new Chart(ctxIhsg, {
+      type: 'line',
+      data: { labels: [], datasets: [{ data: [], borderColor: '#10b981', backgroundColor: gradientIhsg, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 0 }] },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
+        scales: { y: { display: false }, x: { display: false } },
+        layout: { padding: { top: 5, bottom: 5 } }
+      }
+    });
+
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
@@ -732,10 +755,8 @@
         const rates = data.rates;
         const idrRate = rates.IDR;
 
-        // Update Kotak Utama
         document.getElementById('usd-rate').innerText = idrRate.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
-        // --- SETUP DATA TICKER ---
         const currenciesToShow = [
           { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
           { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
@@ -752,7 +773,6 @@
           const rateAgainstUsd = rates[curr.code];
           if(rateAgainstUsd) {
             const rateInIdr = idrRate / rateAgainstUsd;
-            
             tickerHTML += `
               <div class="ticker-item">
                 <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
@@ -768,35 +788,55 @@
         const tickerTrack = document.getElementById('ticker-track');
         tickerTrack.innerHTML = tickerHTML + tickerHTML;
 
-        fetchGoldPrice(idrRate);
-
       } catch (err) { console.error(err); }
     }
 
     async function fetchIHSG() {
       try {
-        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=1d', { cache: "no-store" });
+        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=1d&range=1mo', { cache: "no-store" });
         const data = await res.json();
+        
         if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          const meta = data.chart.result[0].meta;
+          const result = data.chart.result[0];
+          const meta = result.meta;
           const price = meta.regularMarketPrice;
           const prevClose = meta.chartPreviousClose;
           
           const change = price - prevClose;
           const pctChange = (change / prevClose) * 100;
           
+          // Update teks harga dan persentase
           document.getElementById('ihsg-price').innerText = price.toLocaleString('id-ID', { maximumFractionDigits: 2 });
           
           const changeEl = document.getElementById('ihsg-change');
           if (pctChange >= 0) {
              changeEl.innerHTML = `<span class="text-emerald-600"><i class="fa-solid fa-caret-up"></i> +${change.toFixed(2)} (+${pctChange.toFixed(2)}%)</span>`;
+             ihsgMiniChart.data.datasets[0].borderColor = '#10b981'; // Hijau
           } else {
              changeEl.innerHTML = `<span class="text-rose-600"><i class="fa-solid fa-caret-down"></i> ${change.toFixed(2)} (${pctChange.toFixed(2)}%)</span>`;
+             ihsgMiniChart.data.datasets[0].borderColor = '#ef4444'; // Merah
           }
-        } else {
-          document.getElementById('ihsg-price').innerText = '7.200,00';
+
+          // Ambil data historis untuk grafik mini
+          const timestamps = result.timestamp;
+          const closePrices = result.indicators.quote[0].close;
+          
+          let chartData = [];
+          // Filter data null
+          for (let i = 0; i < closePrices.length; i++) {
+             if (closePrices[i] !== null) chartData.push(closePrices[i]);
+          }
+
+          // Tampilkan 20 data terakhir
+          chartData = chartData.slice(-20);
+
+          ihsgMiniChart.data.labels = chartData.map((_, i) => i);
+          ihsgMiniChart.data.datasets[0].data = chartData;
+          ihsgMiniChart.update();
+          
         }
       } catch (err) {
+        console.error('Gagal memuat IHSG:', err);
         document.getElementById('ihsg-price').innerText = '7.200,00';
       }
     }
@@ -814,16 +854,6 @@
       } catch (err) {
         document.getElementById('us-10y').innerText = '4.25%';
       }
-    }
-
-    async function fetchGoldPrice(usdToIdr) {
-      try {
-        const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
-        const data = await res.json();
-        if (data && data.price) {
-          // Harga emas dihapus dari UI tapi JS tetap jalan jika diperlukan di masa depan
-        }
-      } catch (err) {}
     }
 
     let allNews = [];
@@ -868,7 +898,6 @@
         applyNewsFilters();
         renderKebijakan(allNews);
         
-        // --- PANGGIL DEEPSEEK AI UNTUK BRIEFING ---
         generateAIBriefing(allNews);
 
         checkSharedUrl();
@@ -1149,7 +1178,7 @@
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
       try { fetchCurrencies(); } catch(e) {}
-      try { fetchIHSG(); } catch(e) {} // <-- Panggil IHSG
+      try { fetchIHSG(); } catch(e) {}
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
