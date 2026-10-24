@@ -22,11 +22,17 @@
     .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
     @keyframes blink { 50% { opacity: 0; } }
     
-    /* Desain Scrollbar Kustom */
+    /* Scrollbar Kustom */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Gaya Tombol Filter Berita */
+    .filter-btn { transition: all 0.3s ease; }
+    .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.4); }
+    .filter-btn.inactive { background-color: white; color: #64748b; border-color: #e2e8f0; }
+    .filter-btn.inactive:hover { background-color: #f8fafc; color: #2563eb; border-color: #bfdbfe; }
   </style>
 </head>
 <body class="text-slate-800 antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -36,7 +42,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16">
         
-        <!-- LOGO KUSTOM -->
+        <!-- LOGO -->
         <div class="flex items-center gap-2 sm:gap-3 cursor-pointer group" onclick="switchTab('kurs')">
           <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 z-10">
@@ -60,13 +66,11 @@
           <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
         </nav>
 
-        <!-- Status Live & Hamburger Button -->
         <div class="flex items-center gap-3">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold shadow-sm">
             <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             Live Data
           </div>
-          
           <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2 bg-slate-100 rounded-lg transition-colors">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
@@ -99,7 +103,6 @@
         </div>
       </div>
 
-      <!-- GRID KURS -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <!-- USD -->
         <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
@@ -166,7 +169,6 @@
         </div>
       </div>
 
-      <!-- CHART & AI SECTION -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-4">Tren USD / IDR</h3>
@@ -195,9 +197,9 @@
       </div>
     </div>
 
-    <!-- ================= TAB 2: BERITA (DESAIN BARU PREMIUM) ================= -->
+    <!-- ================= TAB 2: BERITA (DENGAN FILTER KATEGORI) ================= -->
     <div id="content-berita" class="tab-content hidden space-y-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
           <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari portal berita terpercaya.</p>
@@ -206,6 +208,15 @@
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
           <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all">
         </div>
+      </div>
+
+      <!-- FILTER KATEGORI BERITA -->
+      <div class="flex overflow-x-auto hide-scrollbar space-x-2 pb-2">
+        <button onclick="filterNewsByCategory('semua')" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Semua</button>
+        <button onclick="filterNewsByCategory('pangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Harga Pangan</button>
+        <button onclick="filterNewsByCategory('keuangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Keuangan & Pasar</button>
+        <button onclick="filterNewsByCategory('energi')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Energi</button>
+        <button onclick="filterNewsByCategory('kebijakan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Kebijakan</button>
       </div>
 
       <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -369,6 +380,59 @@
   </div>
 
   <script>
+    // ==========================================
+    // LOGIKA FILTER KATEGORI BERITA
+    // ==========================================
+    let currentCategory = 'semua';
+    let currentSearchQuery = '';
+
+    const categoryKeywords = {
+      pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
+      keuangan: ['saham', 'ihsg', 'dolar', 'rupiah', 'kurs', 'bank', 'investasi', 'obligasi', 'modal', 'bursa', 'uang', 'fintech', 'kripto', 'bitcoin', 'emas'],
+      energi: ['bbm', 'minyak', 'gas', 'batu bara', 'listrik', 'energi', 'pertamina', 'tambang', 'oplos', 'solar', 'subsidi energi'],
+      kebijakan: ['pajak', 'subsidi', 'pemerintah', 'apbn', 'inflasi', 'bi', 'bank indonesia', 'regulasi', 'kebijakan', 'fiskal', 'moneter', 'insentif', 'menteri', 'presiden']
+    };
+
+    function filterNewsByCategory(category) {
+      currentCategory = category;
+      
+      // Ubah gaya tombol (aktif/non-aktif)
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('inactive');
+      });
+      event.target.classList.remove('inactive');
+      event.target.classList.add('active');
+
+      applyNewsFilters();
+    }
+
+    function applyNewsFilters() {
+      let filteredNews = allNews;
+
+      // 1. Filter berdasarkan kategori (jika bukan 'semua')
+      if (currentCategory !== 'semua') {
+        const keywords = categoryKeywords[currentCategory] || [];
+        filteredNews = filteredNews.filter(item => {
+          const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+          return keywords.some(k => text.includes(k));
+        });
+      }
+
+      // 2. Filter berdasarkan kolom pencarian
+      if (currentSearchQuery) {
+        filteredNews = filteredNews.filter(item => 
+          item.title.toLowerCase().includes(currentSearchQuery) || 
+          (item.description && item.description.toLowerCase().includes(currentSearchQuery))
+        );
+      }
+
+      renderNews(filteredNews);
+    }
+
+    // ==========================================
+    // LOGIKA UTAMA & DATA FETCHING
+    // ==========================================
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
       menu.classList.toggle('hidden');
@@ -477,7 +541,7 @@
       }
     }
 
-    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=15';
+    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30'; // Ambil lebih banyak untuk filter
     let allNews = [];
     let activeNewsList = [];
 
@@ -488,7 +552,7 @@
         const data = await res.json();
         allNews = data.results || [];
         
-        renderNews(allNews);
+        applyNewsFilters();
         renderKebijakan(allNews);
         generateAIAnalysis(allNews);
       } catch (err) {
@@ -497,11 +561,10 @@
       }
     }
 
-    // DESAIN KARTU BERITA BARU + TOMBOL BUKA
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
       if (newsArray.length === 0) {
-        container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Tidak ada berita ditemukan.</div>`;
+        container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Tidak ada berita di kategori ini.</div>`;
         return;
       }
 
@@ -513,7 +576,6 @@
         
         return `
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-            <!-- Garis Gradien Atas -->
             <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
             
             <div class="p-5 sm:p-6 flex flex-col flex-grow">
@@ -526,7 +588,6 @@
               
               <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-5 flex-grow font-medium">${cleanDesc}</p>
               
-              <!-- Tombol Buka Berita -->
               <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
                 <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md group-hover:scale-105">
                   Buka Berita <i class="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i>
@@ -540,7 +601,7 @@
 
     function renderKebijakan(newsArray) {
       const container = document.getElementById('kebijakan-list');
-      const keywords = ['pajak', 'bi', 'bank indonesia', 'regulasi', 'kebijakan', 'aturan', 'subsidi', 'fiskal', 'moneter', 'insentif', 'pemerintah', 'apbn'];
+      const keywords = categoryKeywords['kebijakan'];
       
       const filtered = newsArray.filter(item => {
         const text = (item.title + ' ' + (item.description || '')).toLowerCase();
@@ -619,13 +680,10 @@
       setTimeout(typeWriter, 500);
     }
 
+    // Event listener pencarian
     document.getElementById('search-news').addEventListener('input', (e) => {
-      const keyword = e.target.value.toLowerCase();
-      const filtered = allNews.filter(item => 
-        item.title.toLowerCase().includes(keyword) || 
-        (item.description && item.description.toLowerCase().includes(keyword))
-      );
-      renderNews(filtered);
+      currentSearchQuery = e.target.value.toLowerCase();
+      applyNewsFilters();
     });
 
     function openNewsModal(index) {
