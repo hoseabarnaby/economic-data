@@ -412,8 +412,15 @@
         </div>
       </div>
 
-      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl text-right">
-        <a href="#" id="modal-link" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/30">
+      <!-- Footer Modal -->
+      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+        <!-- Tombol Bagikan -->
+        <button onclick="shareCurrentNews()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
+          <i class="fa-solid fa-share-nodes"></i> Bagikan Berita
+        </button>
+        
+        <!-- Tombol Baca Asli -->
+        <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/30 order-1 sm:order-2">
           Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
         </a>
       </div>
@@ -465,6 +472,9 @@
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     let supabaseClient = null;
+
+    // Variabel untuk menyimpan berita yang sedang dibuka di modal (untuk fitur share)
+    let currentModalNews = null;
 
     // ==========================================
     // LOGIKA PENGUNJUNG ONLINE (HANYA DESKTOP)
@@ -685,9 +695,6 @@
       document.getElementById('gauge-needle').style.transform = `translateX(-50%) rotate(${rotationAngle}deg)`;
     }
 
-    // ==========================================
-    // FETCH KURS, EMAS, & SENTIMEN PASAR (FEAR & GREED)
-    // ==========================================
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -707,7 +714,6 @@
 
         fetchGoldPrice(usdToIdr);
         
-        // Memanggil fungsi sentimen terpisah
         fetchSentiment();
 
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
@@ -715,21 +721,18 @@
         currencyChart.update();
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
-        updateSentiment(50); // Fallback netral jika error
+        updateSentiment(50);
       }
     }
 
     async function fetchSentiment() {
       try {
-        // Mengambil data Fear & Greed Index untuk pasar saham (CORS enabled)
         const res = await fetch('https://fearandgreedgraph.com/api/fear-greed');
         const data = await res.json();
         
         if (data && data.values && data.values.length > 0) {
-          // Mengambil nilai paling baru (elemen terakhir dari array)
           const latestScore = Math.round(data.values[data.values.length - 1]);
           
-          // Mengambil klasifikasi teks terakhir (misal: "Fear", "Greed", "Neutral")
           let classification = "Netral";
           if (latestScore < 25) classification = "Extreme Fear";
           else if (latestScore < 45) classification = "Fear";
@@ -745,7 +748,6 @@
         }
       } catch (err) {
         console.error("Gagal ambil Sentimen:", err);
-        // Fallback: Jika API gagal, gunakan simulasi sederhana agar jarum tidak diam di 0
         updateSentiment(50);
         document.getElementById('sentiment-source').innerText = "Gagal memuat sentimen";
       }
@@ -797,6 +799,11 @@
         renderKebijakan(allNews);
         generateAIAnalysis(allNews);
 
+        // ==========================================
+        // CEK URL UNTUK DEEP LINKING (SHARE LINK)
+        // ==========================================
+        checkSharedUrl();
+
         if (manualRefresh) {
           btnRefresh.classList.replace('bg-blue-50', 'bg-emerald-50');
           btnRefresh.classList.replace('text-blue-600', 'text-emerald-600');
@@ -817,6 +824,25 @@
         isFetchingNews = false;
         btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
         iconRefresh.classList.remove('fa-spin');
+      }
+    }
+
+    // Fungsi untuk membaca URL Share
+    function checkSharedUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedUrl = urlParams.get('news_url');
+      
+      if (sharedUrl) {
+        // Cari berita berdasarkan URL yang dibagikan
+        const sharedNews = allNews.find(n => n.url === sharedUrl);
+        if (sharedNews) {
+          // Berpindah ke tab berita dan buka modalnya
+          switchTab('berita');
+          openNewsModalByObject(sharedNews);
+          
+          // Opsional: Bersihkan URL agar saat di-refresh tidak muncul terus
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
     }
 
@@ -890,7 +916,7 @@
                 <span class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
               </div>
               <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2 leading-snug">
-                <a href="${item.url}" target="_blank" class="hover:text-${color}-600 transition-colors">${item.title}</a>
+                <a href="#" onclick="event.preventDefault(); openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="hover:text-${color}-600 transition-colors">${item.title}</a>
               </h3>
               <p class="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : ''}</p>
             </div>
@@ -937,8 +963,16 @@
       applyNewsFilters();
     });
 
+    // ==========================================
+    // LOGIKA FLOATING WINDOW (MODAL) & SHARE
+    // ==========================================
     function openNewsModal(index) {
       const news = activeNewsList[index];
+      if (!news) return;
+      openNewsModalByObject(news);
+    }
+
+    function openNewsModalByObject(news) {
       if (!news) return;
 
       const dateStr = formatTanggalAman(news.published_at, true);
@@ -949,6 +983,9 @@
       document.getElementById('modal-desc').innerText = fullDesc;
       document.getElementById('modal-link').href = news.url || '#';
 
+      // Simpan berita saat ini ke variabel global untuk fitur share
+      currentModalNews = news;
+
       document.getElementById('news-modal').classList.remove('hidden');
     }
 
@@ -956,6 +993,31 @@
       const modal = document.getElementById('news-modal');
       if (event && event.target.id !== 'news-modal') return;
       modal.classList.add('hidden');
+    }
+
+    // Fungsi untuk Menyalin Link Share
+    function shareCurrentNews() {
+      if (!currentModalNews || !currentModalNews.url) return;
+
+      // Membuat link share
+      const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
+
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        // Ubah teks tombol sementara sebagai feedback
+        const btn = event.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        
+        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
+        btn.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+        
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+        }, 2000);
+      }).catch(err => {
+        console.error('Gagal menyalin tautan: ', err);
+        alert('Gagal menyalin tautan. Browser Anda mungkin memblokir akses clipboard.');
+      });
     }
 
     async function fetchInflasi() {
@@ -1039,14 +1101,13 @@
       try { initOnlineCounter(); } catch(e) { console.warn(e); }
       try { initSentimentGauge(); } catch(e) { console.warn(e); }
       try { fetchCurrencies(); } catch(e) { console.warn(e); }
-      try { fetchNews(); } catch(e) { console.warn(e); }
+      try { fetchNews(); } catch(e) { console.warn(e); } // checkSharedUrl dipanggil di dalam sini
       try { fetchInflasi(); } catch(e) { console.warn(e); }
       try { fetchNaker(); } catch(e) { console.warn(e); }
       try { checkWeekend(); } catch(e) { console.warn(e); }
 
-      // FITUR AUTO-REFRESH DATA BERKALA (Tanpa harus refresh halaman)
-      setInterval(fetchCurrencies, 3600000); // Update kurs setiap 1 jam
-      setInterval(fetchNews, 300000);        // Update berita setiap 5 menit
+      setInterval(fetchCurrencies, 3600000);
+      setInterval(fetchNews, 300000);
     };
   </script>
 </body>
