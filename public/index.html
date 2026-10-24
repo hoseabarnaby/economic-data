@@ -245,19 +245,15 @@
 
   <!-- ================= FLOATING WINDOW (MODAL) UNTUK BERITA ================= -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
-    <!-- Card Modal -->
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
       
-      <!-- Header Modal -->
       <div class="flex items-center justify-between p-6 border-b border-slate-100">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Detail Berita</span>
-        <!-- Tombol Close (X) -->
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <!-- Body Modal (Bisa di-scroll) -->
       <div class="p-6 overflow-y-auto custom-scrollbar">
         <h2 class="text-2xl font-bold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
         
@@ -271,7 +267,6 @@
         </div>
       </div>
 
-      <!-- Footer Modal -->
       <div class="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl text-right">
         <a href="#" id="modal-link" target="_blank" class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-md shadow-blue-200">
           Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
@@ -299,6 +294,28 @@
 
       if (tabId === 'inflasi' && inflationChart) inflationChart.resize();
       if (tabId === 'naker' && nakerChart) nakerChart.resize();
+    }
+
+    // ==========================================
+    // HELPER: FORMAT TANGGAL YANG AMAN
+    // ==========================================
+    function formatTanggalAman(dateString, withDay = false) {
+      if (!dateString) return '-';
+      try {
+        const dateObj = new Date(dateString);
+        if (isNaN(dateObj.getTime())) return dateString; // Jika invalid, tampilkan teks asli
+        
+        const options = { 
+          dateStyle: 'medium', 
+          timeStyle: 'short',
+          timeZone: 'Asia/Jakarta' 
+        };
+        if (withDay) options.weekday = 'long';
+        
+        return dateObj.toLocaleString('id-ID', options);
+      } catch (e) {
+        return dateString;
+      }
     }
 
     // ==========================================
@@ -335,38 +352,49 @@
     });
 
     // ==========================================
-    // FETCH KURS
+    // FETCH KURS (MENGGUNAKAN OPEN.ER-API.COM)
     // ==========================================
     async function fetchCurrencies() {
       try {
-        const res = await fetch('https://cdn.jsdelivr.net/gh/irfanokr/currency-api@main/v1/currencies/usd.json');
+        // API baru: open.er-api.com (gratis, tanpa key, update harian)
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
         const data = await res.json();
         
-        const usdToIdr = data.usd.idr;
-        const usdToJpy = data.usd.jpy;
-        const usdToCny = data.usd.cny;
+        if (data.result !== 'success') throw new Error('API Error');
+
+        const usdToIdr = data.rates.IDR;
+        const usdToJpy = data.rates.JPY;
+        const usdToCny = data.rates.CNY;
         
         document.getElementById('usd-rate').innerText = 'Rp ' + usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         document.getElementById('jpy-rate').innerText = 'Rp ' + (usdToIdr / usdToJpy).toLocaleString('id-ID', { maximumFractionDigits: 2 });
         document.getElementById('cny-rate').innerText = 'Rp ' + (usdToIdr / usdToCny).toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
-        const updateTime = new Date(data.date).toLocaleString('id-ID', { dateStyle: 'medium' });
+        // Format waktu update dari API
+        const updateTime = new Date(data.time_last_update_utc).toLocaleString('id-ID', { 
+            dateStyle: 'medium', 
+            timeStyle: 'short',
+            timeZone: 'Asia/Jakarta'
+        });
         document.getElementById('last-updated').innerText = `Diperbarui: ${updateTime}`;
 
+        // Update Chart (Simulasi tren 7 hari)
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
         currencyChart.update();
+        
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
+        document.getElementById('last-updated').innerText = 'Gagal memuat kurs';
       }
     }
 
     // ==========================================
-    // FETCH BERITA (DENGAN GRID DAN MODAL)
+    // FETCH BERITA
     // ==========================================
     const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=12';
     let allNews = [];
-    let activeNewsList = []; // Menyimpan list berita yang sedang tampil di layar
+    let activeNewsList = [];
 
     async function fetchNews() {
       const gridContainer = document.getElementById('news-grid');
@@ -388,19 +416,10 @@
         return;
       }
 
-      // Simpan data ke variabel global agar bisa diakses oleh Modal
       activeNewsList = newsArray;
 
       container.innerHTML = newsArray.map((item, index) => {
-        // Membiarkan sistem membaca jam sesuai waktu di perangkat pengguna
-        let dateStr = item.published_at;
-        try {
-          const dateObj = new Date(item.published_at);
-          if (!isNaN(dateObj)) {
-            dateStr = dateObj.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-          }
-        } catch(e) {}
-
+        const dateStr = formatTanggalAman(item.published_at);
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
         
         return `
@@ -417,7 +436,6 @@
       }).join('');
     }
 
-    // Fitur Pencarian Berita
     document.getElementById('search-news').addEventListener('input', (e) => {
       const keyword = e.target.value.toLowerCase();
       const filtered = allNews.filter(item => 
@@ -434,14 +452,7 @@
       const news = activeNewsList[index];
       if (!news) return;
 
-      let dateStr = news.published_at;
-      try {
-        const dateObj = new Date(news.published_at);
-        if (!isNaN(dateObj)) {
-            dateStr = dateObj.toLocaleString('id-ID', { weekday: 'long', dateStyle: 'long', timeStyle: 'short' });
-        }
-      } catch(e) {}
-      
+      const dateStr = formatTanggalAman(news.published_at, true);
       const fullDesc = news.description ? news.description.replace(/<[^>]*>?/gm, '') : 'Tidak ada deskripsi lengkap.';
 
       document.getElementById('modal-title').innerText = news.title;
@@ -449,16 +460,12 @@
       document.getElementById('modal-desc').innerText = fullDesc;
       document.getElementById('modal-link').href = news.url || '#';
 
-      // Tampilkan Modal dengan menghapus class 'hidden'
-      const modal = document.getElementById('news-modal');
-      modal.classList.remove('hidden');
+      document.getElementById('news-modal').classList.remove('hidden');
     }
 
     function closeNewsModal(event) {
       const modal = document.getElementById('news-modal');
-      // Jika fungsi ini dipanggil dari tombol X (tanpa event), atau diklik dari background gelap
       if (event && event.target.id !== 'news-modal') return;
-
       modal.classList.add('hidden');
     }
 
@@ -471,7 +478,6 @@
         const res = await fetch('/api/inflasi'); 
         if (!res.ok) throw new Error("Backend Python merespons dengan error");
         const data = await res.json();
-
         if (data.raw_data || data.detail) throw new Error("Data dari backend belum diformat dengan benar");
 
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
