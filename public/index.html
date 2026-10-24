@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
+  <!-- META TAG UNTUK SHARE (OPEN GRAPH) -->
+  <meta property="og:title" content="Economic Insight - Berita & Data Ekonomi">
+  <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
+  <meta property="og:image" id="og-image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80">
+  <meta property="og:type" content="website">
+
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M6 22l8-8 5 5 9-9M23 10h5v5' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,6 +28,7 @@
     .tab-active { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
     .tab-inactive { color: #64748b; border-color: transparent; }
     .tab-inactive:hover { background-color: #f1f5f9; color: #334155; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .glass-panel { background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(49, 46, 129, 0.95)); backdrop-filter: blur(10px); }
     .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
@@ -390,36 +397,36 @@
 
   <!-- FLOATING WINDOW (MODAL) UNTUK BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative animate-fade-in" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
       
-      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
+      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 shrink-0">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
-        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
+      <div class="overflow-y-auto custom-scrollbar">
+        <img id="modal-image" src="" alt="Gambar Berita" class="w-full h-64 sm:h-80 object-cover" onerror="this.style.display='none'">
         
-        <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
-          <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-blue-500"></i> <span id="modal-date">Tanggal</span></div>
-          <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper text-blue-500"></i> Info Ekonomi</div>
-        </div>
+        <div class="p-4 sm:p-6">
+          <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
+          
+          <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-blue-500"></i> <span id="modal-date">Tanggal</span></div>
+            <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper text-blue-500"></i> Economic Insight</div>
+          </div>
 
-        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">
-          Deskripsi berita akan tampil di sini...
+          <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">
+            Deskripsi berita akan tampil di sini...
+          </div>
         </div>
       </div>
 
-      <!-- Footer Modal -->
-      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
-        <!-- Tombol Bagikan -->
+      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
         <button onclick="shareCurrentNews()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
           <i class="fa-solid fa-share-nodes"></i> Bagikan Berita
         </button>
-        
-        <!-- Tombol Baca Asli -->
         <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/30 order-1 sm:order-2">
           Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
         </a>
@@ -713,7 +720,6 @@
         document.getElementById('last-updated').innerText = `Diperbarui: ${updateTime}`;
 
         fetchGoldPrice(usdToIdr);
-        
         fetchSentiment();
 
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
@@ -732,7 +738,6 @@
         
         if (data && data.values && data.values.length > 0) {
           const latestScore = Math.round(data.values[data.values.length - 1]);
-          
           let classification = "Netral";
           if (latestScore < 25) classification = "Extreme Fear";
           else if (latestScore < 45) classification = "Fear";
@@ -768,7 +773,7 @@
     }
 
     // ==========================================
-    // FETCH BERITA (DENGAN FITUR REFRESH & AUTO UPDATE)
+    // FETCH BERITA (MENGGUNAKAN XML PARSER ANTI GAGAL)
     // ==========================================
     let allNews = [];
     let activeNewsList = [];
@@ -789,19 +794,44 @@
 
       try {
         const timestamp = new Date().getTime();
-        const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
+        // Mengambil XML mentah ANTARA via AllOrigins (Bebas blokir CORS)
+        const RSS_URL = 'https://www.antaranews.com/rss/ekonomi.xml';
+        const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(RSS_URL)}&t=${timestamp}`;
         
-        const res = await fetch(NEWS_API_URL);
-        const data = await res.json();
-        allNews = data.results || [];
+        const res = await fetch(PROXY_URL);
+        const str = await res.text();
         
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(str, "text/xml");
+        const items = xml.querySelectorAll("item");
+
+        if (items.length === 0) throw new Error("Format XML gagal dibaca");
+
+        allNews = Array.from(items).slice(0, 30).map(item => {
+          let imgUrl = '';
+          // Coba ambil dari <enclosure>
+          const enclosure = item.querySelector("enclosure");
+          if (enclosure) imgUrl = enclosure.getAttribute("url");
+          
+          // Jika tidak ada, coba ambil dari <description>
+          const desc = item.querySelector("description")?.textContent || "";
+          if (!imgUrl && desc) {
+            const match = desc.match(/src="([^"]+)"/);
+            if (match) imgUrl = match[1];
+          }
+
+          return {
+            title: item.querySelector("title")?.textContent || "Tanpa Judul",
+            url: item.querySelector("link")?.textContent || "#",
+            published_at: item.querySelector("pubDate")?.textContent || "",
+            description: desc,
+            image: imgUrl
+          };
+        });
+
         applyNewsFilters();
         renderKebijakan(allNews);
         generateAIAnalysis(allNews);
-
-        // ==========================================
-        // CEK URL UNTUK DEEP LINKING (SHARE LINK)
-        // ==========================================
         checkSharedUrl();
 
         if (manualRefresh) {
@@ -816,9 +846,9 @@
         }
 
       } catch (err) {
-        console.error(err);
+        console.error("Gagal ambil berita:", err);
         if (gridContainer.innerHTML.includes('Memuat')) {
-          gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita.</div>`;
+          gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita. Server ANTARA mungkin sedang sibuk.</div>`;
         }
       } finally {
         isFetchingNews = false;
@@ -827,20 +857,15 @@
       }
     }
 
-    // Fungsi untuk membaca URL Share
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedUrl = urlParams.get('news_url');
       
       if (sharedUrl) {
-        // Cari berita berdasarkan URL yang dibagikan
         const sharedNews = allNews.find(n => n.url === sharedUrl);
         if (sharedNews) {
-          // Berpindah ke tab berita dan buka modalnya
           switchTab('berita');
           openNewsModalByObject(sharedNews);
-          
-          // Opsional: Bersihkan URL agar saat di-refresh tidak muncul terus
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -856,20 +881,28 @@
 
       container.innerHTML = newsArray.map((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
-        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...' : '';
+        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
+        const imgHtml = item.image 
+          ? `<img src="${item.image}" class="w-full h-48 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-500" alt="Thumbnail" onerror="this.src='https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=400&q=80'">`
+          : `<div class="w-full h-48 bg-slate-100 rounded-t-2xl flex items-center justify-center"><i class="fa-regular fa-image text-4xl text-slate-300"></i></div>`;
+
         return `
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-            <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-            <div class="p-5 sm:p-6 flex flex-col flex-grow">
-              <div class="flex justify-between items-center mb-4">
+            <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity z-10"></div>
+            
+            ${imgHtml}
+
+            <div class="p-5 flex flex-col flex-grow">
+              <div class="flex justify-between items-center mb-3">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ekonomi</span>
-                <div class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
+                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
               </div>
-              <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
-              <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-5 flex-grow font-medium">${cleanDesc}</p>
+              <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
+              <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow font-medium">${cleanDesc}</p>
+              
               <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
-                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md group-hover:scale-105">
-                  Buka Berita <i class="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i>
+                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
+                  Buka Berita <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
               </div>
             </div>
@@ -892,33 +925,34 @@
         return;
       }
 
-      let html = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4">`;
+      let html = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">`;
       
       filtered.forEach((item) => {
         const dateStr = formatTanggalAman(item.published_at);
         let tag = 'Regulasi';
         let color = 'emerald';
-        let icon = 'fa-file-contract';
         
-        if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { tag = 'Fiskal'; color = 'amber'; icon = 'fa-money-bill-wave'; }
-        if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; icon = 'fa-building-columns'; }
+        if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { tag = 'Fiskal'; color = 'amber'; }
+        if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; }
+
+        const imgHtml = item.image 
+          ? `<img src="${item.image}" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg shrink-0 border border-slate-200" alt="Thumbnail" onerror="this.style.display='none'">`
+          : '';
 
         html += `
-          <div class="ml-5 sm:ml-8 relative group">
-            <span class="absolute -left-[31px] sm:-left-[41px] top-1 w-6 h-6 rounded-full bg-${color}-100 border-4 border-white shadow-sm flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
-               <span class="w-2 h-2 bg-${color}-500 rounded-full"></span>
-            </span>
-            <div class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-5 rounded-2xl transition-all duration-300 hover:shadow-md">
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                <span class="text-[10px] sm:text-xs font-bold text-${color}-700 bg-${color}-100/50 px-2.5 py-1 rounded-md flex items-center gap-1.5 w-max border border-${color}-200">
-                  <i class="fa-solid ${icon}"></i> ${tag}
-                </span>
-                <span class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+          <div class="ml-4 sm:ml-6 relative group">
+            <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-${color}-500 border-2 sm:border-4 border-white shadow-sm z-10"></span>
+            
+            <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer flex gap-4 items-center">
+              ${imgHtml}
+              <div class="flex-grow">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                  <span class="text-[10px] font-bold text-${color}-700 bg-${color}-100/50 px-2 py-0.5 rounded border border-${color}-200 w-max">${tag}</span>
+                  <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
+                </div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors">${item.title}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${item.description ? item.description.replace(/<[^>]*>?/gm, '') : ''}</p>
               </div>
-              <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2 leading-snug">
-                <a href="#" onclick="event.preventDefault(); openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="hover:text-${color}-600 transition-colors">${item.title}</a>
-              </h3>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : ''}</p>
             </div>
           </div>
         `;
@@ -983,9 +1017,17 @@
       document.getElementById('modal-desc').innerText = fullDesc;
       document.getElementById('modal-link').href = news.url || '#';
 
-      // Simpan berita saat ini ke variabel global untuk fitur share
-      currentModalNews = news;
+      const modalImg = document.getElementById('modal-image');
+      if (news.image) {
+        modalImg.src = news.image;
+        modalImg.style.display = 'block';
+        document.getElementById('og-image').setAttribute('content', news.image);
+      } else {
+        modalImg.style.display = 'none';
+        document.getElementById('og-image').setAttribute('content', 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80');
+      }
 
+      currentModalNews = news;
       document.getElementById('news-modal').classList.remove('hidden');
     }
 
@@ -995,15 +1037,12 @@
       modal.classList.add('hidden');
     }
 
-    // Fungsi untuk Menyalin Link Share
     function shareCurrentNews() {
       if (!currentModalNews || !currentModalNews.url) return;
 
-      // Membuat link share
       const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
 
       navigator.clipboard.writeText(shareUrl).then(() => {
-        // Ubah teks tombol sementara sebagai feedback
         const btn = event.target.closest('button');
         const originalHtml = btn.innerHTML;
         
@@ -1101,7 +1140,7 @@
       try { initOnlineCounter(); } catch(e) { console.warn(e); }
       try { initSentimentGauge(); } catch(e) { console.warn(e); }
       try { fetchCurrencies(); } catch(e) { console.warn(e); }
-      try { fetchNews(); } catch(e) { console.warn(e); } // checkSharedUrl dipanggil di dalam sini
+      try { fetchNews(); } catch(e) { console.warn(e); }
       try { fetchInflasi(); } catch(e) { console.warn(e); }
       try { fetchNaker(); } catch(e) { console.warn(e); }
       try { checkWeekend(); } catch(e) { console.warn(e); }
