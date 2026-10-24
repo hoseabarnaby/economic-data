@@ -6,7 +6,6 @@ import os
 
 app = FastAPI()
 
-# Izinkan akses dari frontend Vercel
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,26 +13,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ambil API Key dari Vercel Environment Variables
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-BPS_API_KEY = os.getenv("BPS_API_KEY") # Opsional jika pakai BPS
 
-# ==========================================
-# 1. ENDPOINT UNTUK INFLASI
-# ==========================================
-@app.get("/inflasi")
+# 1. Endpoint Inflasi (Dipanggil oleh /api/inflasi)
+@app.get("/api/inflasi")
 def get_inflasi():
-    # Ini adalah data simulasi. Ganti dengan data BPS asli jika sudah siap.
     return {"nilai": 2.56, "tahun": 2026}
 
-# ==========================================
-# 2. ENDPOINT UNTUK CHAT DEEPSEEK
-# ==========================================
+# 2. Endpoint Chat (Dipanggil oleh /api/chat)
 class ChatRequest(BaseModel):
     message: str
     context: str
 
-@app.post("/chat")
+@app.post("/api/chat")
 def chat_with_deepseek(req: ChatRequest):
     if not DEEPSEEK_API_KEY:
         raise HTTPException(status_code=500, detail="API Key DeepSeek belum diatur di Vercel.")
@@ -71,8 +63,3 @@ Jawablah pertanyaan pengguna dengan cerdas, ringkas, dan berikan analisis berdas
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
-
-# Endpoint root untuk tes
-@app.get("/")
-def read_root():
-    return {"status": "Backend Python Vercel Aktif"}
