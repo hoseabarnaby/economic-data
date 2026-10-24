@@ -5,10 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
-  <meta property="og:title" content="Economic Insight - Global Economic Intelligence">
-  <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
-  <meta property="og:image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
+  <!-- Open Graph Meta Tags (Default) -->
+  <meta property="og:title" id="og-title" content="Economic Insight - Global Economic Intelligence">
+  <meta property="og:description" id="og-description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
+  <meta property="og:image" id="og-image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
+
+  <!-- Twitter Meta Tags (Default) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitter-title" content="Economic Insight - Global Economic Intelligence">
+  <meta name="twitter:description" id="twitter-description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
+  <meta name="twitter:image" id="twitter-image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M6 22l8-8 5 5 9-9M23 10h5v5' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
@@ -511,6 +518,21 @@
     `;
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
+    // FUNGSI UNTUK UPDATE META TAGS (OG & Twitter)
+    function updateMetaTags(imageUrl, title, description) {
+      const finalImg = imageUrl || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat';
+      
+      // Update Open Graph
+      document.getElementById('og-title').setAttribute('content', title || 'Economic Insight');
+      document.getElementById('og-description').setAttribute('content', description || 'Pantau berita ekonomi terbaru.');
+      document.getElementById('og-image').setAttribute('content', finalImg);
+      
+      // Update Twitter
+      document.getElementById('twitter-title').setAttribute('content', title || 'Economic Insight');
+      document.getElementById('twitter-description').setAttribute('content', description || 'Pantau berita ekonomi terbaru.');
+      document.getElementById('twitter-image').setAttribute('content', finalImg);
+    }
+
     async function initOnlineCounter() {
       const counterDesktop = document.getElementById('online-counter');
       if (SUPABASE_URL.includes('MASUKKAN') || SUPABASE_ANON_KEY.includes('MASUKKAN') || typeof window.supabase === 'undefined') {
@@ -748,16 +770,12 @@
         "locale": "id",
         "toolbar_bg": "#f1f3f6",
         "enable_publishing": false,
-        
-        // --- KONFIGURASI AGAR STATIS ---
-        "hide_side_toolbar": true, // Sembunyikan menu gambar di kiri
-        "hide_top_toolbar": true, // Sembunyikan menu di atas agar lebih bersih
-        "enableScrolling": false, // Nonaktifkan fitur geser (pan)
-        "enableScaleZ": false, // Nonaktifkan zoom sumbu waktu
-        "disable_mouse_wheel": true, // Nonaktifkan zoom pakai scroll mouse
-        "allow_symbol_change": false, // Kunci agar tidak bisa ganti simbol
-        // ------------------------------
-
+        "hide_side_toolbar": true, 
+        "hide_top_toolbar": true, 
+        "enableScrolling": false, 
+        "enableScaleZ": false, 
+        "disable_mouse_wheel": true, 
+        "allow_symbol_change": false, 
         "container_id": "tradingview_ihsg"
       });
     }
@@ -1184,6 +1202,10 @@
       document.getElementById('modal-image-container').innerHTML = `<img src="${imgSrc}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
 
       currentModalNews = news;
+      
+      // UPDATE META TAGS UNTUK SHARE LINK
+      updateMetaTags(news.image, news.title, news.description);
+
       document.getElementById('news-modal').classList.remove('hidden');
     }
 
@@ -1191,6 +1213,13 @@
       const modal = document.getElementById('news-modal');
       if (event && event.target.id !== 'news-modal') return;
       modal.classList.add('hidden');
+      
+      // KEMBALIKAN META TAGS KE DEFAULT SAAT MODAL DITUTUP
+      updateMetaTags(
+          'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat',
+          'Economic Insight - Global Economic Intelligence',
+          'Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.'
+      );
     }
 
     function shareCurrentNews(event) {
@@ -1289,7 +1318,7 @@
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
       try { fetchCurrenciesForTicker(); } catch(e) {}
-      try { initTradingViewChart(); } catch(e) {} // Inisialisasi TradingView
+      try { initTradingViewChart(); } catch(e) {} 
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
