@@ -6,6 +6,7 @@ import os
 
 app = FastAPI()
 
+# Izinkan akses dari frontend Vercel
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,43 +14,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ambil API Key dari Environment Variable Vercel
-BPS_API_KEY = os.getenv("BPS_API_KEY")
+# Ambil API Key dari Vercel Environment Variables
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+BPS_API_KEY = os.getenv("BPS_API_KEY") # Opsional jika pakai BPS
 
 # ==========================================
-# ENDPOINT 1: AMBIL DATA BPS (Inflasi)
+# 1. ENDPOINT UNTUK INFLASI
 # ==========================================
-@app.get("/api/inflasi")
+@app.get("/inflasi")
 def get_inflasi():
-    if not BPS_API_KEY:
-        raise HTTPException(status_code=500, detail="API Key BPS belum diatur di Vercel.")
-    
-    # (Biarkan kode BPS Anda yang sebelumnya di sini, atau gunakan versi fallback ini)
-    try:
-        # Simulasi (Ganti dengan kode fetch BPS asli Anda jika sudah berjalan)
-        return {"nilai": 2.56, "tahun": 2026}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # Ini adalah data simulasi. Ganti dengan data BPS asli jika sudah siap.
+    return {"nilai": 2.56, "tahun": 2026}
 
 # ==========================================
-# ENDPOINT 2: CHAT DEEPSEEK AI (Floating Window)
+# 2. ENDPOINT UNTUK CHAT DEEPSEEK
 # ==========================================
 class ChatRequest(BaseModel):
     message: str
     context: str
 
-@app.post("/api/chat")
+@app.post("/chat")
 def chat_with_deepseek(req: ChatRequest):
     if not DEEPSEEK_API_KEY:
-        raise HTTPException(status_code=500, detail="DeepSeek API Key belum diatur di Vercel.")
+        raise HTTPException(status_code=500, detail="API Key DeepSeek belum diatur di Vercel.")
 
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    # Prompt Sistem (Menyuruh AI menjadi analis ekonomi dan membaca data dari frontend)
     system_prompt = f"""Anda adalah "Economic Insight AI", asisten analis ekonomi profesional. 
 Data real-time saat ini:
 {req.context}
@@ -79,7 +72,7 @@ Jawablah pertanyaan pengguna dengan cerdas, ringkas, dan berikan analisis berdas
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
 
-# Endpoint Health Check
-@app.get("/api")
+# Endpoint root untuk tes
+@app.get("/")
 def read_root():
-    return {"status": "Backend Vercel Aktif"}
+    return {"status": "Backend Python Vercel Aktif"}
