@@ -81,8 +81,8 @@
 
         <div class="flex items-center gap-2 sm:gap-3">
           
-          <!-- INDIKATOR ONLINE (IKON MATA) -->
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm" title="Pengunjung Online">
+          <!-- INDIKATOR ONLINE (HANYA MUNCUL DI DESKTOP) -->
+          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm" title="Pengunjung Online">
             <i class="fa-solid fa-eye text-blue-500 animate-pulse"></i>
             <span id="online-counter">0</span> Online
           </div>
@@ -99,10 +99,7 @@
       </div>
 
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
-        <div class="flex items-center justify-between px-4 py-2 mb-2 bg-blue-50 rounded-xl">
-          <span class="text-sm font-semibold text-blue-700"><i class="fa-solid fa-eye mr-2"></i>Pengunjung Online</span>
-          <span class="font-bold text-blue-700" id="online-counter-mobile">0</span>
-        </div>
+        <!-- Menu Mobile (Hitungan Online Dihapus) -->
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Kurs & Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="inflasi">Inflasi <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -460,32 +457,25 @@
     // ==========================================
     // 🔥 KONFIGURASI SUPABASE (GANTI DENGAN MILIK ANDA)
     // ==========================================
-    // Cukup ganti teks di dalam tanda kutip di bawah ini:
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
 
     let supabaseClient = null;
 
     // ==========================================
-    // LOGIKA PENGUNJUNG ONLINE (SUPABASE PRESENCE) - ANTI CRASH
+    // LOGIKA PENGUNJUNG ONLINE (SUPABASE PRESENCE) - HANYA DESKTOP
     // ==========================================
     async function initOnlineCounter() {
+      // Hanya cari elemen online-counter (desktop). Elemen mobile sudah dihapus.
       const counterDesktop = document.getElementById('online-counter');
-      const counterMobile = document.getElementById('online-counter-mobile');
 
-      // 1. Cek apakah user sudah mengisi URL & Key
       if (SUPABASE_URL.includes('MASUKKAN') || SUPABASE_ANON_KEY.includes('MASUKKAN')) {
-        counterDesktop.innerText = '0';
-        counterMobile.innerText = '0';
-        console.warn("Supabase belum dikonfigurasi. Hitungan online tidak berjalan.");
+        if(counterDesktop) counterDesktop.innerText = '0';
         return; 
       }
 
-      // 2. Cek apakah script Supabase dari CDN berhasil dimuat
       if (typeof window.supabase === 'undefined') {
-        counterDesktop.innerText = '0';
-        counterMobile.innerText = '0';
-        console.error("Gagal memuat library Supabase. Periksa koneksi internet.");
+        if(counterDesktop) counterDesktop.innerText = '0';
         return;
       }
 
@@ -499,8 +489,7 @@
           for (const key in newState) {
             count += newState[key].length;
           }
-          counterDesktop.innerText = count;
-          counterMobile.innerText = count + ' Pengunjung';
+          if(counterDesktop) counterDesktop.innerText = count;
         })
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
@@ -512,8 +501,7 @@
         });
       } catch (error) {
         console.error("Gagal inisialisasi Supabase:", error);
-        counterDesktop.innerText = '0';
-        counterMobile.innerText = '0';
+        if(counterDesktop) counterDesktop.innerText = '0';
       }
     }
 
@@ -521,7 +509,7 @@
     // LOGIKA POP-UP AKHIR PEKAN (SABTU/MINGGU)
     // ==========================================
     function checkWeekend() {
-      const today = new Date().getDay(); // 0 = Minggu, 6 = Sabtu
+      const today = new Date().getDay();
       const hasSeenModal = sessionStorage.getItem('weekendModalSeen');
 
       if ((today === 0 || today === 6) && !hasSeenModal) {
@@ -978,10 +966,9 @@
     }
 
     // ==========================================
-    // INISIALISASI AWAL (ANTI CRASH)
+    // INISIALISASI AWAL
     // ==========================================
     window.onload = () => {
-      // Dibungkus try-catch terpisah agar jika satu error, yang lain tetap jalan.
       try { initOnlineCounter(); } catch(e) { console.warn(e); }
       try { initSentimentGauge(); } catch(e) { console.warn(e); }
       try { fetchCurrencies(); } catch(e) { console.warn(e); }
