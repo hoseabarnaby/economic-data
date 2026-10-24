@@ -436,6 +436,11 @@
         </div>
       </div>
 
+      <!-- Tambahan Copyright di Modal -->
+      <div class="bg-slate-50 border-t border-slate-100 py-3 text-center">
+        <p class="text-[10px] font-bold text-slate-400">&copy; 2026 Hosea Barnaby</p>
+      </div>
+
     </div>
   </div>
 
@@ -447,11 +452,10 @@
       const today = new Date().getDay(); // 0 = Minggu, 6 = Sabtu
       const hasSeenModal = sessionStorage.getItem('weekendModalSeen');
 
-      // Tampilkan hanya jika hari Sabtu/Minggu DAN belum pernah ditutup di sesi ini
       if ((today === 0 || today === 6) && !hasSeenModal) {
         setTimeout(() => {
           document.getElementById('weekend-modal').classList.remove('hidden');
-        }, 1500); // Muncul setelah 1.5 detik agar website tidak kaget
+        }, 1500);
       }
     }
 
@@ -460,7 +464,6 @@
       if (event && event.target.id !== 'weekend-modal') return;
       
       modal.classList.add('hidden');
-      // Simpan di session agar tidak muncul terus saat refresh
       sessionStorage.setItem('weekendModalSeen', 'true');
     }
 
@@ -912,7 +915,7 @@
       fetchNews();
       fetchInflasi(); 
       fetchNaker();
-      checkWeekend(); // Cek apakah hari ini Sabtu/Minggu
+      checkWeekend();
     };
   </script>
 </body>
