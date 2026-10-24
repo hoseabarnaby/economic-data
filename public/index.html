@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
+  <!-- ========================================== -->
+  <!-- GAMBAR SHARE (OPEN GRAPH) - TERKUNCI STATIS -->
+  <!-- ========================================== -->
   <meta property="og:title" content="Economic Insight - Global Economic Intelligence">
   <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
-  <meta property="og:image" id="og-image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80">
+  <!-- Gambar di bawah ini yang akan muncul saat link di-share -->
+  <meta property="og:image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M6 22l8-8 5 5 9-9M23 10h5v5' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
@@ -51,6 +56,13 @@
       50% { opacity: .5; }
     }
     .skeleton { animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: #e2e8f0; border-radius: 0.375rem; }
+
+    /* Animasi Chatbot Pop Up */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .chat-popup { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -66,7 +78,6 @@
               <path d="M3 17l6-6 4 4 8-8"/>
               <path d="M17 7h4v4"/>
             </svg>
-            <!-- Efek kilau kaca -->
             <div class="absolute inset-0 bg-white/20 w-full h-full transform rotate-45 -translate-y-4"></div>
           </div>
           <div>
@@ -122,7 +133,7 @@
         </div>
       </div>
 
-      <!-- 4 KOTAK UTAMA PREMIUM (SESUAI FOTO) -->
+      <!-- 4 KOTAK UTAMA PREMIUM -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
@@ -165,18 +176,18 @@
         </div>
       </div>
 
-      <!-- BARIS KEDUA: MATA UANG LAIN & EMAS -->
-      <div class="grid grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 mt-4">
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-xs text-slate-500 font-bold mb-1">JPY / IDR</div>
+      <!-- BARIS KEDUA: MATA UANG LAIN & EMAS (Diperbaiki untuk Mobile) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mt-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
+          <div class="text-sm text-slate-500 font-bold">JPY / IDR</div>
           <div class="text-xl font-extrabold text-slate-900" id="jpy-rate">-</div>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-xs text-slate-500 font-bold mb-1">CNY / IDR</div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
+          <div class="text-sm text-slate-500 font-bold">CNY / IDR</div>
           <div class="text-xl font-extrabold text-slate-900" id="cny-rate">-</div>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-          <div class="text-xs text-slate-500 font-bold mb-1">Emas / gr</div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
+          <div class="text-sm text-slate-500 font-bold">Emas / gr</div>
           <div class="text-xl font-extrabold text-slate-900" id="gold-rate">-</div>
         </div>
       </div>
@@ -343,18 +354,47 @@
 
   </main>
 
-  <!-- FLOATING BUTTON (TANYA AI) -->
-  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-sm">
-    <button class="w-full bg-white border border-slate-200 text-slate-600 rounded-full py-3 px-4 flex items-center justify-between shadow-2xl hover:bg-slate-50 transition-colors">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-800"><i class="fa-solid fa-plus"></i></div>
-        <span class="font-medium text-sm">Tanya AI Insight</span>
+  <!-- FLOATING AI CHATBOT BUTTON (KECIL DI POJOK KANAN BAWAH) -->
+  <button onclick="toggleAIChat()" id="ai-fab" class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 transition-transform hover:scale-110">
+    <i class="fa-solid fa-robot text-white text-2xl"></i>
+  </button>
+
+  <!-- AI CHATBOT WINDOW (FLOATING WINDOW) -->
+  <div id="ai-chat-window" class="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden chat-popup">
+    <!-- Chat Header -->
+    <div class="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+           <i class="fa-solid fa-robot text-sm"></i>
+        </div>
+        <div>
+           <div class="font-bold text-sm leading-tight">AI Economic Bot</div>
+           <div class="text-[10px] text-blue-100">Online</div>
+        </div>
       </div>
-      <div class="flex items-center gap-3">
-        <i class="fa-solid fa-microphone text-slate-400"></i>
-        <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-chart-simple"></i></div>
+      <button onclick="toggleAIChat()" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    
+    <!-- Chat Body -->
+    <div class="p-4 h-64 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
+      <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
+        Halo! Saya AI dari Economic Insight. Silakan tanya apa saja terkait kondisi ekonomi, kurs, atau berita terbaru hari ini.
       </div>
-    </button>
+      <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
+        Anda bisa bertanya: <br>
+        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana kondisi kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana kondisi kurs hari ini?"</span>
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="p-3 border-t border-slate-200 bg-white flex gap-2 shrink-0">
+      <input type="text" id="chat-input" placeholder="Tanya AI..." class="flex-grow px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors">
+      <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm">
+        <i class="fa-solid fa-paper-plane text-sm"></i>
+      </button>
+    </div>
   </div>
 
   <!-- FOOTER -->
@@ -489,6 +529,58 @@
       sessionStorage.setItem('weekendModalSeen', 'true');
     }
 
+    // === LOGIKA CHATBOT AI ===
+    function toggleAIChat() {
+      const chat = document.getElementById('ai-chat-window');
+      const fab = document.getElementById('ai-fab');
+      if (chat.classList.contains('hidden')) {
+        chat.classList.remove('hidden');
+        chat.classList.add('flex');
+        fab.classList.add('scale-0'); // Sembunyikan tombol kecil saat chat terbuka
+      } else {
+        chat.classList.add('hidden');
+        chat.classList.remove('flex');
+        fab.classList.remove('scale-0');
+      }
+    }
+
+    function sendAIMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBody = document.getElementById('chat-messages');
+      
+      // Tampilkan pesan user
+      chatBody.innerHTML += `
+        <div class="bg-blue-600 text-white p-3 rounded-xl rounded-tr-sm shadow-sm mb-3 ml-8 text-sm">
+          ${text}
+        </div>
+      `;
+      
+      input.value = '';
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      // Simulasi balasan AI (Setelah 1 detik)
+      setTimeout(() => {
+        let reply = "Pasar keuangan hari ini bergerak fluktuatif dipengaruhi oleh data inflasi dan pergerakan suku bunga. Ada indikator spesifik yang ingin Anda ketahui?";
+        
+        if (text.toLowerCase().includes('kurs') || text.toLowerCase().includes('dolar')) {
+          reply = "Kurs USD/IDR saat ini berada di level " + document.getElementById('usd-rate').innerText + ". Rupiah cenderung stabil terhadap dolar AS hari ini.";
+        } else if (text.toLowerCase().includes('emas')) {
+          reply = "Harga emas global saat ini berada di kisaran " + document.getElementById('gold-rate').innerText + " per gram. Tren emas masih dipengaruhi oleh ekspektasi suku bunga The Fed.";
+        }
+
+        chatBody.innerHTML += `
+          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-8 text-slate-700 text-sm">
+            ${reply}
+          </div>
+        `;
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 1000);
+    }
+
+    // === NAVIGASI & STATE ===
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     let sentimentGaugeChart = null;
@@ -557,7 +649,6 @@
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
-    // Chart Inflasi
     const ctxInflasi = document.getElementById('inflationChart').getContext('2d');
     let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
     gradientInflasi.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
@@ -568,7 +659,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // Chart Naker
     const ctxNaker = document.getElementById('nakerChart').getContext('2d');
     const nakerChart = new Chart(ctxNaker, {
       type: 'bar',
@@ -576,7 +666,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // FETCHING DATA KURS
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
@@ -592,7 +681,6 @@
       } catch (err) { console.error(err); }
     }
 
-    // FETCH US TREASURY 10Y (Yahoo Finance)
     async function fetchUS10Y() {
       try {
         const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d', { cache: "no-store" });
@@ -618,7 +706,6 @@
       } catch (err) { document.getElementById('gold-rate').innerText = '1.250.000'; }
     }
 
-    // FETCH BERITA
     let allNews = [];
     let activeNewsList = [];
     let isFetchingNews = false;
@@ -851,7 +938,6 @@
         const data = await res.json();
         if (data.raw_data || data.detail) throw new Error("Format Error");
         
-        // Update Tampilan Utama & Tab
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
         document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
         document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
