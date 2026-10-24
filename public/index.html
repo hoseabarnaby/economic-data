@@ -244,12 +244,14 @@
   </main>
 
   <!-- ================= FLOATING WINDOW (MODAL) UNTUK BERITA ================= -->
-  <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity" onclick="closeNewsModal(event)">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl transform transition-transform scale-100" onclick="event.stopPropagation()">
+  <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
+    <!-- Card Modal -->
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
       
       <!-- Header Modal -->
       <div class="flex items-center justify-between p-6 border-b border-slate-100">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Detail Berita</span>
+        <!-- Tombol Close (X) -->
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
@@ -264,7 +266,7 @@
           <div class="flex items-center gap-1"><i class="fa-solid fa-newspaper"></i> Info Ekonomi</div>
         </div>
 
-        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed" id="modal-desc">
+        <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">
           Deskripsi berita akan tampil di sini...
         </div>
       </div>
@@ -362,15 +364,15 @@
     // ==========================================
     // FETCH BERITA (DENGAN GRID DAN MODAL)
     // ==========================================
-    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=12'; // Ditambah jadi 12 berita
+    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=12';
     let allNews = [];
+    let activeNewsList = []; // Menyimpan list berita yang sedang tampil di layar
 
     async function fetchNews() {
       const gridContainer = document.getElementById('news-grid');
       try {
         const res = await fetch(NEWS_API_URL);
         const data = await res.json();
-        
         allNews = data.results || [];
         renderNews(allNews);
       } catch (err) {
@@ -386,17 +388,21 @@
         return;
       }
 
+      // Simpan data ke variabel global agar bisa diakses oleh Modal
+      activeNewsList = newsArray;
+
       container.innerHTML = newsArray.map((item, index) => {
-        // FORMAT TANGGAL DENGAN ZONA WAKTU JAKARTA (WIB)
-        const dateStr = new Date(item.published_at).toLocaleString('id-ID', { 
-            dateStyle: 'medium', 
-            timeStyle: 'short',
-            timeZone: 'Asia/Jakarta'
-        });
+        // Membiarkan sistem membaca jam sesuai waktu di perangkat pengguna
+        let dateStr = item.published_at;
+        try {
+          const dateObj = new Date(item.published_at);
+          if (!isNaN(dateObj)) {
+            dateStr = dateObj.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+          }
+        } catch(e) {}
 
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
         
-        // Desain Card Grid
         return `
           <div onclick="openNewsModal(${index})" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col h-full group">
             <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded self-start mb-3">Ekonomi</span>
@@ -425,43 +431,35 @@
     // LOGIKA FLOATING WINDOW (MODAL)
     // ==========================================
     function openNewsModal(index) {
-      const news = allNews[index];
+      const news = activeNewsList[index];
       if (!news) return;
 
-      const dateStr = new Date(news.published_at).toLocaleString('id-ID', { 
-          weekday: 'long', dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Jakarta' 
-      });
+      let dateStr = news.published_at;
+      try {
+        const dateObj = new Date(news.published_at);
+        if (!isNaN(dateObj)) {
+            dateStr = dateObj.toLocaleString('id-ID', { weekday: 'long', dateStyle: 'long', timeStyle: 'short' });
+        }
+      } catch(e) {}
       
       const fullDesc = news.description ? news.description.replace(/<[^>]*>?/gm, '') : 'Tidak ada deskripsi lengkap.';
 
       document.getElementById('modal-title').innerText = news.title;
       document.getElementById('modal-date').innerText = dateStr;
       document.getElementById('modal-desc').innerText = fullDesc;
-      document.getElementById('modal-link').href = news.url;
+      document.getElementById('modal-link').href = news.url || '#';
 
-      // Tampilkan Modal
+      // Tampilkan Modal dengan menghapus class 'hidden'
       const modal = document.getElementById('news-modal');
       modal.classList.remove('hidden');
-      
-      // Animasi masuk
-      setTimeout(() => {
-        modal.children[0].classList.remove('scale-95');
-        modal.children[0].classList.add('scale-100');
-      }, 10);
     }
 
     function closeNewsModal(event) {
       const modal = document.getElementById('news-modal');
-      // Jika ada event (klik backdrop), pastikan yang diklik adalah backdrop (bukan isi modal)
+      // Jika fungsi ini dipanggil dari tombol X (tanpa event), atau diklik dari background gelap
       if (event && event.target.id !== 'news-modal') return;
 
-      // Animasi keluar
-      modal.children[0].classList.remove('scale-100');
-      modal.children[0].classList.add('scale-95');
-      
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 150); // Sesuaikan dengan durasi animasi tailwind
+      modal.classList.add('hidden');
     }
 
     // ==========================================
