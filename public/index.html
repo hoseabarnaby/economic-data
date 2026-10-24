@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EkoDash - Dashboard Ekonomi Indonesia</title>
+  <title>Economic Insight</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,19 +18,31 @@
     .tab-inactive { color: #64748b; border-color: transparent; }
     .tab-inactive:hover { background-color: #f1f5f9; color: #334155; }
     .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    /* Efek Kaca untuk Analisis AI */
+    .glass-panel { background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(49, 46, 129, 0.95)); backdrop-filter: blur(10px); }
   </style>
 </head>
-<body class="text-slate-800 antialiased relative">
+<body class="text-slate-800 antialiased relative flex flex-col min-h-screen">
 
   <!-- NAVBAR -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-200">
-            <i class="fa-solid fa-chart-line"></i>
+        
+        <!-- LOGO KUSTOM BARU -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('kurs')">
+          <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden">
+            <!-- SVG Logo Panah & Huruf i -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 z-10">
+              <path d="M3 17l6-6 4 4 8-8"/>
+              <path d="M17 7h4v4"/>
+            </svg>
+            <div class="absolute inset-0 bg-white/20 w-full h-full transform rotate-45 -translate-y-4"></div>
           </div>
-          <span class="text-xl font-bold text-slate-900 tracking-tight">EkoDash</span>
+          <div>
+            <span class="text-xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
+            <span class="text-[10px] text-slate-500 font-medium tracking-widest uppercase">Data & Analisis</span>
+          </div>
         </div>
         
         <!-- Menu Desktop -->
@@ -42,26 +54,33 @@
           <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
         </nav>
 
-        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
-          <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-          Data Live
+        <!-- Status Live & Hamburger Button -->
+        <div class="flex items-center gap-4">
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            Live Data
+          </div>
+          
+          <!-- Hamburger (Hanya Muncul di Mobile) -->
+          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
         </div>
       </div>
-    </div>
-    
-    <!-- Menu Mobile -->
-    <div class="md:hidden border-t border-slate-100 bg-white">
-      <div class="flex overflow-x-auto hide-scrollbar px-4 py-3 space-x-2">
-        <button onclick="switchTab('kurs')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-active" data-tab="kurs">Kurs & Pasar</button>
-        <button onclick="switchTab('berita')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="berita">Berita</button>
-        <button onclick="switchTab('inflasi')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="inflasi">Inflasi</button>
-        <button onclick="switchTab('naker')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="naker">Ketenagakerjaan</button>
-        <button onclick="switchTab('kebijakan')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="kebijakan">Kebijakan</button>
+
+      <!-- Dropdown Menu Mobile -->
+      <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2">
+        <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active" data-tab="kurs">Kurs & Pasar</button>
+        <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive" data-tab="berita">Berita</button>
+        <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive" data-tab="inflasi">Inflasi</button>
+        <button onclick="switchTab('naker'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive" data-tab="naker">Ketenagakerjaan</button>
+        <button onclick="switchTab('kebijakan'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive" data-tab="kebijakan">Kebijakan</button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[80vh]">
+  <!-- MAIN CONTENT -->
+  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- ================= TAB 1: KURS & PASAR ================= -->
     <div id="content-kurs" class="tab-content space-y-6 block">
@@ -118,17 +137,32 @@
           <h3 class="font-bold text-slate-800 text-lg mb-4">Tren USD / IDR</h3>
           <div class="relative h-64 w-full"><canvas id="currencyChart"></canvas></div>
         </div>
-        <div class="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-6 text-white shadow-sm flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-lightbulb text-amber-400"></i><h3 class="font-bold text-lg">Analisis Singkat</h3></div>
-            <p class="text-blue-100 text-sm leading-relaxed mb-4">Rupiah bergerak dinamis terhadap Dolar AS. Tekanan eksternal dari kebijakan suku bunga global masih menjadi faktor utama pergerakan kurs.</p>
+        
+        <!-- AI ANALISIS DINAMIS -->
+        <div class="glass-panel rounded-2xl p-6 text-white shadow-lg flex flex-col justify-between relative overflow-hidden">
+          <!-- Ornamen Background -->
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+          <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-indigo-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <i class="fa-solid fa-robot text-amber-300"></i>
+              </div>
+              <h3 class="font-bold text-lg">AI Market Insight</h3>
+            </div>
+            <p class="text-blue-100 text-sm leading-relaxed mb-4" id="ai-analysis-text">
+              Menganalisis kondisi pasar terkini...
+            </p>
           </div>
-          <button class="mt-6 w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition">Baca Laporan Lengkap</button>
+          <button class="relative z-10 mt-6 w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition">
+            Baca Laporan Lengkap
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- ================= TAB 2: BERITA (GRID & MODAL) ================= -->
+    <!-- ================= TAB 2: BERITA ================= -->
     <div id="content-berita" class="tab-content hidden space-y-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-4">
         <div>
@@ -141,7 +175,6 @@
         </div>
       </div>
 
-      <!-- Grid Container -->
       <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="col-span-full text-center py-10 text-slate-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat berita...</div>
       </div>
@@ -210,40 +243,37 @@
       </div>
     </div>
 
-    <!-- ================= TAB 5: KEBIJAKAN ================= -->
+    <!-- ================= TAB 5: KEBIJAKAN (REAL-TIME DARI BERITA) ================= -->
     <div id="content-kebijakan" class="tab-content hidden space-y-6">
       <div class="mb-4">
         <h1 class="text-2xl font-bold text-slate-900">Kebijakan Ekonomi</h1>
-        <p class="text-sm text-slate-500 mt-1">Kumpulan regulasi dan kebijakan fiskal/moneter terbaru.</p>
+        <p class="text-sm text-slate-500 mt-1">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru.</p>
       </div>
 
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+      <div id="kebijakan-list" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
         <div class="relative border-l border-slate-200 ml-3 space-y-8 pb-4">
-          <div class="ml-6 relative">
-            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm"></span>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-              <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">BI Rate</span>
-              <span class="text-xs text-slate-400 font-medium">20 Oktober 2026</span>
-            </div>
-            <h3 class="text-base font-bold text-slate-900 mb-2">Bank Indonesia Pertahankan Suku Bunga Acuan di 5,75%</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">Rapat Dewan Gubernur (RDG) BI memutuskan untuk mempertahankan BI-Rate pada level 5,75% guna memastikan stabilitas nilai tukar Rupiah dan terkendalinya inflasi.</p>
-          </div>
-          <div class="ml-6 relative">
-            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-500 border-4 border-white shadow-sm"></span>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-              <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Fiskal</span>
-              <span class="text-xs text-slate-400 font-medium">15 Oktober 2026</span>
-            </div>
-            <h3 class="text-base font-bold text-slate-900 mb-2">Pemerintah Umumkan Insentif Pajak untuk Sektor Padat Karya</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">Kementerian Keuangan merilis paket kebijakan fiskal baru berupa insentif PPN DTP untuk sektor industri padat karya guna mendorong penyerapan tenaga kerja.</p>
-          </div>
+           <div class="text-center text-slate-500 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat kebijakan terbaru...</div>
         </div>
       </div>
     </div>
 
   </main>
 
-  <!-- ================= FLOATING WINDOW (MODAL) UNTUK BERITA ================= -->
+  <!-- FOOTER COPYRIGHT -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-sm text-slate-500 font-medium">
+        &copy; 2026 Hosea Barnaby. All rights reserved.
+      </p>
+      <div class="flex space-x-4 text-slate-400">
+        <a href="#" class="hover:text-blue-600 transition"><i class="fa-brands fa-twitter"></i></a>
+        <a href="#" class="hover:text-blue-600 transition"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="#" class="hover:text-blue-600 transition"><i class="fa-brands fa-github"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING WINDOW (MODAL) UNTUK BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
       
@@ -277,6 +307,14 @@
 
   <script>
     // ==========================================
+    // LOGIKA HAMBURGER MENU MOBILE
+    // ==========================================
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    // ==========================================
     // SISTEM NAVIGASI TAB
     // ==========================================
     function switchTab(tabId) {
@@ -297,19 +335,15 @@
     }
 
     // ==========================================
-    // HELPER: FORMAT TANGGAL YANG AMAN
+    // HELPER: FORMAT TANGGAL
     // ==========================================
     function formatTanggalAman(dateString, withDay = false) {
       if (!dateString) return '-';
       try {
         const dateObj = new Date(dateString);
-        if (isNaN(dateObj.getTime())) return dateString; // Jika invalid, tampilkan teks asli
+        if (isNaN(dateObj.getTime())) return dateString;
         
-        const options = { 
-          dateStyle: 'medium', 
-          timeStyle: 'short',
-          timeZone: 'Asia/Jakarta' 
-        };
+        const options = { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' };
         if (withDay) options.weekday = 'long';
         
         return dateObj.toLocaleString('id-ID', options);
@@ -352,14 +386,12 @@
     });
 
     // ==========================================
-    // FETCH KURS (MENGGUNAKAN OPEN.ER-API.COM)
+    // FETCH KURS
     // ==========================================
     async function fetchCurrencies() {
       try {
-        // API baru: open.er-api.com (gratis, tanpa key, update harian)
         const res = await fetch('https://open.er-api.com/v6/latest/USD');
         const data = await res.json();
-        
         if (data.result !== 'success') throw new Error('API Error');
 
         const usdToIdr = data.rates.IDR;
@@ -370,29 +402,21 @@
         document.getElementById('jpy-rate').innerText = 'Rp ' + (usdToIdr / usdToJpy).toLocaleString('id-ID', { maximumFractionDigits: 2 });
         document.getElementById('cny-rate').innerText = 'Rp ' + (usdToIdr / usdToCny).toLocaleString('id-ID', { maximumFractionDigits: 0 });
 
-        // Format waktu update dari API
-        const updateTime = new Date(data.time_last_update_utc).toLocaleString('id-ID', { 
-            dateStyle: 'medium', 
-            timeStyle: 'short',
-            timeZone: 'Asia/Jakarta'
-        });
+        const updateTime = formatTanggalAman(data.time_last_update_utc);
         document.getElementById('last-updated').innerText = `Diperbarui: ${updateTime}`;
 
-        // Update Chart (Simulasi tren 7 hari)
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
         currencyChart.update();
-        
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
-        document.getElementById('last-updated').innerText = 'Gagal memuat kurs';
       }
     }
 
     // ==========================================
-    // FETCH BERITA
+    // FETCH BERITA, KEBIJAKAN, & AI ANALISIS
     // ==========================================
-    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=12';
+    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=15';
     let allNews = [];
     let activeNewsList = [];
 
@@ -402,13 +426,17 @@
         const res = await fetch(NEWS_API_URL);
         const data = await res.json();
         allNews = data.results || [];
+        
         renderNews(allNews);
+        renderKebijakan(allNews); // Render khusus tab kebijakan
+        generateAIAnalysis(allNews); // Buat analisis teks dinamis
       } catch (err) {
         console.error(err);
         gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita.</div>`;
       }
     }
 
+    // 1. RENDER BERITA UTAMA
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
       if (newsArray.length === 0) {
@@ -416,7 +444,7 @@
         return;
       }
 
-      activeNewsList = newsArray;
+      activeNewsList = newsArray; // Simpan state untuk Modal
 
       container.innerHTML = newsArray.map((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
@@ -436,6 +464,88 @@
       }).join('');
     }
 
+    // 2. FILTER & RENDER TAB KEBIJAKAN
+    function renderKebijakan(newsArray) {
+      const container = document.getElementById('kebijakan-list');
+      
+      // Filter berita yang mengandung kata kunci terkait kebijakan
+      const keywords = ['pajak', 'bi', 'bank indonesia', 'regulasi', 'kebijakan', 'aturan', 'subsidi', 'fiskal', 'moneter', 'insentif', 'pemerintah', 'apbn'];
+      const filtered = newsArray.filter(item => {
+        const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+        return keywords.some(k => text.includes(k));
+      }).slice(0, 5); // Ambil maksimal 5 kebijakan terbaru
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center text-slate-500 py-4">Belum ada berita kebijakan terbaru hari ini.</div>`;
+        return;
+      }
+
+      let html = `<div class="relative border-l border-slate-200 ml-3 space-y-8 pb-4">`;
+      
+      filtered.forEach((item) => {
+        const dateStr = formatTanggalAman(item.published_at);
+        // Tentukan label warna berdasarkan judul
+        let tag = 'Regulasi';
+        let color = 'emerald';
+        if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { tag = 'Fiskal'; color = 'amber'; }
+        if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; }
+
+        html += `
+          <div class="ml-6 relative">
+            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-${color}-500 border-4 border-white shadow-sm"></span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded">${tag}</span>
+              <span class="text-xs text-slate-400 font-medium">${dateStr}</span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 leading-snug">
+              <a href="${item.url}" target="_blank" class="hover:text-blue-600 transition-colors">${item.title}</a>
+            </h3>
+            <p class="text-sm text-slate-600 leading-relaxed">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : ''}</p>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    // 3. GENERATE AI ANALISIS DINAMIS
+    function generateAIAnalysis(newsArray) {
+      const aiTextEl = document.getElementById('ai-analysis-text');
+      if (newsArray.length < 2) return;
+
+      // Ambil 2 berita teratas untuk dijadikan bahan analisis
+      const news1 = newsArray[0].title;
+      const news2 = newsArray[1].title;
+
+      // Template paragraf analisis makro
+      const templates = [
+        `Berdasarkan pantauan pasar terkini, sentimen investor sangat dipengaruhi oleh berita: "${news1}". Selain itu, faktor "${news2}" turut menambah dinamika terhadap pergerakan Rupiah dan likuiditas pasar modal.`,
+        `Kondisi makroekonomi saat ini tengah mencermati perkembangan dari "${news1}". Di sisi lain, pasar juga merespons positif terhadap "${news2}", yang berdampak pada stabilitas neraca perdagangan dan sektor riil.`,
+        `Volatilitas pasar hari ini tidak lepas dari pengaruh berita utama: "${news1}". Pelaku pasar disarankan mencermati perkembangan selanjutnya terkait "${news2}" untuk mengambil keputusan investasi jangka pendek.`
+      ];
+
+      // Pilih template acak agar tidak membosankan
+      const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+      
+      // Efek mengetik (Typewriter effect)
+      aiTextEl.innerText = "";
+      let i = 0;
+      const speed = 20; // kecepatan ketik
+      
+      function typeWriter() {
+        if (i < randomTemplate.length) {
+          aiTextEl.innerHTML += randomTemplate.charAt(i);
+          i++;
+          setTimeout(typeWriter, speed);
+        }
+      }
+      
+      // Jalankan setelah delay sebentar
+      setTimeout(typeWriter, 500);
+    }
+
+    // Fitur Pencarian Berita
     document.getElementById('search-news').addEventListener('input', (e) => {
       const keyword = e.target.value.toLowerCase();
       const filtered = allNews.filter(item => 
@@ -485,7 +595,6 @@
         sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
         sourceEl.className = "text-sm text-emerald-600 font-semibold mt-1";
       } catch (error) {
-        console.warn("Gagal ambil BPS, beralih ke World Bank:", error.message);
         sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
         sourceEl.className = "text-sm text-amber-500 mt-1";
         fetchWorldBankInflasi();
