@@ -99,7 +99,6 @@
       </div>
 
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
-        <!-- Menu Mobile (Hitungan Online Dihapus) -->
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Kurs & Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="inflasi">Inflasi <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -236,14 +235,21 @@
 
     <!-- ================= TAB 2: BERITA ================= -->
     <div id="content-berita" class="tab-content hidden space-y-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
           <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari portal berita terpercaya.</p>
         </div>
-        <div class="relative w-full sm:w-72">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all">
+        
+        <!-- Search & Refresh Button -->
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all">
+          </div>
+          <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm" title="Refresh Berita">
+            <i class="fa-solid fa-rotate-right" id="icon-refresh"></i>
+          </button>
         </div>
       </div>
 
@@ -455,18 +461,16 @@
 
   <script>
     // ==========================================
-    // 🔥 KONFIGURASI SUPABASE (GANTI DENGAN MILIK ANDA)
+    // 🔥 KONFIGURASI SUPABASE
     // ==========================================
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
-
     let supabaseClient = null;
 
     // ==========================================
-    // LOGIKA PENGUNJUNG ONLINE (SUPABASE PRESENCE) - HANYA DESKTOP
+    // LOGIKA PENGUNJUNG ONLINE (HANYA DESKTOP)
     // ==========================================
     async function initOnlineCounter() {
-      // Hanya cari elemen online-counter (desktop). Elemen mobile sudah dihapus.
       const counterDesktop = document.getElementById('online-counter');
 
       if (SUPABASE_URL.includes('MASUKKAN') || SUPABASE_ANON_KEY.includes('MASUKKAN')) {
@@ -700,22 +704,19 @@
 
         fetchGoldPrice(usdToIdr);
 
-        let simulatedScore = 50;
-        if (usdToIdr > 17800) {
-            simulatedScore = Math.floor(Math.random() * 30);
-        } else if (usdToIdr < 17500) {
-            simulatedScore = Math.floor(Math.random() * 30) + 70;
-        } else {
-            simulatedScore = Math.floor(Math.random() * 30) + 35;
-        }
-        updateSentiment(simulatedScore);
+        // --- PERHITUNGAN SENTIMEN YANG STABIL (TIDAK RANDOM) ---
+        // Semakin tinggi USD/IDR, Rupiah makin lemah (Bearish -> Skor kecil)
+        // Asumsi batas bawah 16.000 (Bullish/100) dan batas atas 18.000 (Bearish/0)
+        let baseScore = 100 - ((usdToIdr - 16000) / 20);
+        let stableScore = Math.max(0, Math.min(100, Math.round(baseScore)));
+        updateSentiment(stableScore);
 
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
         currencyChart.update();
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
-        updateSentiment(50);
+        updateSentiment(50); // Fallback netral jika error
       }
     }
 
@@ -733,13 +734,32 @@
       }
     }
 
-    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30';
+    // ==========================================
+    // FETCH BERITA (DENGAN FITUR REFRESH & AUTO UPDATE)
+    // ==========================================
     let allNews = [];
     let activeNewsList = [];
+    let isFetchingNews = false;
 
-    async function fetchNews() {
+    async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
+      const btnRefresh = document.getElementById('btn-refresh-news');
+      const iconRefresh = document.getElementById('icon-refresh');
+
+      if (isFetchingNews) return; // Mencegah double fetch
+      isFetchingNews = true;
+
+      // Animasi loading pada tombol refresh
+      if (manualRefresh) {
+        btnRefresh.classList.add('opacity-50', 'cursor-not-allowed');
+        iconRefresh.classList.add('fa-spin');
+      }
+
       try {
+        // Tambahkan parameter waktu (cache buster) agar API selalu memberikan data terbaru
+        const timestamp = new Date().getTime();
+        const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
+        
         const res = await fetch(NEWS_API_URL);
         const data = await res.json();
         allNews = data.results || [];
@@ -747,9 +767,28 @@
         applyNewsFilters();
         renderKebijakan(allNews);
         generateAIAnalysis(allNews);
+
+        if (manualRefresh) {
+          // Efek kedip hijau saat berhasil refresh
+          btnRefresh.classList.replace('bg-blue-50', 'bg-emerald-50');
+          btnRefresh.classList.replace('text-blue-600', 'text-emerald-600');
+          btnRefresh.classList.replace('border-blue-100', 'border-emerald-100');
+          setTimeout(() => {
+            btnRefresh.classList.replace('bg-emerald-50', 'bg-blue-50');
+            btnRefresh.classList.replace('text-emerald-600', 'text-blue-600');
+            btnRefresh.classList.replace('border-emerald-100', 'border-blue-100');
+          }, 1000);
+        }
+
       } catch (err) {
         console.error(err);
-        gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita.</div>`;
+        if (gridContainer.innerHTML.includes('Memuat')) {
+          gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita.</div>`;
+        }
+      } finally {
+        isFetchingNews = false;
+        btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
+        iconRefresh.classList.remove('fa-spin');
       }
     }
 
@@ -976,6 +1015,10 @@
       try { fetchInflasi(); } catch(e) { console.warn(e); }
       try { fetchNaker(); } catch(e) { console.warn(e); }
       try { checkWeekend(); } catch(e) { console.warn(e); }
+
+      // FITUR AUTO-REFRESH DATA BERKALA (Tanpa harus refresh halaman)
+      setInterval(fetchCurrencies, 3600000); // Update kurs setiap 1 jam
+      setInterval(fetchNews, 300000);        // Update berita setiap 5 menit
     };
   </script>
 </body>
