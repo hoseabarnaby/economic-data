@@ -136,9 +136,8 @@
         </div>
       </div>
 
-      <!-- 4 KOTAK UTAMA (TETAP SEPERTI SEBELUMNYA) -->
+      <!-- 4 KOTAK UTAMA -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -148,7 +147,6 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Kurs terbaru</div>
         </div>
 
-        <!-- 2. INFLASI INDONESIA -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -158,7 +156,6 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10" id="inflasi-tahun">Rilis terakhir</div>
         </div>
 
-        <!-- 3. BI RATE -->
         <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 sm:p-5 border border-indigo-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -168,7 +165,6 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Keputusan terbaru</div>
         </div>
 
-        <!-- 4. US TREASURY 10Y -->
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -209,12 +205,10 @@
           </div>
           <p class="text-blue-100 text-sm leading-relaxed mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
           
-          <!-- Loading AI -->
           <div id="ai-briefing-loading" class="flex items-center gap-2 text-blue-200 text-sm">
              <span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span> Menghubungi DeepSeek AI...
           </div>
 
-          <!-- Hasil AI (Markdown) -->
           <div class="markdown-body" id="ai-analysis-text" style="display: none;">
           </div>
         </div>
@@ -223,48 +217,58 @@
         </button>
       </div>
 
-      <!-- MARKET MOVERS (HANYA MATA UANG) -->
+      <!-- MARKET MOVERS & UPCOMING EVENTS (SETENGAH-SETENGAH) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <!-- Top Gainer -->
+        <!-- KIRI: Market Movers -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> Top Gainers (Mata Uang)
+            <i class="fa-solid fa-arrow-right-arrow-left text-blue-500"></i> Market Movers (Mata Uang)
           </h3>
-          <p class="text-slate-500 text-xs leading-relaxed mb-4">Mata uang dengan penguatan terbesar terhadap Rupiah hari ini.</p>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Pergerakan mata uang utama terhadap Rupiah hari ini.</p>
           <div class="space-y-3">
+            <!-- Top Gainer -->
             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-bold">GBP / IDR</span>
-               <span class="text-emerald-600 font-extrabold">+0.85%</span>
+               <span class="text-slate-700 font-medium">GBP / IDR <span class="text-[10px] text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded ml-1">Gainer</span></span>
+               <span class="text-emerald-600 font-bold">+0.85%</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-bold">AUD / IDR</span>
-               <span class="text-emerald-600 font-extrabold">+0.45%</span>
+               <span class="text-slate-700 font-medium">AUD / IDR <span class="text-[10px] text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded ml-1">Gainer</span></span>
+               <span class="text-emerald-600 font-bold">+0.45%</span>
+            </div>
+            <!-- Top Loser -->
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-medium">JPY / IDR <span class="text-[10px] text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1">Loser</span></span>
+               <span class="text-rose-600 font-bold">-1.20%</span>
             </div>
             <div class="flex justify-between items-center text-sm">
-               <span class="text-slate-700 font-bold">EUR / IDR</span>
-               <span class="text-emerald-600 font-extrabold">+0.21%</span>
+               <span class="text-slate-700 font-medium">CNY / IDR <span class="text-[10px] text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1">Loser</span></span>
+               <span class="text-rose-600 font-bold">-0.50%</span>
             </div>
           </div>
         </div>
 
-        <!-- Top Loser -->
+        <!-- KANAN: Upcoming Economic Events -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-arrow-trend-down text-rose-500"></i> Top Losers (Mata Uang)
+            <i class="fa-regular fa-calendar-days text-indigo-500"></i> Upcoming Economic Events
           </h3>
-          <p class="text-slate-500 text-xs leading-relaxed mb-4">Mata uang dengan pelemahan terbesar terhadap Rupiah hari ini.</p>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal rilis data ekonomi dan kebijakan penting minggu ini.</p>
           <div class="space-y-3">
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-bold">JPY / IDR</span>
-               <span class="text-rose-600 font-extrabold">-1.20%</span>
+             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-medium">Rilis Inflasi BPS</span>
+               <span class="text-slate-400 text-xs font-semibold">Besok, 10:00</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-bold">CNY / IDR</span>
-               <span class="text-rose-600 font-extrabold">-0.50%</span>
+               <span class="text-slate-700 font-medium">RDG Bank Indonesia</span>
+               <span class="text-slate-400 text-xs font-semibold">Rabu, 14:00</span>
             </div>
-            <div class="flex justify-between items-center text-sm">
-               <span class="text-slate-700 font-bold">SGD / IDR</span>
-               <span class="text-rose-600 font-extrabold">-0.15%</span>
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+               <span class="text-slate-700 font-medium">FOMC Meeting (The Fed)</span>
+               <span class="text-slate-400 text-xs font-semibold">Kamis, 02:00</span>
+            </div>
+             <div class="flex justify-between items-center text-sm">
+               <span class="text-slate-700 font-medium">Rilis Data GDP</span>
+               <span class="text-slate-400 text-xs font-semibold">Jumat, 09:00</span>
             </div>
           </div>
         </div>
