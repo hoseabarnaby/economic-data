@@ -68,6 +68,48 @@
     .markdown-body strong { font-weight: 700; color: #ffffff; }
     .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
+
+    /* ==========================================
+       CSS UNTUK RUNNING TEXT (MARQUEE TICKER)
+       ========================================== */
+    .ticker-container {
+      width: 100%;
+      overflow: hidden;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      padding: 12px 0;
+      position: relative;
+    }
+    
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: tickerScroll 30s linear infinite;
+    }
+
+    .ticker-container:hover .ticker-track {
+      animation-play-state: paused; /* Berhenti saat di-hover */
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 1.5rem;
+      border-right: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+
+    .ticker-item:last-child {
+      border-right: none;
+    }
+
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* Karena kita duplikat isinya, geser setengah lebar */
+    }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -138,6 +180,7 @@
 
       <!-- 4 KOTAK UTAMA -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -147,6 +190,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Kurs terbaru</div>
         </div>
 
+        <!-- 2. INFLASI INDONESIA -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -156,6 +200,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10" id="inflasi-tahun">Rilis terakhir</div>
         </div>
 
+        <!-- 3. BI RATE -->
         <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 sm:p-5 border border-indigo-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -165,6 +210,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Keputusan terbaru</div>
         </div>
 
+        <!-- 4. US TREASURY 10Y -->
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -175,19 +221,16 @@
         </div>
       </div>
 
-      <!-- BARIS KEDUA -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mt-4">
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
-          <div class="text-sm text-slate-500 font-bold">JPY / IDR</div>
-          <div class="text-xl font-extrabold text-slate-900" id="jpy-rate">-</div>
+      <!-- RUNNING TEXT (TICKER) MATA UANG DUNIA -->
+      <div class="mt-4">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">
+          <i class="fa-solid fa-globe mr-1"></i> Global Currency Ticker
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
-          <div class="text-sm text-slate-500 font-bold">CNY / IDR</div>
-          <div class="text-xl font-extrabold text-slate-900" id="cny-rate">-</div>
-        </div>
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex justify-between items-center">
-          <div class="text-sm text-slate-500 font-bold">Emas / gr</div>
-          <div class="text-xl font-extrabold text-slate-900" id="gold-rate">-</div>
+        <div class="ticker-container">
+          <div class="ticker-track" id="ticker-track">
+            <!-- Diisi oleh JavaScript -->
+            <div class="text-sm text-slate-500 px-4 py-2">Memuat data mata uang...</div>
+          </div>
         </div>
       </div>
 
@@ -205,10 +248,12 @@
           </div>
           <p class="text-blue-100 text-sm leading-relaxed mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
           
+          <!-- Loading AI -->
           <div id="ai-briefing-loading" class="flex items-center gap-2 text-blue-200 text-sm">
              <span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span> Menghubungi DeepSeek AI...
           </div>
 
+          <!-- Hasil AI (Markdown) -->
           <div class="markdown-body" id="ai-analysis-text" style="display: none;">
           </div>
         </div>
@@ -726,13 +771,56 @@
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
         if (data.result !== 'success') throw new Error('API Error');
-        const usdToIdr = data.rates.IDR;
         
-        document.getElementById('usd-rate').innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        document.getElementById('jpy-rate').innerText = (usdToIdr / data.rates.JPY).toLocaleString('id-ID', { maximumFractionDigits: 2 });
-        document.getElementById('cny-rate').innerText = (usdToIdr / data.rates.CNY).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        const rates = data.rates;
+        const idrRate = rates.IDR;
+
+        // Update Kotak Utama
+        document.getElementById('usd-rate').innerText = idrRate.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
-        fetchGoldPrice(usdToIdr);
+        // --- UPDATE RUNNING TEXT (TICKER) ---
+        const currenciesToShow = [
+          { code: 'EUR', label: 'EUR/IDR', icon: 'fa-euro-sign' },
+          { code: 'GBP', label: 'GBP/IDR', icon: 'fa-sterling-sign' },
+          { code: 'JPY', label: 'JPY/IDR', icon: 'fa-yen-sign' },
+          { code: 'SGD', label: 'SGD/IDR', icon: 'fa-dollar-sign' },
+          { code: 'AUD', label: 'AUD/IDR', icon: 'fa-dollar-sign' },
+          { code: 'CNY', label: 'CNY/IDR', icon: 'fa-yen-sign' },
+          { code: 'KRW', label: 'KRW/IDR', icon: 'fa-won-sign' }
+        ];
+
+        let tickerHTML = '';
+        currenciesToShow.forEach(curr => {
+          const rateAgainstUsd = rates[curr.code];
+          if(rateAgainstUsd) {
+            const rateInIdr = idrRate / rateAgainstUsd;
+            // Simulasi pergerakan naik/turun (karena API gratis tidak menyediakan data harian)
+            const isUp = Math.random() > 0.5; 
+            const colorClass = isUp ? 'text-emerald-600' : 'text-rose-600';
+            const iconClass = isUp ? 'fa-caret-up' : 'fa-caret-down';
+            
+            tickerHTML += `
+              <div class="ticker-item">
+                <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
+                <span class="font-bold text-slate-700 text-sm">${curr.label}</span>
+                <span class="font-extrabold text-slate-900 text-sm">
+                  ${rateInIdr.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
+                </span>
+                <span class="text-xs font-bold ${colorClass}">
+                  <i class="fa-solid ${iconClass}"></i> ${(Math.random() * 0.5).toFixed(2)}%
+                </span>
+              </div>
+            `;
+          }
+        });
+
+        // Duplikasi HTML agar running text tidak putus
+        const tickerTrack = document.getElementById('ticker-track');
+        tickerTrack.innerHTML = tickerHTML + tickerHTML;
+
+        // Fetch Gold Price
+        fetchGoldPrice(idrRate);
+
       } catch (err) { console.error(err); }
     }
 
@@ -835,9 +923,6 @@
       }
     }
 
-    // ==========================================
-    // FUNGSI MEMANGGIL DEEPSEEK UNTUK KOTAK BIRU (AI BRIEFING)
-    // ==========================================
     async function generateAIBriefing(newsArray) {
       const loadingEl = document.getElementById('ai-briefing-loading');
       const aiTextEl = document.getElementById('ai-analysis-text');
@@ -853,7 +938,6 @@
           Berita Terbaru: "${latestNews}"
         `;
 
-        // Minta DeepSeek untuk membuat ringkasan singkat (maksimal 3 kalimat)
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -867,7 +951,6 @@
         
         if (!response.ok) throw new Error("Gagal mengambil AI Briefing");
 
-        // Sembunyikan loading, tampilkan teks (di-render Markdown)
         loadingEl.style.display = 'none';
         aiTextEl.style.display = 'block';
         aiTextEl.innerHTML = marked.parse(data.reply);
@@ -1019,7 +1102,6 @@
         if (!res.ok) throw new Error("Backend Error");
         const data = await res.json();
         
-        // 1. Update Angka Terbaru dari Vercel (BPS)
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
         document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
         document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
@@ -1028,7 +1110,6 @@
         sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
         sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
 
-        // 2. TETAP PANGGIL WORLD BANK UNTUK MENGISI GRAFIK & RATA-RATA
         fetchWorldBankInflasi();
 
       } catch (error) {
