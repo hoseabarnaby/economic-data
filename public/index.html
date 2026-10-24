@@ -9,7 +9,6 @@
   <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
   <meta property="og:image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M6 22l8-8 5 5 9-9M23 10h5v5' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
@@ -18,6 +17,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
@@ -62,6 +63,16 @@
     .dot:nth-child(1) { animation-delay: -0.32s; }
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    .markdown-body { font-size: 0.875rem; line-height: 1.5; color: #334155; }
+    .markdown-body p { margin-bottom: 0.75rem; }
+    .markdown-body strong { font-weight: 700; color: #0f172a; }
+    .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    .markdown-body ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    .markdown-body li { margin-bottom: 0.25rem; }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.8rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
+    .markdown-body th { background-color: #f1f5f9; font-weight: 600; }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -121,7 +132,7 @@
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
-    <!-- TAB 1: KURS & PASAR -->
+    <!-- TAB 1: KURS & PASAR (DASHBOARD UTAMA) -->
     <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
@@ -350,7 +361,6 @@
 
   <!-- AI CHATBOT WINDOW -->
   <div id="ai-chat-window" class="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden chat-popup">
-    <!-- Chat Header -->
     <div class="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
@@ -366,18 +376,16 @@
       </button>
     </div>
     
-    <!-- Chat Body -->
-    <div class="p-4 h-72 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
+    <div class="p-4 h-80 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
         Halo! Saya AI dari Economic Insight. Silakan tanya apa saja terkait kondisi ekonomi, kurs, atau berita terbaru hari ini.
       </div>
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
         Anda bisa bertanya: <br>
-        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap kurs hari ini?"</span>
+        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bandingkan performa IHSG dan Bitcoin saat ini?'; document.getElementById('chat-input').focus();">"Bandingkan performa IHSG dan Bitcoin?"</span>
       </div>
     </div>
 
-    <!-- Chat Input -->
     <div class="p-3 border-t border-slate-200 bg-white flex gap-2 shrink-0">
       <input type="text" id="chat-input" placeholder="Tanya AI..." class="flex-grow px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors" onkeypress="if(event.key === 'Enter') sendAIMessage()">
       <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm">
@@ -386,7 +394,6 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer class="bg-white py-8 mt-20 border-t border-slate-200 pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3">
@@ -449,8 +456,8 @@
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
+    const SUPABASE_URL = 'MASUKKAN_PROJECT_URL_ANDA_DISINI'; 
+    const SUPABASE_ANON_KEY = 'MASUKKAN_ANON_KEY_ANDA_DISINI';
     let supabaseClient = null;
     let currentModalNews = null;
     
@@ -581,10 +588,10 @@
 
         if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
 
-        let reply = data.reply.replace(/\n/g, '<br>');
+        let reply = marked.parse(data.reply);
         
         chatBody.innerHTML += `
-          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-8 text-slate-700 text-sm leading-relaxed">
+          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-4 text-slate-700 text-sm leading-relaxed markdown-body">
             ${reply}
           </div>
         `;
@@ -951,6 +958,9 @@
       }).catch(err => alert('Gagal menyalin tautan.'));
     }
 
+    // ==========================================
+    // LOGIKA INFLASI (UPDATED)
+    // ==========================================
     async function fetchInflasi() {
       const sourceEl = document.getElementById('inflasi-source');
       try {
@@ -958,6 +968,7 @@
         if (!res.ok) throw new Error("Backend Error");
         const data = await res.json();
         
+        // 1. Update Angka Terbaru dari Vercel (BPS)
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
         document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
         document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
@@ -965,6 +976,11 @@
         
         sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
         sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
+
+        // 2. TETAP PANGGIL WORLD BANK UNTUK MENGISI GRAFIK & RATA-RATA
+        // (Karena API Vercel hanya mengirim 1 angka, bukan data sejarah)
+        fetchWorldBankInflasi();
+
       } catch (error) {
         sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
         sourceEl.className = "text-sm text-amber-500 font-bold mt-1";
@@ -980,18 +996,18 @@
           const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
           if (validData.length > 0) {
             const latest = validData[validData.length - 1];
-            document.getElementById('inflasi-terakhir').innerText = latest.value.toFixed(2) + '%';
-            document.getElementById('inflasi-tahun').innerText = `Rilis: ${latest.date}`;
-            document.getElementById('inflasi-terakhir-tab').innerText = latest.value.toFixed(2) + '%';
-            document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${latest.date}`;
-
+            
+            // Hanya update Rata-rata dan Tren. Biarkan angka "Terakhir" tetap pakai data BPS Vercel.
             const sum = validData.reduce((a, b) => a + b.value, 0);
             document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
+            
             if (validData.length > 1) {
               const prev = validData[validData.length - 2];
               const diff = latest.value - prev.value;
               document.getElementById('inflasi-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
             }
+            
+            // Gambar Grafik
             inflationChart.data.labels = validData.map(d => d.date);
             inflationChart.data.datasets[0].data = validData.map(d => d.value);
             inflationChart.update();
