@@ -19,6 +19,10 @@
     .tab-inactive:hover { background-color: #f1f5f9; color: #334155; }
     .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .glass-panel { background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(49, 46, 129, 0.95)); backdrop-filter: blur(10px); }
+    
+    /* Animasi untuk AI */
+    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
   </style>
 </head>
 <body class="text-slate-800 antialiased relative flex flex-col min-h-screen">
@@ -29,17 +33,17 @@
       <div class="flex items-center justify-between h-16">
         
         <!-- LOGO KUSTOM -->
-        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('kurs')">
-          <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 z-10">
+        <div class="flex items-center gap-2 sm:gap-3 cursor-pointer" onclick="switchTab('kurs')">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 sm:w-5 sm:h-5 z-10">
               <path d="M3 17l6-6 4 4 8-8"/>
               <path d="M17 7h4v4"/>
             </svg>
             <div class="absolute inset-0 bg-white/20 w-full h-full transform rotate-45 -translate-y-4"></div>
           </div>
           <div>
-            <span class="text-xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
-            <span class="text-[10px] text-slate-500 font-medium tracking-widest uppercase">Data & Analisis</span>
+            <span class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
+            <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-widest uppercase">Data & Analisis</span>
           </div>
         </div>
         
@@ -53,14 +57,14 @@
         </nav>
 
         <!-- Status Live & Hamburger Button -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
             <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             Live Data
           </div>
           
           <!-- Hamburger (Hanya Muncul di Mobile) -->
-          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2">
+          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-1">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
@@ -78,81 +82,113 @@
   </header>
 
   <!-- MAIN CONTENT -->
-  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
     <!-- ================= TAB 1: KURS & PASAR ================= -->
     <div id="content-kurs" class="tab-content space-y-6 block">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-bold text-slate-900">Pergerakan Pasar</h1>
           <p class="text-sm text-slate-500 mt-1">Pantauan nilai tukar real-time.</p>
         </div>
-        <div class="text-sm font-medium text-slate-400 bg-white px-3 py-1 rounded-lg border border-slate-200">
+        <div class="text-xs sm:text-sm font-medium text-slate-400 bg-white px-3 py-1 rounded-lg border border-slate-200">
           <i class="fa-regular fa-clock mr-1"></i> <span id="last-updated">Memuat...</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
-          <div class="flex justify-between items-center mb-4">
+      <!-- GRID KURS: 2 KOLOM DI MOBILE, 4 KOLOM DI DESKTOP -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        
+        <!-- USD -->
+        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between group">
+          <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-slate-50 opacity-80 group-hover:scale-110 transition-transform duration-500"></i>
+          <div class="flex justify-between items-start mb-3 relative z-10">
             <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">$</div>
-              <span class="font-bold text-slate-700">USD / IDR</span>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">$</div>
+              <span class="font-bold text-slate-700 text-xs sm:text-sm">USD/IDR</span>
             </div>
-            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-down"></i> 0.12%</span>
+            <span class="text-[10px] sm:text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-down"></i>0.12%</span>
           </div>
-          <div class="text-3xl font-extrabold text-slate-900" id="usd-rate">-</div>
-          <div class="mt-2 text-xs text-slate-500">Kurs Pasar</div>
+          <div class="relative z-10">
+            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Kurs Pasar</div>
+            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="usd-rate">-</div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
-          <div class="flex justify-between items-center mb-4">
+        <!-- JPY -->
+        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between group">
+          <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-slate-50 opacity-80 group-hover:scale-110 transition-transform duration-500"></i>
+          <div class="flex justify-between items-start mb-3 relative z-10">
             <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">¥</div>
-              <span class="font-bold text-slate-700">JPY / IDR</span>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 font-bold text-xs">¥</div>
+              <span class="font-bold text-slate-700 text-xs sm:text-sm">JPY/IDR</span>
             </div>
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-up"></i> 0.45%</span>
+            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.45%</span>
           </div>
-          <div class="text-3xl font-extrabold text-slate-900" id="jpy-rate">-</div>
-          <div class="mt-2 text-xs text-slate-500">Per 1 Yen Jepang</div>
+          <div class="relative z-10">
+            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Per 1 Yen</div>
+            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="jpy-rate">-</div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
-          <div class="flex justify-between items-center mb-4">
+        <!-- CNY -->
+        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between group">
+          <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-slate-50 opacity-80 group-hover:scale-110 transition-transform duration-500"></i>
+          <div class="flex justify-between items-start mb-3 relative z-10">
             <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">¥</div>
-              <span class="font-bold text-slate-700">CNY / IDR</span>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 font-bold text-xs">¥</div>
+              <span class="font-bold text-slate-700 text-xs sm:text-sm">CNY/IDR</span>
             </div>
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-up"></i> 0.21%</span>
+            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.21%</span>
           </div>
-          <div class="text-3xl font-extrabold text-slate-900" id="cny-rate">-</div>
-          <div class="mt-2 text-xs text-slate-500">Per 1 Yuan China</div>
+          <div class="relative z-10">
+            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Per 1 Yuan</div>
+            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="cny-rate">-</div>
+          </div>
         </div>
+
+        <!-- EMAS -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between group">
+          <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
+          <div class="flex justify-between items-start mb-3 relative z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-xs"><i class="fa-solid fa-coins"></i></div>
+              <span class="font-bold text-slate-700 text-xs sm:text-sm">Emas/gr</span>
+            </div>
+            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.10%</span>
+          </div>
+          <div class="relative z-10">
+            <div class="text-[10px] sm:text-xs text-amber-600/70 font-medium mb-1">Harga Global</div>
+            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="gold-rate">-</div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-800 text-lg mb-4">Tren USD / IDR</h3>
-          <div class="relative h-64 w-full"><canvas id="currencyChart"></canvas></div>
+      <!-- CHART & AI SECTION -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-4">Tren USD / IDR</h3>
+          <div class="relative h-64 sm:h-72 w-full"><canvas id="currencyChart"></canvas></div>
         </div>
         
         <!-- AI ANALISIS DINAMIS -->
         <div class="glass-panel rounded-2xl p-6 text-white shadow-lg flex flex-col justify-between relative overflow-hidden">
-          <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
-          <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-indigo-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+          <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+          <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
           
           <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-4">
-              <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
                 <i class="fa-solid fa-robot text-amber-300"></i>
               </div>
               <h3 class="font-bold text-lg">AI Market Insight</h3>
             </div>
-            <p class="text-blue-100 text-sm leading-relaxed mb-4" id="ai-analysis-text">
+            <p class="text-blue-100 text-sm leading-relaxed mb-4 typing-cursor" id="ai-analysis-text">
               Menganalisis kondisi pasar terkini...
             </p>
           </div>
-          <button class="relative z-10 mt-6 w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition">
+          <button class="relative z-10 mt-4 w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition">
             Baca Laporan Lengkap
           </button>
         </div>
@@ -172,7 +208,7 @@
         </div>
       </div>
 
-      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         <div class="col-span-full text-center py-10 text-slate-500"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat berita...</div>
       </div>
     </div>
@@ -202,9 +238,9 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <h3 class="font-bold text-slate-800 text-lg mb-4">Tren Inflasi Tahunan</h3>
-        <div class="relative h-64 w-full"><canvas id="inflationChart"></canvas></div>
+      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-4">Tren Inflasi Tahunan</h3>
+        <div class="relative h-64 sm:h-72 w-full"><canvas id="inflationChart"></canvas></div>
       </div>
     </div>
 
@@ -216,27 +252,27 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-6">
-          <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 text-2xl"><i class="fa-solid fa-users"></i></div>
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex items-center gap-4 sm:gap-6">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 text-xl sm:text-2xl"><i class="fa-solid fa-users"></i></div>
           <div>
-            <div class="text-sm font-medium text-slate-500 mb-1">Tingkat Pengangguran</div>
-            <div class="text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
-            <div class="text-xs text-slate-500 mt-1" id="naker-tahun">-</div>
+            <div class="text-xs sm:text-sm font-medium text-slate-500 mb-1">Tingkat Pengangguran</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
+            <div class="text-[10px] sm:text-xs text-slate-500 mt-1" id="naker-tahun">-</div>
           </div>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-6">
-          <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 text-2xl"><i class="fa-solid fa-arrow-trend-down"></i></div>
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex items-center gap-4 sm:gap-6">
+          <div class="w-12 h-12 sm:w-16 sm:h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 text-xl sm:text-2xl"><i class="fa-solid fa-arrow-trend-down"></i></div>
           <div>
-            <div class="text-sm font-medium text-slate-500 mb-1">Tren 5 Tahun</div>
-            <div class="text-3xl font-extrabold text-slate-900" id="naker-tren">-</div>
-            <div class="text-xs text-slate-500 mt-1">Perubahan poin persentase</div>
+            <div class="text-xs sm:text-sm font-medium text-slate-500 mb-1">Tren 5 Tahun</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="naker-tren">-</div>
+            <div class="text-[10px] sm:text-xs text-slate-500 mt-1">Perubahan poin persentase</div>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <h3 class="font-bold text-slate-800 text-lg mb-4">Tren Tingkat Pengangguran</h3>
-        <div class="relative h-72 w-full"><canvas id="nakerChart"></canvas></div>
+      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-4">Tren Tingkat Pengangguran</h3>
+        <div class="relative h-64 sm:h-72 w-full"><canvas id="nakerChart"></canvas></div>
       </div>
     </div>
 
@@ -247,16 +283,16 @@
         <p class="text-sm text-slate-500 mt-1">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru.</p>
       </div>
 
-      <div id="kebijakan-list" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
         <div class="relative border-l border-slate-200 ml-3 space-y-8 pb-4">
-           <div class="text-center text-slate-500 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat kebijakan terbaru...</div>
+           <div class="text-center text-slate-500 py-4 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat kebijakan terbaru...</div>
         </div>
       </div>
     </div>
 
   </main>
 
-  <!-- FOOTER COPYRIGHT (HITAM) -->
+  <!-- FOOTER COPYRIGHT -->
   <footer class="bg-slate-900 py-6 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <p class="text-sm text-slate-400 font-medium">
@@ -274,17 +310,17 @@
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
       
-      <div class="flex items-center justify-between p-6 border-b border-slate-100">
+      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <div class="p-6 overflow-y-auto custom-scrollbar">
-        <h2 class="text-2xl font-bold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
         
-        <div class="flex items-center gap-4 text-xs font-medium text-slate-500 mb-6 border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-4 text-xs font-medium text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
           <div class="flex items-center gap-1"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
           <div class="flex items-center gap-1"><i class="fa-solid fa-newspaper"></i> Info Ekonomi</div>
         </div>
@@ -294,8 +330,8 @@
         </div>
       </div>
 
-      <div class="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl text-right">
-        <a href="#" id="modal-link" target="_blank" class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-md shadow-blue-200">
+      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl text-right">
+        <a href="#" id="modal-link" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition shadow-md shadow-blue-200">
           Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
         </a>
       </div>
@@ -383,7 +419,7 @@
     });
 
     // ==========================================
-    // FETCH KURS
+    // FETCH KURS & EMAS
     // ==========================================
     async function fetchCurrencies() {
       try {
@@ -402,11 +438,28 @@
         const updateTime = formatTanggalAman(data.time_last_update_utc);
         document.getElementById('last-updated').innerText = `Diperbarui: ${updateTime}`;
 
+        // Ambil Harga Emas
+        fetchGoldPrice(usdToIdr);
+
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
         currencyChart.update();
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
+      }
+    }
+
+    async function fetchGoldPrice(usdToIdr) {
+      try {
+        const res = await fetch('https://api.gold-api.com/price/XAU');
+        const data = await res.json();
+        if (data && data.price) {
+          const usdPerOunce = data.price;
+          const idrPerGram = (usdPerOunce / 31.1034768) * usdToIdr;
+          document.getElementById('gold-rate').innerText = 'Rp ' + idrPerGram.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        }
+      } catch (err) {
+        document.getElementById('gold-rate').innerText = 'Rp 1.250.000'; 
       }
     }
 
@@ -447,11 +500,11 @@
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
         
         return `
-          <div onclick="openNewsModal(${index})" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col h-full group">
+          <div onclick="openNewsModal(${index})" class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer flex flex-col h-full group">
             <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded self-start mb-3">Ekonomi</span>
-            <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-3 line-clamp-3">${item.title}</h3>
-            <p class="text-sm text-slate-500 line-clamp-3 mb-4 flex-grow">${cleanDesc}</p>
-            <div class="mt-auto pt-4 border-t border-slate-100 text-xs text-slate-400 font-medium flex items-center justify-between">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-2 sm:mb-3 line-clamp-3">${item.title}</h3>
+            <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-4 flex-grow">${cleanDesc}</p>
+            <div class="mt-auto pt-3 sm:pt-4 border-t border-slate-100 text-[10px] sm:text-xs text-slate-400 font-medium flex items-center justify-between">
               <div class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
               <i class="fa-solid fa-arrow-right text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1"></i>
             </div>
@@ -470,11 +523,11 @@
       }).slice(0, 5);
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center text-slate-500 py-4">Belum ada berita kebijakan terbaru hari ini.</div>`;
+        container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada berita kebijakan terbaru hari ini.</div>`;
         return;
       }
 
-      let html = `<div class="relative border-l border-slate-200 ml-3 space-y-8 pb-4">`;
+      let html = `<div class="relative border-l border-slate-200 ml-3 space-y-6 sm:space-y-8 pb-4">`;
       
       filtered.forEach((item) => {
         const dateStr = formatTanggalAman(item.published_at);
@@ -484,16 +537,16 @@
         if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; }
 
         html += `
-          <div class="ml-6 relative">
-            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-${color}-500 border-4 border-white shadow-sm"></span>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-              <span class="text-xs font-bold text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded">${tag}</span>
-              <span class="text-xs text-slate-400 font-medium">${dateStr}</span>
+          <div class="ml-4 sm:ml-6 relative">
+            <span class="absolute -left-[25px] sm:-left-[31px] top-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-${color}-500 border-2 sm:border-4 border-white shadow-sm"></span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+              <span class="text-[10px] sm:text-xs font-bold text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded w-max">${tag}</span>
+              <span class="text-[10px] sm:text-xs text-slate-400 font-medium">${dateStr}</span>
             </div>
-            <h3 class="text-base font-bold text-slate-900 mb-2 leading-snug">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 mb-2 leading-snug">
               <a href="${item.url}" target="_blank" class="hover:text-blue-600 transition-colors">${item.title}</a>
             </h3>
-            <p class="text-sm text-slate-600 leading-relaxed">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : ''}</p>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : ''}</p>
           </div>
         `;
       });
@@ -579,10 +632,10 @@
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
         document.getElementById('inflasi-tahun').innerText = `Data Tahun ${data.tahun}`;
         sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
-        sourceEl.className = "text-sm text-emerald-600 font-semibold mt-1";
+        sourceEl.className = "text-xs sm:text-sm text-emerald-600 font-semibold mt-1";
       } catch (error) {
         sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
-        sourceEl.className = "text-sm text-amber-500 mt-1";
+        sourceEl.className = "text-xs sm:text-sm text-amber-500 mt-1";
         fetchWorldBankInflasi();
       }
     }
