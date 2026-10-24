@@ -259,30 +259,16 @@
           </div>
         </div>
 
-        <!-- KANAN: Upcoming Economic Events (Jadwal Akurat) -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <!-- KANAN: Upcoming Economic Events (REAL-TIME) -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
             <i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi
           </h3>
-          <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal reguler rilis data dan kebijakan penting (Waktu Indonesia Barat).</p>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal rilis data dan kebijakan global terdekat (Waktu Indonesia Barat).</p>
           
-          <div class="space-y-3">
-             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">Rilis Inflasi (BPS)</span>
-               <span class="text-slate-400 text-xs font-semibold">Awal bulan, 11:00</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">RDG Bank Indonesia</span>
-               <span class="text-slate-400 text-xs font-semibold">Bulanan, 14:00</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">FOMC Meeting (The Fed)</span>
-               <span class="text-slate-400 text-xs font-semibold">8x setahun, 01:00</span>
-            </div>
-             <div class="flex justify-between items-center text-sm">
-               <span class="text-slate-700 font-medium">Rilis Data PDB (BPS)</span>
-               <span class="text-slate-400 text-xs font-semibold">Triwulanan, 11:00</span>
-            </div>
+          <!-- Container untuk data dinamis -->
+          <div id="calendar-list" class="space-y-3 flex-grow">
+             <div class="text-center text-slate-400 py-4 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>
           </div>
         </div>
       </div>
@@ -753,10 +739,8 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // === STATE UNTUK IHSG ===
     let ihsgChart = null;
 
-    // === FUNGSI FETCH IHSG (DENGAN CORS PROXY) ===
     async function fetchIHSG() {
       const valueEl = document.getElementById('ihsg-value');
       const changeEl = document.getElementById('ihsg-change');
@@ -940,6 +924,54 @@
         fetchGoldPrice(usdToIdr);
 
       } catch (err) { console.error(err); }
+    }
+
+    // === FUNGSI UNTUK MENGAMBIL JADWAL EKONOMI REAL-TIME ===
+    async function fetchEconomicCalendar() {
+      const container = document.getElementById('calendar-list');
+      if (!container) return;
+
+      try {
+        const res = await fetch('https://biquote.io/api/calendar/upcoming?limit=5&importance=high', { cache: "no-store" });
+        const events = await res.json();
+
+        if (!events || events.length === 0) {
+          container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada jadwal rilis penting terdekat.</div>`;
+          return;
+        }
+
+        container.innerHTML = events.map(event => {
+          const eventDate = new Date(event.time);
+          const dateStr = eventDate.toLocaleString('id-ID', { 
+            timeZone: 'Asia/Jakarta', 
+            day: 'numeric', 
+            month: 'short', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }).replace('.', ':') + ' WIB';
+
+          let badgeClass = 'bg-blue-50 text-blue-600 border-blue-100';
+          if (event.importance === 'high') badgeClass = 'bg-rose-50 text-rose-600 border-rose-100';
+          else if (event.importance === 'medium') badgeClass = 'bg-amber-50 text-amber-600 border-amber-100';
+
+          return `
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0 last:pb-0">
+              <div class="flex flex-col">
+                <span class="text-slate-800 font-bold">${event.name}</span>
+                <span class="text-slate-400 text-xs font-medium">${event.countryCode} - ${event.currency}</span>
+              </div>
+              <div class="text-right flex flex-col items-end">
+                <span class="text-slate-500 text-xs font-semibold">${dateStr}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 ${badgeClass}">${event.importance}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (error) {
+        console.error("Gagal mengambil jadwal ekonomi:", error);
+        container.innerHTML = `<div class="text-center text-rose-500 py-4 text-sm">Gagal memuat jadwal. Silakan refresh halaman.</div>`;
+      }
     }
 
     let allNews = [];
@@ -1347,6 +1379,9 @@
       try { fetchInflasi(); } catch(e) {}
       try { fetchNaker(); } catch(e) {}
       try { checkWeekend(); } catch(e) {}
+      
+      // Fetch jadwal ekonomi real-time
+      try { fetchEconomicCalendar(); } catch(e) {} 
 
       setInterval(fetchCurrenciesForTicker, 3600000); // 1 jam
       setInterval(fetchIHSG, 300000); // 5 menit 
