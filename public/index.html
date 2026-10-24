@@ -188,7 +188,7 @@
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Yield terbaru</div>
         </div>
 
-        <!-- 5. HARGA EMAS (FIX: Elemen ini ditambahkan) -->
+        <!-- 5. HARGA EMAS -->
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 sm:p-5 border border-yellow-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="relative z-10">
@@ -289,7 +289,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari portal berita terpercaya. <span id="news-timestamp" class="text-xs text-blue-500 ml-2 block sm:inline"></span></p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari berbagai portal berita terpercaya. <span id="news-timestamp" class="text-xs text-blue-500 ml-2 block sm:inline"></span></p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
@@ -457,7 +457,7 @@
           <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
           <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
-            <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> Economic Insight</div>
+            <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="modal-source">Sumber</span></div>
           </div>
           <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">Deskripsi...</div>
         </div>
@@ -496,7 +496,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     let supabaseClient = null;
     let currentModalNews = null;
-    let activePolicyNews = []; // FIX: Variabel global untuk kebijakan
+    let activePolicyNews = [];
     
     const svgPlaceholder = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
@@ -600,7 +600,6 @@
       chatBody.scrollTop = chatBody.scrollHeight;
 
       try {
-        // FIX: Menggunakan optional chaining (?.) untuk mencegah error null
         const contextData = `
           Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
           Harga Emas: ${document.getElementById('gold-rate')?.innerText || '-'}
@@ -649,7 +648,6 @@
 
     let currentCategory = 'semua';
     let currentSearchQuery = '';
-    let sentimentGaugeChart = null;
 
     const categoryKeywords = {
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
@@ -658,13 +656,11 @@
       kebijakan: ['pajak', 'subsidi', 'pemerintah', 'apbn', 'inflasi', 'bi', 'bank indonesia', 'regulasi', 'kebijakan', 'fiskal', 'moneter', 'insentif', 'menteri', 'presiden']
     };
 
-    // FIX: Menambahkan parameter event
     function filterNewsByCategory(category, event) {
       currentCategory = category;
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active'); btn.classList.add('inactive');
       });
-      // FIX: Menggunakan event.currentTarget agar aman jika yang diklik adalah icon di dalam tombol
       if (event && event.currentTarget) {
         event.currentTarget.classList.remove('inactive'); 
         event.currentTarget.classList.add('active');
@@ -695,7 +691,7 @@
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const targetTab = document.getElementById(`content-${tabId}`);
-      if (targetTab) targetTab.classList.remove('hidden'); // FIX: Cek null
+      if (targetTab) targetTab.classList.remove('hidden');
       
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('tab-active');
@@ -753,11 +749,9 @@
         const rates = data.rates;
         usdToIdrGlobal = rates.IDR;
 
-        // Update Kotak Utama
         const usdRateEl = document.getElementById('usd-rate');
         if (usdRateEl) usdRateEl.innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
-        // --- SETUP DATA TICKER & LIST ---
         const currenciesToShow = [
           { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
           { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
@@ -769,14 +763,13 @@
         ];
 
         let tickerHTML = '';
-        allCurrencies = []; // Reset
+        allCurrencies = [];
 
         currenciesToShow.forEach(curr => {
           const rateAgainstUsd = rates[curr.code];
           if(rateAgainstUsd) {
             const rateInIdr = usdToIdrGlobal / rateAgainstUsd;
             
-            // Untuk Ticker
             tickerHTML += `
               <div class="ticker-item">
                 <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
@@ -787,7 +780,6 @@
               </div>
             `;
 
-            // Untuk Daftar Bawah (Market Movers diganti)
             allCurrencies.push({
               ...curr,
               rate: rateInIdr
@@ -795,14 +787,10 @@
           }
         });
 
-        // Render Ticker (Duplikasi agar berjalan mulus)
         const tickerTrack = document.getElementById('ticker-track');
         if (tickerTrack) tickerTrack.innerHTML = tickerHTML + tickerHTML;
 
-        // Render Daftar Kurs (Default hanya tampilkan 4)
         renderCurrencyList();
-
-        // Fetch Gold Price
         fetchGoldPrice(usdToIdrGlobal);
 
       } catch (err) { console.error(err); }
@@ -814,7 +802,6 @@
       
       if (!listContainer) return;
 
-      // Tentukan berapa yang mau ditampilkan
       const limit = showAllCurrencies ? allCurrencies.length : 4;
       const toDisplay = allCurrencies.slice(0, limit);
 
@@ -827,7 +814,6 @@
         </div>
       `).join('');
 
-      // Tampilkan tombol jika data lebih dari 4
       if (btnShowMore) {
         if (allCurrencies.length > 4) {
           btnShowMore.classList.remove('hidden');
@@ -862,7 +848,6 @@
       }
     }
 
-    // FIX: Fungsi diperbaiki agar tidak error saat elemen gold-rate belum ada (null)
     async function fetchGoldPrice(usdToIdr) {
       const el = document.getElementById('gold-rate');
       try {
@@ -880,6 +865,9 @@
     let activeNewsList = [];
     let isFetchingNews = false;
 
+    // ============================================================
+    // === PERUBAHAN UTAMA: API BERITA GRATIS TANPA LIMIT ===
+    // ============================================================
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -894,22 +882,57 @@
 
       try {
         const timestamp = new Date().getTime();
-        const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        // Daftar endpoint API yang akan dicoba secara berurutan (fallback mechanism)
+        const apiEndpoints = [
+          // 1. FreeNewsAPI dengan kata kunci "ekonomi" (paling relevan)
+          `https://freenewsapi.ai/v1/search?lang=id&q=ekonomi&size=30&t=${timestamp}`,
+          // 2. FreeNewsAPI tanpa kata kunci (jika yang pertama kosong)
+          `https://freenewsapi.ai/v1/search?lang=id&size=30&t=${timestamp}`,
+          // 3. FreeNewsAPI dengan kata kunci "bisnis"
+          `https://freenewsapi.ai/v1/search?lang=id&q=bisnis&size=30&t=${timestamp}`
+        ];
 
-        const res = await fetch(NEWS_API_URL, { cache: "no-store", signal: controller.signal });
-        clearTimeout(timeoutId);
+        let data = null;
+        let lastError = null;
 
-        const data = await res.json();
-        if (!data.results || data.results.length === 0) throw new Error("Data kosong");
+        for (const url of apiEndpoints) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // Timeout 8 detik
 
+            const res = await fetch(url, { 
+              cache: "no-store", 
+              signal: controller.signal,
+              headers: { 'Accept': 'application/json' }
+            });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const json = await res.json();
+            
+            if (json && json.results && json.results.length > 0) {
+              data = json;
+              console.log(`✅ Berita berhasil dimuat dari: ${url.split('?')[1]}`);
+              break;
+            }
+          } catch (err) {
+            lastError = err;
+            console.warn(`⚠️ Endpoint gagal: ${url}`, err.message);
+            // Lanjut ke endpoint berikutnya
+          }
+        }
+
+        if (!data || !data.results) throw lastError || new Error("Semua sumber API berita gagal");
+
+        // Map data ke format yang digunakan aplikasi
         allNews = data.results.map(item => ({
             title: item.title,
             url: item.url,
             published_at: item.published_at,
-            description: item.description
+            description: item.description,
+            source: item.source || item.publisher || 'Berita Ekonomi'
         }));
 
         const now = new Date();
@@ -918,10 +941,7 @@
 
         applyNewsFilters();
         renderKebijakan(allNews);
-        
-        // --- PANGGIL DEEPSEEK AI UNTUK BRIEFING ---
         generateAIBriefing(allNews);
-
         checkSharedUrl();
 
         if (manualRefresh && btnRefresh) {
@@ -935,13 +955,16 @@
           }, 1000);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Fetch News Error:", err);
         if (gridContainer && (gridContainer.innerHTML.includes('skeleton') || gridContainer.innerHTML.includes('Memuat'))) {
           gridContainer.innerHTML = `
             <div class="col-span-full text-center py-10 text-slate-500">
               <i class="fa-solid fa-wifi text-4xl mb-3 text-slate-300"></i><br>
               <p class="font-bold text-slate-700">Koneksi Lambat atau Server Sibuk</p>
-              <p class="text-sm mt-1">Gagal memuat berita. Silakan klik tombol Refresh.</p>
+              <p class="text-sm mt-1 mb-4">Gagal memuat berita dari semua sumber. Silakan klik tombol Refresh.</p>
+              <button onclick="fetchNews(true)" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-500 transition">
+                <i class="fa-solid fa-rotate-right mr-1"></i> Coba Lagi
+              </button>
             </div>`;
         }
       } finally {
@@ -962,7 +985,6 @@
       const latestNews = newsArray.length > 0 ? newsArray[0].title : "Belum ada berita terbaru.";
 
       try {
-        // FIX: Menggunakan optional chaining
         const contextData = `
           Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
           Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
@@ -1021,13 +1043,14 @@
       container.innerHTML = newsArray.map((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
+        const sourceName = item.source || 'Ekonomi';
         return `
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
             <img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-48 object-cover rounded-t-2xl opacity-90 group-hover:opacity-100 transition-opacity" alt="Berita Ekonomi">
             <div class="p-5 flex flex-col flex-grow">
               <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ekonomi</span>
-                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 truncate max-w-[120px]" title="${sourceName}">${sourceName}</span>
+                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 whitespace-nowrap"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
               </div>
               <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
               <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow font-medium">${cleanDesc}</p>
@@ -1052,7 +1075,7 @@
         return keywords.some(k => text.includes(k));
       }).slice(0, 5);
 
-      activePolicyNews = filtered; // FIX: Simpan ke variabel global
+      activePolicyNews = filtered;
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm font-medium">Belum ada berita kebijakan terbaru hari ini.</div>`;
@@ -1063,7 +1086,6 @@
       filtered.forEach((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
         
-        // FIX: Menghindari dynamic class Tailwind yang bisa gagal dirender
         let tag = 'Regulasi'; 
         let dotColor = 'bg-blue-500';
         let textColor = 'text-blue-600';
@@ -1080,7 +1102,6 @@
         html += `
           <div class="ml-4 sm:ml-6 relative group">
             <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${dotColor} border-2 sm:border-4 border-white shadow-sm z-10"></span>
-            <!-- FIX: Menggunakan index dari array global activePolicyNews -->
             <div onclick="openPolicyNewsModal(${index})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
               <img src="${DEFAULT_NEWS_IMAGE}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Berita Kebijakan">
               <div class="flex-grow">
@@ -1127,6 +1148,9 @@
       document.getElementById('modal-date').innerText = dateStr;
       document.getElementById('modal-desc').innerText = fullDesc;
       document.getElementById('modal-link').href = news.url || '#';
+      
+      const sourceEl = document.getElementById('modal-source');
+      if (sourceEl) sourceEl.innerText = news.source || 'Economic Insight';
 
       document.getElementById('modal-image-container').innerHTML = `<img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-full object-cover">`;
 
@@ -1140,7 +1164,6 @@
       modal.classList.add('hidden');
     }
 
-    // FIX: Menambahkan parameter event
     function shareCurrentNews(event) {
       if (!currentModalNews || !currentModalNews.url) return;
       const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
