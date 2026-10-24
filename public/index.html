@@ -236,27 +236,23 @@
         </button>
       </div>
 
-      <!-- PERUBAHAN: DAFTAR KURS DIGANTI DENGAN IHSG & CHART -->
+      <!-- DAFTAR KURS & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         
-        <!-- KIRI: IHSG & Chart -->
+        <!-- KIRI: Daftar Kurs Mata Uang -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                <i class="fa-solid fa-chart-line text-blue-500"></i> Indeks Harga Saham Gabungan (IHSG)
-              </h3>
-              <p class="text-slate-500 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia (1 Bulan Terakhir).</p>
-            </div>
-            <div class="text-right">
-              <div class="text-2xl font-extrabold text-slate-900" id="ihsg-value">-</div>
-              <div class="text-sm font-bold" id="ihsg-change">-</div>
-            </div>
-          </div>
+          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-money-bill-transfer text-blue-500"></i> Nilai Tukar Mata Uang
+          </h3>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Kurs terhadap Rupiah berdasarkan data pasar terbaru.</p>
           
-          <div class="relative h-48 w-full mt-2">
-            <canvas id="ihsgChart"></canvas>
+          <div id="currency-list" class="space-y-3 flex-grow">
+            <!-- Diisi oleh JS -->
           </div>
+
+          <button id="btn-show-more" onclick="toggleCurrencyList()" class="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-blue-600 text-sm font-bold rounded-xl transition-colors border border-slate-200 hidden">
+            Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>
+          </button>
         </div>
 
         <!-- KANAN: Upcoming Economic Events (Jadwal Akurat) -->
@@ -610,7 +606,6 @@
           Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
           BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
           US Treasury 10Y: ${document.getElementById('us-10y')?.innerText || '-'}
-          IHSG: ${document.getElementById('ihsg-value')?.innerText || '-'}
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : 'Belum ada berita'}"
         `;
 
@@ -654,19 +649,26 @@
     let currentCategory = 'semua';
     let currentSearchQuery = '';
 
+    // FIX: Memperbarui kata kunci agar lebih spesifik ke ekonomi, bukan kata umum
     const categoryKeywords = {
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
       keuangan: ['saham', 'ihsg', 'dolar', 'rupiah', 'kurs', 'bank', 'investasi', 'obligasi', 'modal', 'bursa', 'uang', 'fintech', 'kripto', 'bitcoin', 'emas'],
       energi: ['bbm', 'minyak', 'gas', 'batu bara', 'listrik', 'energi', 'pertamina', 'tambang', 'oplos', 'solar', 'subsidi energi'],
       kebijakan: [
+        // Fiskal
         'pajak', 'apbn', 'fiskal', 'subsidi', 'defisit', 'utang negara', 'bea cukai', 'penerimaan negara', 'belanja negara',
+        // Moneter
         'bi rate', 'suku bunga', 'bank indonesia', 'moneter', 'inflasi', 'likuiditas', 'rdg', 'gubernur bi', 'perry warjiyo',
+        // Regulasi & Hukum Ekonomi
         'regulasi ekonomi', 'ruu', 'omnibus law', 'peraturan pemerintah', 'perpres', 'investasi asing', 'izin usaha', 'kementerian keuangan', 'sri mulyani', 'kebijakan ekonomi', 'larangan ekspor', 'larangan impor', 'bea masuk'
       ]
     };
 
+    // FIX: Fungsi helper untuk mencocokkan kata secara utuh (Word Boundary Regex)
+    // Mencegah "bi" cocok dengan "bikers", "pajak" cocok dengan "pajak" (oke), dll.
     function matchesKeywords(text, keywords) {
       return keywords.some(k => {
+        // Escape regex characters just in case
         const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`\\b${escaped}\\b`, 'i');
         return regex.test(text);
@@ -691,7 +693,7 @@
         const keywords = categoryKeywords[currentCategory] || [];
         filteredNews = filteredNews.filter(item => {
           const text = (item.title + ' ' + (item.description || '')).toLowerCase();
-          return matchesKeywords(text, keywords);
+          return matchesKeywords(text, keywords); // Menggunakan regex helper
         });
       }
       if (currentSearchQuery) {
@@ -719,7 +721,6 @@
       });
       if (tabId === 'inflasi' && inflationChart) inflationChart.resize();
       if (tabId === 'naker' && nakerChart) nakerChart.resize();
-      if (tabId === 'kurs' && ihsgChart) ihsgChart.resize();
     }
 
     function formatTanggalAman(dateString, withDay = false) {
@@ -753,119 +754,102 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // === STATE UNTUK IHSG ===
-    let ihsgChart = null;
+    // === STATE UNTUK KURS ===
+    let allCurrencies = [];
+    let showAllCurrencies = false;
+    let usdToIdrGlobal = 0;
 
-    // === FUNGSI FETCH IHSG ===
-    async function fetchIHSG() {
-      const valueEl = document.getElementById('ihsg-value');
-      const changeEl = document.getElementById('ihsg-change');
-      if (!valueEl || !changeEl) return;
-
+    async function fetchCurrencies() {
       try {
-        // Mengambil data IHSG (ticker ^JKSE) untuk 1 bulan terakhir
-        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=1d&range=1mo', { cache: "no-store" });
+        const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
+        if (data.result !== 'success') throw new Error('API Error');
         
-        if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
-          throw new Error("Data IHSG tidak tersedia");
-        }
+        const rates = data.rates;
+        usdToIdrGlobal = rates.IDR;
 
-        const result = data.chart.result[0];
-        const meta = result.meta;
-        const timestamps = result.timestamp;
-        const prices = result.indicators.quote[0].close;
-
-        // Nilai terakhir
-        const lastPrice = meta.regularMarketPrice;
-        const prevClose = meta.chartPreviousClose;
-        const change = lastPrice - prevClose;
-        const changePercent = (change / prevClose) * 100;
-
-        // Update Tampilan
-        valueEl.innerText = lastPrice.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usdRateEl = document.getElementById('usd-rate');
+        if (usdRateEl) usdRateEl.innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
-        if (change >= 0) {
-          changeEl.innerHTML = `<span class="text-emerald-600">+${change.toFixed(2)} (+${changePercent.toFixed(2)}%)</span>`;
-        } else {
-          changeEl.innerHTML = `<span class="text-rose-600">${change.toFixed(2)} (${changePercent.toFixed(2)}%)</span>`;
-        }
+        const currenciesToShow = [
+          { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
+          { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
+          { code: 'JPY', label: 'JPY / IDR', icon: 'fa-yen-sign' },
+          { code: 'SGD', label: 'SGD / IDR', icon: 'fa-dollar-sign' },
+          { code: 'AUD', label: 'AUD / IDR', icon: 'fa-dollar-sign' },
+          { code: 'CNY', label: 'CNY / IDR', icon: 'fa-yen-sign' },
+          { code: 'KRW', label: 'KRW / IDR', icon: 'fa-won-sign' }
+        ];
 
-        // Render Chart
-        renderIHSGChart(timestamps, prices, change >= 0 ? '#10b981' : '#f43f5e');
+        let tickerHTML = '';
+        allCurrencies = [];
 
-      } catch (err) {
-        console.error("Gagal mengambil data IHSG:", err);
-        valueEl.innerText = 'Gagal Memuat';
-        changeEl.innerHTML = '<span class="text-slate-400">-</span>';
-      }
-    }
+        currenciesToShow.forEach(curr => {
+          const rateAgainstUsd = rates[curr.code];
+          if(rateAgainstUsd) {
+            const rateInIdr = usdToIdrGlobal / rateAgainstUsd;
+            
+            tickerHTML += `
+              <div class="ticker-item">
+                <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
+                <span class="font-bold text-slate-700 text-sm">${curr.label}</span>
+                <span class="font-extrabold text-slate-900 text-sm">
+                  ${rateInIdr.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
+                </span>
+              </div>
+            `;
 
-    // === FUNGSI RENDER CHART IHSG ===
-    function renderIHSGChart(timestamps, prices, lineColor) {
-      const ctx = document.getElementById('ihsgChart').getContext('2d');
-      
-      // Format label tanggal
-      const labels = timestamps.map(ts => {
-        const d = new Date(ts * 1000);
-        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      });
-
-      // Gradient untuk area di bawah garis
-      let gradient = ctx.createLinearGradient(0, 0, 0, 200);
-      gradient.addColorStop(0, lineColor + '33'); // 20% opacity
-      gradient.addColorStop(1, lineColor + '00'); // 0% opacity
-
-      if (ihsgChart) {
-        ihsgChart.destroy();
-      }
-
-      ihsgChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'IHSG',
-            data: prices,
-            borderColor: lineColor,
-            backgroundColor: gradient,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
-              callbacks: {
-                label: function(context) {
-                  return 'IHSG: ' + context.parsed.y.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { maxTicksLimit: 6, font: { size: 10 } }
-            },
-            y: {
-              grid: { color: '#f1f5f9' },
-              ticks: { font: { size: 10 } }
-            }
+            allCurrencies.push({
+              ...curr,
+              rate: rateInIdr
+            });
           }
-        }
-      });
+        });
+
+        const tickerTrack = document.getElementById('ticker-track');
+        if (tickerTrack) tickerTrack.innerHTML = tickerHTML + tickerHTML;
+
+        renderCurrencyList();
+        fetchGoldPrice(usdToIdrGlobal);
+
+      } catch (err) { console.error(err); }
     }
 
-    // === FUNGSI LAINNYA (USD, EMAS, US10Y) ===
+    function renderCurrencyList() {
+      const listContainer = document.getElementById('currency-list');
+      const btnShowMore = document.getElementById('btn-show-more');
+      
+      if (!listContainer) return;
+
+      const limit = showAllCurrencies ? allCurrencies.length : 4;
+      const toDisplay = allCurrencies.slice(0, limit);
+
+      listContainer.innerHTML = toDisplay.map(curr => `
+        <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+           <span class="text-slate-700 font-medium">${curr.label}</span>
+           <span class="text-slate-900 font-bold">
+              Rp ${curr.rate.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
+           </span>
+        </div>
+      `).join('');
+
+      if (btnShowMore) {
+        if (allCurrencies.length > 4) {
+          btnShowMore.classList.remove('hidden');
+          btnShowMore.innerHTML = showAllCurrencies 
+            ? 'Tampilkan Lebih Sedikit <i class="fa-solid fa-chevron-up ml-1"></i>' 
+            : 'Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>';
+        } else {
+          btnShowMore.classList.add('hidden');
+        }
+      }
+    }
+
+    function toggleCurrencyList() {
+      showAllCurrencies = !showAllCurrencies;
+      renderCurrencyList();
+    }
+
     async function fetchUS10Y() {
       try {
         const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d', { cache: "no-store" });
@@ -894,57 +878,6 @@
       } catch (err) { 
         if (el) el.innerText = '1.250.000'; 
       }
-    }
-
-    // === FUNGSI KURS UNTUK TICKER BAWAH ===
-    async function fetchCurrenciesForTicker() {
-      try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
-        const data = await res.json();
-        if (data.result !== 'success') throw new Error('API Error');
-        
-        const rates = data.rates;
-        const usdToIdr = rates.IDR;
-
-        // Update kotak utama USD
-        const usdRateEl = document.getElementById('usd-rate');
-        if (usdRateEl) usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        
-        // Data untuk ticker
-        const currenciesToShow = [
-          { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
-          { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
-          { code: 'JPY', label: 'JPY / IDR', icon: 'fa-yen-sign' },
-          { code: 'SGD', label: 'SGD / IDR', icon: 'fa-dollar-sign' },
-          { code: 'AUD', label: 'AUD / IDR', icon: 'fa-dollar-sign' },
-          { code: 'CNY', label: 'CNY / IDR', icon: 'fa-yen-sign' },
-          { code: 'KRW', label: 'KRW / IDR', icon: 'fa-won-sign' }
-        ];
-
-        let tickerHTML = '';
-        currenciesToShow.forEach(curr => {
-          const rateAgainstUsd = rates[curr.code];
-          if(rateAgainstUsd) {
-            const rateInIdr = usdToIdr / rateAgainstUsd;
-            tickerHTML += `
-              <div class="ticker-item">
-                <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
-                <span class="font-bold text-slate-700 text-sm">${curr.label}</span>
-                <span class="font-extrabold text-slate-900 text-sm">
-                  ${rateInIdr.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
-                </span>
-              </div>
-            `;
-          }
-        });
-
-        const tickerTrack = document.getElementById('ticker-track');
-        if (tickerTrack) tickerTrack.innerHTML = tickerHTML + tickerHTML;
-
-        // Fetch Gold Price setelah dapat USD rate
-        fetchGoldPrice(usdToIdr);
-
-      } catch (err) { console.error(err); }
     }
 
     let allNews = [];
@@ -1068,7 +1001,6 @@
           Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
           BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
           US Treasury 10Y: ${document.getElementById('us-10y')?.innerText || '-'}
-          IHSG: ${document.getElementById('ihsg-value')?.innerText || '-'}
           Berita Terbaru: "${latestNews}"
         `;
 
@@ -1076,7 +1008,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, inflasi, IHSG, dan berita utama.",
+            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, inflasi, dan berita utama.",
             context: contextData
           })
         });
@@ -1154,7 +1086,7 @@
       const keywords = categoryKeywords['kebijakan'];
       const filtered = newsArray.filter(item => {
         const text = (item.title + ' ' + (item.description || '')).toLowerCase();
-        return matchesKeywords(text, keywords);
+        return matchesKeywords(text, keywords); // FIX: Menggunakan regex helper
       }).slice(0, 5);
 
       activePolicyNews = filtered;
@@ -1176,6 +1108,7 @@
         
         const titleLower = item.title.toLowerCase();
         
+        // FIX: Menggunakan regex yang lebih ketat untuk penentuan tag
         if (titleLower.match(/\b(pajak|apbn|fiskal|subsidi|defisit|utang|bea cukai)\b/)) { 
           tag = 'Fiskal'; dotColor = 'bg-amber-500'; textColor = 'text-amber-600'; bgColor = 'bg-amber-50'; borderColor = 'border-amber-100';
         } else if (titleLower.match(/\b(bi rate|suku bunga|bank indonesia|moneter|inflasi|rdg)\b/)) { 
@@ -1345,18 +1278,15 @@
 
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
-      try { fetchCurrenciesForTicker(); } catch(e) {}
-      try { fetchIHSG(); } catch(e) {}
+      try { fetchCurrencies(); } catch(e) {}
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
       try { fetchNaker(); } catch(e) {}
       try { checkWeekend(); } catch(e) {}
 
-      // Refresh data secara berkala
-      setInterval(fetchCurrenciesForTicker, 3600000); // 1 jam
-      setInterval(fetchIHSG, 300000); // 5 menit (IHSG lebih dinamis)
-      setInterval(fetchNews, 300000); // 5 menit
+      setInterval(fetchCurrencies, 3600000);
+      setInterval(fetchNews, 300000);
     };
   </script>
 </body>
