@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
+  <!-- META TAG UNTUK SHARE (OPEN GRAPH) -->
   <meta property="og:title" content="Economic Insight - Berita & Data Ekonomi">
   <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
   <meta property="og:image" id="og-image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80">
@@ -367,7 +368,6 @@
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div class="overflow-y-auto custom-scrollbar">
-        <!-- GAMBAR STATIS DI MODAL -->
         <div id="modal-image-container" class="w-full h-64 sm:h-80 bg-blue-50 flex items-center justify-center overflow-hidden">
             <!-- SVG Placeholder akan diisi via JS -->
         </div>
@@ -436,19 +436,15 @@
         <rect width="800" height="400" fill="url(#grad)" />
         <rect width="800" height="400" fill="url(#dots)" />
         
-        <!-- Logo Icon -->
         <g transform="translate(360, 130) scale(3.5)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 17l6-6 4 4 8-8" />
           <path d="M17 7h4v4" />
         </g>
         
-        <!-- Text -->
         <text x="400" y="260" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="42" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="1">Economic Insight</text>
         <text x="400" y="300" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="18" font-weight="600" fill="#bfdbfe" text-anchor="middle" letter-spacing="3">BERITA EKONOMI TERBARU</text>
       </svg>
     `;
-    
-    // Konversi SVG ke format Data URI
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
     // ==========================================
@@ -617,7 +613,7 @@
 
     async function fetchCurrencies() {
       try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
         if (data.result !== 'success') throw new Error('API Error');
         const usdToIdr = data.rates.IDR;
@@ -635,7 +631,7 @@
 
     async function fetchSentiment() {
       try {
-        const res = await fetch('https://fearandgreedgraph.com/api/fear-greed');
+        const res = await fetch('https://fearandgreedgraph.com/api/fear-greed', { cache: "no-store" });
         const data = await res.json();
         if (data && data.values && data.values.length > 0) {
           const latestScore = Math.round(data.values[data.values.length - 1]);
@@ -648,7 +644,7 @@
 
     async function fetchGoldPrice(usdToIdr) {
       try {
-        const res = await fetch('https://api.gold-api.com/price/XAU');
+        const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
         const data = await res.json();
         if (data && data.price) {
           document.getElementById('gold-rate').innerText = 'Rp ' + ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
@@ -657,7 +653,7 @@
     }
 
     // ==========================================
-    // FETCH BERITA (STABIL + GAMBAR PLACEHOLDER)
+    // FETCH BERITA (API STABIL + NO CACHE)
     // ==========================================
     let allNews = [];
     let activeNewsList = [];
@@ -675,11 +671,23 @@
       }
       try {
         const timestamp = new Date().getTime();
-        const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
-        const res = await fetch(NEWS_API_URL);
-        const data = await res.json();
-        allNews = data.results || [];
+        // Menggunakan API JSON yang stabil dan diperbarui secara rutin
+        const NEWS_API_URL = `https://berita-indo-api.vercel.app/v1/cnbc-news/ekonomi?t=${timestamp}`;
         
+        const res = await fetch(NEWS_API_URL, { cache: "no-store" });
+        const json = await res.json();
+
+        if (!json.data || json.data.length === 0) throw new Error("Data kosong");
+
+        // Memetakan data agar seragam
+        allNews = json.data.map(item => ({
+            title: item.title,
+            url: item.link,
+            published_at: item.isoDate,
+            description: item.contentSnippet || item.content,
+            image: item.image // Gambar asli tidak akan kita pakai di UI, tapi disimpan untuk jaga-jaga
+        }));
+
         applyNewsFilters();
         renderKebijakan(allNews);
         generateAIAnalysis(allNews);
@@ -696,6 +704,7 @@
           }, 1000);
         }
       } catch (err) {
+        console.error(err);
         if (gridContainer.innerHTML.includes('Memuat')) {
           gridContainer.innerHTML = `<div class="col-span-full text-center text-rose-500 py-10"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><br>Gagal memuat berita.</div>`;
         }
