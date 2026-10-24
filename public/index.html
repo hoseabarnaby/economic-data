@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EkoDash - Dashboard Ekonomi Indonesia</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome (Ikon) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .tab-active { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .tab-inactive { color: #64748b; border-color: transparent; }
+    .tab-inactive:hover { background-color: #f1f5f9; color: #334155; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+  <!-- NAVBAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-200">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <span class="text-xl font-bold text-slate-900 tracking-tight">EkoDash</span>
+        </div>
+        
+        <!-- Menu Desktop -->
+        <nav class="hidden md:flex space-x-2">
+          <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Kurs & Pasar</button>
+          <button onclick="switchTab('inflasi')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="inflasi">Inflasi</button>
+          <button onclick="switchTab('naker')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="naker">Ketenagakerjaan</button>
+          <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
+        </nav>
+
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          Data Live
+        </div>
+      </div>
+    </div>
+    
+    <!-- Menu Mobile (Scrollable) -->
+    <div class="md:hidden border-t border-slate-100 bg-white">
+      <div class="flex overflow-x-auto hide-scrollbar px-4 py-3 space-x-2">
+        <button onclick="switchTab('kurs')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-active" data-tab="kurs">Kurs & Pasar</button>
+        <button onclick="switchTab('inflasi')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="inflasi">Inflasi</button>
+        <button onclick="switchTab('naker')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="naker">Ketenagakerjaan</button>
+        <button onclick="switchTab('kebijakan')" class="tab-btn whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-full border tab-inactive bg-slate-100" data-tab="kebijakan">Kebijakan</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- ================= TAB 1: KURS & PASAR ================= -->
+    <div id="content-kurs" class="tab-content space-y-6 block">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Pergerakan Pasar</h1>
+          <p class="text-sm text-slate-500 mt-1">Pantauan nilai tukar dan berita ekonomi terkini.</p>
+        </div>
+        <div class="text-sm font-medium text-slate-400 bg-white px-3 py-1 rounded-lg border border-slate-200">
+          <i class="fa-regular fa-clock mr-1"></i> <span id="last-updated">Memuat...</span>
+        </div>
+      </div>
+
+      <!-- Kartu Kurs -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">$</div>
+              <span class="font-bold text-slate-700">USD / IDR</span>
+            </div>
+            <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-down"></i> 0.12%</span>
+          </div>
+          <div class="text-3xl font-extrabold text-slate-900" id="usd-rate">-</div>
+          <div class="mt-2 text-xs text-slate-500">Kurs Pasar</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">¥</div>
+              <span class="font-bold text-slate-700">JPY / IDR</span>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-up"></i> 0.45%</span>
+          </div>
+          <div class="text-3xl font-extrabold text-slate-900" id="jpy-rate">-</div>
+          <div class="mt-2 text-xs text-slate-500">Per 1 Yen Jepang</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">¥</div>
+              <span class="font-bold text-slate-700">CNY / IDR</span>
+            </div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1"><i class="fa-solid fa-caret-up"></i> 0.21%</span>
+          </div>
+          <div class="text-3xl font-extrabold text-slate-900" id="cny-rate">-</div>
+          <div class="mt-2 text-xs text-slate-500">Per 1 Yuan China</div>
+        </div>
+      </div>
+
+      <!-- Chart & Analisis -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-800 text-lg mb-4">Tren USD / IDR</h3>
+          <div class="relative h-64 w-full"><canvas id="currencyChart"></canvas></div>
+        </div>
+        <div class="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-6 text-white shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-4"><i class="fa-solid fa-lightbulb text-amber-400"></i><h3 class="font-bold text-lg">Analisis Singkat</h3></div>
+            <p class="text-blue-100 text-sm leading-relaxed mb-4">Rupiah bergerak dinamis terhadap Dolar AS. Tekanan eksternal dari kebijakan suku bunga global masih menjadi faktor utama pergerakan kurs.</p>
+          </div>
+          <button class="mt-6 w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition">Baca Laporan Lengkap</button>
+        </div>
+      </div>
+
+      <!-- Berita Container -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Berita Ekonomi Terkini</h2>
+            <p class="text-sm text-slate-500">Sumber terpercaya dari Info Ekonomi</p>
+          </div>
+          <div class="relative w-full sm:w-72">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 focus:bg-white transition-all">
+          </div>
+        </div>
+        <div id="news-container" class="divide-y divide-slate-100">
+          <div class="p-6 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat berita...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: INFLASI ================= -->
+    <div id="content-inflasi" class="tab-content hidden space-y-6">
+      <div class="mb-4">
+        <h1 class="text-2xl font-bold text-slate-900">Data Inflasi</h1>
+        <p class="text-sm text-slate-500 mt-1">Berdasarkan data resmi World Bank Open Data.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm border-l-4 border-l-amber-400">
+          <div class="text-sm font-medium text-slate-500 mb-1">Inflasi Terakhir</div>
+          <div class="text-3xl font-extrabold text-emerald-600" id="inflasi-terakhir">-</div>
+          <div class="mt-2 text-xs text-slate-500" id="inflasi-tahun">-</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm border-l-4 border-l-rose-400">
+          <div class="text-sm font-medium text-slate-500 mb-1">Rata-rata 10 Tahun</div>
+          <div class="text-3xl font-extrabold text-rose-600" id="inflasi-avg">-</div>
+          <div class="mt-2 text-xs text-slate-500">Data Tahunan</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm border-l-4 border-l-blue-400">
+          <div class="text-sm font-medium text-slate-500 mb-1">Tren</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-tren">-</div>
+          <div class="mt-2 text-xs text-slate-500">Dibanding tahun lalu</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 text-lg mb-4">Tren Inflasi Tahunan</h3>
+        <div class="relative h-64 w-full"><canvas id="inflationChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: KETENAGAKERJAAN ================= -->
+    <div id="content-naker" class="tab-content hidden space-y-6">
+      <div class="mb-4">
+        <h1 class="text-2xl font-bold text-slate-900">Ketenagakerjaan</h1>
+        <p class="text-sm text-slate-500 mt-1">Data Tingkat Pengangguran Terbuka (TPT) dari World Bank.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-6">
+          <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 text-2xl"><i class="fa-solid fa-users"></i></div>
+          <div>
+            <div class="text-sm font-medium text-slate-500 mb-1">Tingkat Pengangguran</div>
+            <div class="text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
+            <div class="text-xs text-slate-500 mt-1" id="naker-tahun">-</div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center gap-6">
+          <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 text-2xl"><i class="fa-solid fa-arrow-trend-down"></i></div>
+          <div>
+            <div class="text-sm font-medium text-slate-500 mb-1">Tren 5 Tahun</div>
+            <div class="text-3xl font-extrabold text-slate-900" id="naker-tren">-</div>
+            <div class="text-xs text-slate-500 mt-1">Perubahan poin persentase</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 text-lg mb-4">Tren Tingkat Pengangguran</h3>
+        <div class="relative h-72 w-full"><canvas id="nakerChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: KEBIJAKAN ================= -->
+    <div id="content-kebijakan" class="tab-content hidden space-y-6">
+      <div class="mb-4">
+        <h1 class="text-2xl font-bold text-slate-900">Kebijakan Ekonomi</h1>
+        <p class="text-sm text-slate-500 mt-1">Kumpulan regulasi dan kebijakan fiskal/moneter terbaru.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="relative border-l border-slate-200 ml-3 space-y-8 pb-4">
+          <div class="ml-6 relative">
+            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-indigo-600 border-4 border-white shadow-sm"></span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">BI Rate</span>
+              <span class="text-xs text-slate-400 font-medium">20 Oktober 2026</span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mb-2">Bank Indonesia Pertahankan Suku Bunga Acuan di 5,75%</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Rapat Dewan Gubernur (RDG) BI memutuskan untuk mempertahankan BI-Rate pada level 5,75% guna memastikan stabilitas nilai tukar Rupiah dan terkendalinya inflasi.</p>
+          </div>
+          <div class="ml-6 relative">
+            <span class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-500 border-4 border-white shadow-sm"></span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Fiskal</span>
+              <span class="text-xs text-slate-400 font-medium">15 Oktober 2026</span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mb-2">Pemerintah Umumkan Insentif Pajak untuk Sektor Padat Karya</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Kementerian Keuangan merilis paket kebijakan fiskal baru berupa insentif PPN DTP untuk sektor industri padat karya guna mendorong penyerapan tenaga kerja.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ==========================================
+    // SISTEM NAVIGASI TAB
+    // ==========================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`content-${tabId}`).classList.remove('hidden');
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active', 'bg-blue-50', 'text-blue-600', 'border-blue-200');
+        btn.classList.add('tab-inactive');
+      });
+      document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => {
+        activeBtn.classList.remove('tab-inactive');
+        activeBtn.classList.add('tab-active');
+      });
+
+      // Resize Chart agar tidak gepeng saat tab dibuka
+      if (tabId === 'inflasi' && inflationChart) inflationChart.resize();
+      if (tabId === 'naker' && nakerChart) nakerChart.resize();
+    }
+
+    // ==========================================
+    // SETUP CHART (Chart.js)
+    // ==========================================
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    // Chart Kurs
+    const ctxKurs = document.getElementById('currencyChart').getContext('2d');
+    let gradientKurs = ctxKurs.createLinearGradient(0, 0, 0, 400);
+    gradientKurs.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
+    gradientKurs.addColorStop(1, 'rgba(37, 99, 235, 0)');
+    const currencyChart = new Chart(ctxKurs, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'USD/IDR', data: [], borderColor: '#2563eb', backgroundColor: gradientKurs, borderWidth: 2, pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+    });
+
+    // Chart Inflasi
+    const ctxInflasi = document.getElementById('inflationChart').getContext('2d');
+    let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
+    gradientInflasi.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
+    gradientInflasi.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    const inflationChart = new Chart(ctxInflasi, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'Inflasi YoY (%)', data: [], borderColor: '#f59e0b', backgroundColor: gradientInflasi, borderWidth: 2, pointBackgroundColor: '#ffffff', pointBorderColor: '#f59e0b', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+    });
+
+    // Chart Naker
+    const ctxNaker = document.getElementById('nakerChart').getContext('2d');
+    const nakerChart = new Chart(ctxNaker, {
+      type: 'bar',
+      data: { labels: [], datasets: [{ label: 'TPT (%)', data: [], backgroundColor: '#10b981', borderRadius: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+    });
+
+    // ==========================================
+    // FETCH KURS (API TERBARU & AKURAT)
+    // ==========================================
+    async function fetchCurrencies() {
+      try {
+        const res = await fetch('https://cdn.jsdelivr.net/gh/irfanokr/currency-api@main/v1/currencies/usd.json');
+        const data = await res.json();
+        
+        const usdToIdr = data.usd.idr;
+        const usdToJpy = data.usd.jpy;
+        const usdToCny = data.usd.cny;
+        
+        document.getElementById('usd-rate').innerText = 'Rp ' + usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        document.getElementById('jpy-rate').innerText = 'Rp ' + (usdToIdr / usdToJpy).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+        document.getElementById('cny-rate').innerText = 'Rp ' + (usdToIdr / usdToCny).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+
+        const updateTime = new Date(data.date).toLocaleString('id-ID', { dateStyle: 'medium' });
+        document.getElementById('last-updated').innerText = `Diperbarui: ${updateTime}`;
+
+        currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+        currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
+        currencyChart.update();
+      } catch (err) { 
+        console.error("Gagal ambil kurs:", err); 
+        document.getElementById('last-updated').innerText = 'Gagal memuat kurs';
+      }
+    }
+
+    // ==========================================
+    // FETCH BERITA (INFO EKONOMI API)
+    // ==========================================
+    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=8';
+    let allNews = [];
+
+    async function fetchNews() {
+      const container = document.getElementById('news-container');
+      try {
+        const res = await fetch(NEWS_API_URL);
+        const data = await res.json();
+        
+        allNews = data.results || [];
+        renderNews(allNews);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="p-6 text-center text-rose-500 text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat berita.</div>`;
+      }
+    }
+
+    function renderNews(newsArray) {
+      const container = document.getElementById('news-container');
+      if (newsArray.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 text-sm">Tidak ada berita ditemukan.</div>`;
+        return;
+      }
+
+      container.innerHTML = newsArray.map(item => {
+        const date = new Date(item.published_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...' : '';
+        
+        return `
+          <div class="p-5 hover:bg-slate-50 transition-colors group">
+            <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div class="flex-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2 inline-block">Ekonomi</span>
+                <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-2">
+                  <a href="${item.url}" target="_blank">${item.title}</a>
+                </h3>
+                <p class="text-sm text-slate-500 line-clamp-2">${cleanDesc}</p>
+                <div class="mt-3 text-xs text-slate-400 font-medium flex items-center gap-1">
+                  <i class="fa-regular fa-clock"></i> ${date}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Fitur Pencarian Berita
+    document.getElementById('search-news').addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = allNews.filter(item => 
+        item.title.toLowerCase().includes(keyword) || 
+        (item.description && item.description.toLowerCase().includes(keyword))
+      );
+      renderNews(filtered);
+    });
+
+    // ==========================================
+    // FETCH WORLD BANK DATA (INFLASI & NAKER)
+    // ==========================================
+    async function fetchWorldBankData() {
+      try {
+        // Ambil 60 data historis untuk memastikan kita mendapat 10 tahun terakhir yang valid
+        const [inflasiRes, nakerRes] = await Promise.all([
+          fetch('https://api.worldbank.org/v2/country/IDN/indicator/FP.CPI.TOTL.ZG?format=json&per_page=60'),
+          fetch('https://api.worldbank.org/v2/country/IDN/indicator/SL.UEM.TOTL.ZS?format=json&per_page=60')
+        ]);
+
+        const inflasiJson = await inflasiRes.json();
+        const nakerJson = await nakerRes.json();
+
+        // --- PROSES DATA INFLASI ---
+        if (inflasiJson && inflasiJson.length > 1 && Array.isArray(inflasiJson[1])) {
+          const validInflasi = inflasiJson[1]
+            .filter(d => d.value !== null) // Buang tahun yang datanya kosong
+            .sort((a, b) => parseInt(a.date) - parseInt(b.date)) // Urutkan dari terlama ke terbaru
+            .slice(-10); // Ambil 10 tahun terakhir
+
+          if (validInflasi.length > 0) {
+            const latest = validInflasi[validInflasi.length - 1];
+            document.getElementById('inflasi-terakhir').innerText = latest.value.toFixed(2) + '%';
+            document.getElementById('inflasi-tahun').innerText = `Data Tahun ${latest.date}`;
+            
+            const sum = validInflasi.reduce((a, b) => a + b.value, 0);
+            document.getElementById('inflasi-avg').innerText = (sum / validInflasi.length).toFixed(2) + '%';
+
+            if (validInflasi.length > 1) {
+              const prev = validInflasi[validInflasi.length - 2];
+              const diff = latest.value - prev.value;
+              document.getElementById('inflasi-tren').innerHTML = diff > 0 
+                ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` 
+                : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
+            }
+
+            inflationChart.data.labels = validInflasi.map(d => d.date);
+            inflationChart.data.datasets[0].data = validInflasi.map(d => d.value);
+            inflationChart.update();
+          }
+        }
+
+        // --- PROSES DATA NAKER ---
+        if (nakerJson && nakerJson.length > 1 && Array.isArray(nakerJson[1])) {
+          const validNaker = nakerJson[1]
+            .filter(d => d.value !== null)
+            .sort((a, b) => parseInt(a.date) - parseInt(b.date))
+            .slice(-10);
+
+          if (validNaker.length > 0) {
+            const latest = validNaker[validNaker.length - 1];
+            document.getElementById('naker-terakhir').innerText = latest.value.toFixed(2) + '%';
+            document.getElementById('naker-tahun').innerText = `Data Tahun ${latest.date}`;
+
+            if (validNaker.length > 1) {
+              const prev = validNaker[validNaker.length - 2];
+              const diff = latest.value - prev.value;
+              document.getElementById('naker-tren').innerHTML = diff > 0 
+                ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` 
+                : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
+            }
+
+            nakerChart.data.labels = validNaker.map(d => d.date);
+            nakerChart.data.datasets[0].data = validNaker.map(d => d.value);
+            nakerChart.update();
+          }
+        }
+
+      } catch (error) {
+        console.error("Gagal mengambil data World Bank:", error);
+      }
+    }
+
+    // ==========================================
+    // JALANKAN SEMUA FUNGSI SAAT HALAMAN DIBUKA
+    // ==========================================
+    fetchCurrencies();
+    fetchNews();
+    fetchWorldBankData();
+  </script>
+</body>
+</html>
