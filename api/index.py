@@ -6,6 +6,7 @@ import os
 
 app = FastAPI()
 
+# Izinkan frontend Vercel untuk mengakses API ini
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,14 +14,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ambil API Key dari Environment Variable Vercel
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# 1. Endpoint Inflasi (Dipanggil oleh /api/inflasi)
+# ==========================================
+# 1. ENDPOINT UNTUK INFLASI (Dipanggil oleh /api/inflasi)
+# ==========================================
 @app.get("/api/inflasi")
 def get_inflasi():
+    # Data simulasi. Bisa diganti dengan data BPS asli jika sudah siap.
     return {"nilai": 2.56, "tahun": 2026}
 
-# 2. Endpoint Chat (Dipanggil oleh /api/chat)
+# ==========================================
+# 2. ENDPOINT UNTUK CHAT DEEPSEEK (Dipanggil oleh /api/chat)
+# ==========================================
 class ChatRequest(BaseModel):
     message: str
     context: str
@@ -35,11 +42,17 @@ def chat_with_deepseek(req: ChatRequest):
         "Content-Type": "application/json"
     }
 
-    system_prompt = f"""Anda adalah "Economic Insight AI", asisten analis ekonomi profesional. 
-Data real-time saat ini:
+    # --- ATURAN AI SUDAH DILONGGARKAN DI SINI ---
+    system_prompt = f"""Anda adalah "AI Economic Insight", asisten analis keuangan dan ekonomi yang cerdas, canggih, dan membantu.
+    
+Data pasar real-time saat ini:
 {req.context}
 
-Jawablah pertanyaan pengguna dengan cerdas, ringkas, dan berikan analisis berdasarkan data di atas. Jika ditanya di luar topik ekonomi, jawab dengan sopan bahwa Anda hanya asisten ekonomi."""
+Panduan Anda:
+1. Jawablah pertanyaan pengguna dengan gaya bahasa profesional namun mudah dipahami.
+2. Anda BEBAS menjawab pertanyaan seputar makroekonomi, pasar saham, cryptocurrency (seperti Bitcoin, Ethereum), komoditas, kurs, dan topik keuangan lainnya.
+3. JANGAN menolak pertanyaan pengguna. Jika pertanyaannya di luar data konteks yang diberikan, gunakan pengetahuan internal Anda yang luas untuk menjawab.
+4. Jika pengguna meminta prediksi (seperti harga Bitcoin), berikan analisis objektif berdasarkan tren pasar, sentimen, dan berita terkini, serta sertakan disclaimer singkat bahwa itu bukan saran investasi mutlak."""
 
     payload = {
         "model": "deepseek-chat",
@@ -61,5 +74,12 @@ Jawablah pertanyaan pengguna dengan cerdas, ringkas, dan berikan analisis berdas
         data = response.json()
         reply = data['choices'][0]['message']['content']
         return {"reply": reply}
+    except requests.exceptions.HTTPError as errh:
+        raise HTTPException(status_code=response.status_code, detail=f"DeepSeek Error: {response.text}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
+
+# Endpoint Health Check (Untuk memastikan server hidup)
+@app.get("/api")
+def read_root():
+    return {"status": "Backend Python Vercel Aktif"}
