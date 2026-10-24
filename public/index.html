@@ -646,46 +646,38 @@
         let dataNews = [];
         let success = false;
 
-        // WATERFALL 1: ANTARA XML via Codetabs (Anti-cache)
+        // WATERFALL 1: CNBC via rss2json
         try {
-          const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=https://www.antaranews.com/rss/ekonomi.xml&t=${timestamp}`;
-          const res = await fetch(proxyUrl, { cache: "no-store" });
-          const text = await res.text();
-          const parser = new DOMParser();
-          const xml = parser.parseFromString(text, "text/xml");
-          const items = xml.querySelectorAll("item");
-          
-          if (items.length > 0) {
-            dataNews = Array.from(items).slice(0, 30).map(item => ({
-              title: item.querySelector("title")?.textContent || "Tanpa Judul",
-              url: item.querySelector("link")?.textContent || "#",
-              published_at: item.querySelector("pubDate")?.textContent || "",
-              description: item.querySelector("description")?.textContent || ""
+          const rssUrl = encodeURIComponent('https://www.cnbcindonesia.com/rss/ekonomi');
+          const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&t=${timestamp}`, { cache: "no-store" });
+          const data = await res.json();
+          if (data.status === 'ok' && data.items.length > 0) {
+            dataNews = data.items.map(item => ({
+              title: item.title,
+              url: item.link,
+              published_at: item.pubDate,
+              description: item.description
             }));
             success = true;
           }
-        } catch (e) { console.warn("ANTARA XML failed, trying fallback..."); }
+        } catch (e) { console.warn("CNBC RSS failed, trying fallback..."); }
 
-        // WATERFALL 2: CNBC XML via Codetabs (Anti-cache)
+        // WATERFALL 2: ANTARA via rss2json
         if (!success) {
           try {
-            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=https://www.cnbcindonesia.com/rss/ekonomi&t=${timestamp}`;
-            const res = await fetch(proxyUrl, { cache: "no-store" });
-            const text = await res.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, "text/xml");
-            const items = xml.querySelectorAll("item");
-            
-            if (items.length > 0) {
-              dataNews = Array.from(items).slice(0, 30).map(item => ({
-                title: item.querySelector("title")?.textContent || "Tanpa Judul",
-                url: item.querySelector("link")?.textContent || "#",
-                published_at: item.querySelector("pubDate")?.textContent || "",
-                description: item.querySelector("description")?.textContent || ""
+            const rssUrl = encodeURIComponent('https://www.antaranews.com/rss/ekonomi.xml');
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&t=${timestamp}`, { cache: "no-store" });
+            const data = await res.json();
+            if (data.status === 'ok' && data.items.length > 0) {
+              dataNews = data.items.map(item => ({
+                title: item.title,
+                url: item.link,
+                published_at: item.pubDate,
+                description: item.description
               }));
               success = true;
             }
-          } catch (e) { console.warn("CNBC XML failed, trying fallback..."); }
+          } catch (e) { console.warn("ANTARA RSS failed, trying fallback..."); }
         }
 
         // WATERFALL 3: FreeNewsAPI
