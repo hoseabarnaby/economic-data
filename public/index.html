@@ -229,7 +229,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari portal berita terpercaya.</p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari portal berita terpercaya. <span id="news-timestamp" class="text-xs text-blue-500 ml-2 block sm:inline"></span></p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
@@ -624,7 +624,7 @@
     }
 
     // ==========================================
-    // FETCH BERITA (API FREEEWSAPI - STABIL)
+    // FETCH BERITA (SISTEM WATERFALL ANTI GAGAL)
     // ==========================================
     let allNews = [];
     let activeNewsList = [];
@@ -640,23 +640,70 @@
         btnRefresh.classList.add('opacity-50', 'cursor-not-allowed');
         iconRefresh.classList.add('fa-spin');
       }
+
       try {
         const timestamp = new Date().getTime();
-        // Menggunakan API FreeNewsApi (Info Ekonomi)
-        const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
-        
-        const res = await fetch(NEWS_API_URL, { cache: "no-store" });
-        const data = await res.json();
-        
-        if (!data.results || data.results.length === 0) throw new Error("Data kosong");
+        let dataNews = [];
+        let success = false;
 
-        allNews = data.results.map(item => ({
-            title: item.title,
-            url: item.url,
-            published_at: item.published_at,
-            description: item.description,
-            image: item.image // Tetap disimpan untuk jaga-jaga
-        }));
+        // WATERFALL 1: CNBC via rss2json
+        try {
+          const rssUrl = encodeURIComponent('https://www.cnbcindonesia.com/rss/ekonomi');
+          const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&t=${timestamp}`, { cache: "no-store" });
+          const data = await res.json();
+          if (data.status === 'ok' && data.items.length > 0) {
+            dataNews = data.items.map(item => ({
+              title: item.title,
+              url: item.link,
+              published_at: item.pubDate,
+              description: item.description
+            }));
+            success = true;
+          }
+        } catch (e) { console.warn("CNBC RSS failed, trying fallback..."); }
+
+        // WATERFALL 2: ANTARA via rss2json
+        if (!success) {
+          try {
+            const rssUrl = encodeURIComponent('https://www.antaranews.com/rss/ekonomi.xml');
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}&t=${timestamp}`, { cache: "no-store" });
+            const data = await res.json();
+            if (data.status === 'ok' && data.items.length > 0) {
+              dataNews = data.items.map(item => ({
+                title: item.title,
+                url: item.link,
+                published_at: item.pubDate,
+                description: item.description
+              }));
+              success = true;
+            }
+          } catch (e) { console.warn("ANTARA RSS failed, trying fallback..."); }
+        }
+
+        // WATERFALL 3: FreeNewsAPI
+        if (!success) {
+          try {
+            const res = await fetch(`https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`, { cache: "no-store" });
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              dataNews = data.results.map(item => ({
+                title: item.title,
+                url: item.url,
+                published_at: item.published_at,
+                description: item.description
+              }));
+              success = true;
+            }
+          } catch (e) { console.warn("FreeNewsAPI failed."); }
+        }
+
+        if (!success) throw new Error("Semua sumber berita gagal dimuat.");
+
+        allNews = dataNews;
+        
+        // Tampilkan waktu update berita
+        const now = new Date();
+        document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${now.toLocaleTimeString('id-ID')}`;
 
         applyNewsFilters();
         renderKebijakan(allNews);
