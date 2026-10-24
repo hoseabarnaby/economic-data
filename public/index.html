@@ -226,32 +226,26 @@
         </button>
       </div>
 
-      <!-- IHSG & UPCOMING EVENTS -->
+      <!-- DAFTAR KURS & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         
-        <!-- KIRI: IHSG dengan Grafik Mini -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-emerald-500"></i> IHSG
-            </h3>
-            <p class="text-slate-500 text-xs leading-relaxed mb-2">Pergerakan Indeks Harga Saham Gabungan hari ini.</p>
-          </div>
+        <!-- KIRI: Daftar Kurs Mata Uang -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-money-bill-transfer text-blue-500"></i> Nilai Tukar Mata Uang
+          </h3>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Kurs terhadap Rupiah berdasarkan data pasar terbaru.</p>
           
-          <div class="flex items-end justify-between">
-            <div>
-              <div class="text-3xl font-extrabold text-slate-900" id="ihsg-price">-</div>
-              <div class="mt-1 text-sm font-bold" id="ihsg-change"></div>
-            </div>
-            <!-- Canvas untuk Grafik Mini IHSG -->
-            <div class="w-1/2 h-16 relative">
-              <canvas id="ihsgMiniChart"></canvas>
-            </div>
+          <div id="currency-list" class="space-y-3 flex-grow">
+            <!-- Diisi oleh JS -->
           </div>
-          <div class="text-[10px] text-slate-400 mt-2 text-right">Sumber: Yahoo Finance</div>
+
+          <button id="btn-show-more" onclick="toggleCurrencyList()" class="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-blue-600 text-sm font-bold rounded-xl transition-colors border border-slate-200 hidden">
+            Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>
+          </button>
         </div>
 
-        <!-- KANAN: Upcoming Economic Events -->
+        <!-- KANAN: Upcoming Economic Events (Jadwal Akurat) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
             <i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi
@@ -414,7 +408,7 @@
       </div>
       <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
         Anda bisa bertanya: <br>
-        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap IHSG hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap IHSG hari ini?"</span>
+        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap kurs hari ini?"</span>
       </div>
     </div>
 
@@ -597,11 +591,10 @@
       try {
         const contextData = `
           Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
-          Harga Emas: ${document.getElementById('gold-rate') ? document.getElementById('gold-rate').innerText : 'N/A'}
+          Harga Emas: ${document.getElementById('gold-rate').innerText}
           Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
           BI Rate: ${document.getElementById('bi-rate').innerText}
           US Treasury 10Y: ${document.getElementById('us-10y').innerText}
-          IHSG: ${document.getElementById('ihsg-price').innerText}
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : 'Belum ada berita'}"
         `;
 
@@ -645,7 +638,6 @@
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     let sentimentGaugeChart = null;
-    let ihsgMiniChart = null; // Variabel global untuk grafik IHSG
 
     const categoryKeywords = {
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
@@ -728,23 +720,10 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // Setup Mini Chart untuk IHSG
-    const ctxIhsg = document.getElementById('ihsgMiniChart').getContext('2d');
-    let gradientIhsg = ctxIhsg.createLinearGradient(0, 0, 0, 100);
-    gradientIhsg.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); // Default hijau
-    gradientIhsg.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-    ihsgMiniChart = new Chart(ctxIhsg, {
-      type: 'line',
-      data: { labels: [], datasets: [{ data: [], borderColor: '#10b981', backgroundColor: gradientIhsg, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 0 }] },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { legend: { display: false }, tooltip: { enabled: false } }, 
-        scales: { y: { display: false }, x: { display: false } },
-        layout: { padding: { top: 5, bottom: 5 } }
-      }
-    });
+    // === STATE UNTUK KURS ===
+    let allCurrencies = [];
+    let showAllCurrencies = false;
+    let usdToIdrGlobal = 0;
 
     async function fetchCurrencies() {
       try {
@@ -753,10 +732,12 @@
         if (data.result !== 'success') throw new Error('API Error');
         
         const rates = data.rates;
-        const idrRate = rates.IDR;
+        usdToIdrGlobal = rates.IDR;
 
-        document.getElementById('usd-rate').innerText = idrRate.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        // Update Kotak Utama
+        document.getElementById('usd-rate').innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
+        // --- SETUP DATA TICKER & LIST ---
         const currenciesToShow = [
           { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
           { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
@@ -768,11 +749,14 @@
         ];
 
         let tickerHTML = '';
+        allCurrencies = []; // Reset
 
         currenciesToShow.forEach(curr => {
           const rateAgainstUsd = rates[curr.code];
           if(rateAgainstUsd) {
-            const rateInIdr = idrRate / rateAgainstUsd;
+            const rateInIdr = usdToIdrGlobal / rateAgainstUsd;
+            
+            // Untuk Ticker
             tickerHTML += `
               <div class="ticker-item">
                 <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
@@ -782,63 +766,57 @@
                 </span>
               </div>
             `;
+
+            // Untuk Daftar Bawah (Market Movers diganti)
+            allCurrencies.push({
+              ...curr,
+              rate: rateInIdr
+            });
           }
         });
 
+        // Render Ticker (Duplikasi agar berjalan mulus)
         const tickerTrack = document.getElementById('ticker-track');
         tickerTrack.innerHTML = tickerHTML + tickerHTML;
+
+        // Render Daftar Kurs (Default hanya tampilkan 4)
+        renderCurrencyList();
+
+        // Fetch Gold Price
+        fetchGoldPrice(usdToIdrGlobal);
 
       } catch (err) { console.error(err); }
     }
 
-    async function fetchIHSG() {
-      try {
-        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=1d&range=1mo', { cache: "no-store" });
-        const data = await res.json();
-        
-        if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          const result = data.chart.result[0];
-          const meta = result.meta;
-          const price = meta.regularMarketPrice;
-          const prevClose = meta.chartPreviousClose;
-          
-          const change = price - prevClose;
-          const pctChange = (change / prevClose) * 100;
-          
-          // Update teks harga dan persentase
-          document.getElementById('ihsg-price').innerText = price.toLocaleString('id-ID', { maximumFractionDigits: 2 });
-          
-          const changeEl = document.getElementById('ihsg-change');
-          if (pctChange >= 0) {
-             changeEl.innerHTML = `<span class="text-emerald-600"><i class="fa-solid fa-caret-up"></i> +${change.toFixed(2)} (+${pctChange.toFixed(2)}%)</span>`;
-             ihsgMiniChart.data.datasets[0].borderColor = '#10b981'; // Hijau
-          } else {
-             changeEl.innerHTML = `<span class="text-rose-600"><i class="fa-solid fa-caret-down"></i> ${change.toFixed(2)} (${pctChange.toFixed(2)}%)</span>`;
-             ihsgMiniChart.data.datasets[0].borderColor = '#ef4444'; // Merah
-          }
+    function renderCurrencyList() {
+      const listContainer = document.getElementById('currency-list');
+      const btnShowMore = document.getElementById('btn-show-more');
+      
+      // Tentukan berapa yang mau ditampilkan
+      const limit = showAllCurrencies ? allCurrencies.length : 4;
+      const toDisplay = allCurrencies.slice(0, limit);
 
-          // Ambil data historis untuk grafik mini
-          const timestamps = result.timestamp;
-          const closePrices = result.indicators.quote[0].close;
-          
-          let chartData = [];
-          // Filter data null
-          for (let i = 0; i < closePrices.length; i++) {
-             if (closePrices[i] !== null) chartData.push(closePrices[i]);
-          }
+      listContainer.innerHTML = toDisplay.map(curr => `
+        <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+           <span class="text-slate-700 font-medium">${curr.label}</span>
+           <span class="text-slate-900 font-bold">
+              Rp ${curr.rate.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
+           </span>
+        </div>
+      `).join('');
 
-          // Tampilkan 20 data terakhir
-          chartData = chartData.slice(-20);
-
-          ihsgMiniChart.data.labels = chartData.map((_, i) => i);
-          ihsgMiniChart.data.datasets[0].data = chartData;
-          ihsgMiniChart.update();
-          
-        }
-      } catch (err) {
-        console.error('Gagal memuat IHSG:', err);
-        document.getElementById('ihsg-price').innerText = '7.200,00';
+      // Tampilkan tombol jika data lebih dari 4
+      if (allCurrencies.length > 4) {
+        btnShowMore.classList.remove('hidden');
+        btnShowMore.innerHTML = showAllCurrencies 
+          ? 'Tampilkan Lebih Sedikit <i class="fa-solid fa-chevron-up ml-1"></i>' 
+          : 'Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>';
       }
+    }
+
+    function toggleCurrencyList() {
+      showAllCurrencies = !showAllCurrencies;
+      renderCurrencyList();
     }
 
     async function fetchUS10Y() {
@@ -854,6 +832,16 @@
       } catch (err) {
         document.getElementById('us-10y').innerText = '4.25%';
       }
+    }
+
+    async function fetchGoldPrice(usdToIdr) {
+      try {
+        const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
+        const data = await res.json();
+        if (data && data.price) {
+          document.getElementById('gold-rate').innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        }
+      } catch (err) { document.getElementById('gold-rate').innerText = '1.250.000'; }
     }
 
     let allNews = [];
@@ -898,6 +886,7 @@
         applyNewsFilters();
         renderKebijakan(allNews);
         
+        // --- PANGGIL DEEPSEEK AI UNTUK BRIEFING ---
         generateAIBriefing(allNews);
 
         checkSharedUrl();
@@ -938,7 +927,6 @@
       try {
         const contextData = `
           Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
-          IHSG: ${document.getElementById('ihsg-price').innerText}
           Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
           BI Rate: ${document.getElementById('bi-rate').innerText}
           US Treasury 10Y: ${document.getElementById('us-10y').innerText}
@@ -949,7 +937,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, IHSG, inflasi, dan berita utama.",
+            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, inflasi, dan berita utama.",
             context: contextData
           })
         });
@@ -1178,7 +1166,6 @@
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
       try { fetchCurrencies(); } catch(e) {}
-      try { fetchIHSG(); } catch(e) {}
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
@@ -1186,7 +1173,6 @@
       try { checkWeekend(); } catch(e) {}
 
       setInterval(fetchCurrencies, 3600000);
-      setInterval(fetchIHSG, 600000); // Refresh IHSG tiap 10 menit
       setInterval(fetchNews, 300000);
     };
   </script>
