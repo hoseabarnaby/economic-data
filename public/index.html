@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
+  <!-- FAVICON BARU (Ikon Tab Browser) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M6 22l8-8 5 5 9-9M23 10h5v5' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -22,13 +25,11 @@
     .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
     @keyframes blink { 50% { opacity: 0; } }
     
-    /* Scrollbar Kustom */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Gaya Tombol Filter Berita */
     .filter-btn { transition: all 0.3s ease; }
     .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.4); }
     .filter-btn.inactive { background-color: white; color: #64748b; border-color: #e2e8f0; }
@@ -42,7 +43,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16">
         
-        <!-- LOGO -->
         <div class="flex items-center gap-2 sm:gap-3 cursor-pointer group" onclick="switchTab('kurs')">
           <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 z-10">
@@ -57,7 +57,6 @@
           </div>
         </div>
         
-        <!-- Menu Desktop -->
         <nav class="hidden md:flex space-x-1">
           <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Kurs & Pasar</button>
           <button onclick="switchTab('berita')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
@@ -77,7 +76,6 @@
         </div>
       </div>
 
-      <!-- Dropdown Menu Mobile -->
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Kurs & Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -88,7 +86,6 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
     <!-- ================= TAB 1: KURS & PASAR ================= -->
@@ -104,7 +101,6 @@
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <!-- USD -->
         <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/5 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="flex justify-between items-start mb-3 relative z-10">
@@ -120,7 +116,6 @@
           </div>
         </div>
 
-        <!-- JPY -->
         <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
           <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-rose-500/5 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="flex justify-between items-start mb-3 relative z-10">
@@ -136,7 +131,6 @@
           </div>
         </div>
 
-        <!-- CNY -->
         <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
           <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-red-500/5 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="flex justify-between items-start mb-3 relative z-10">
@@ -152,7 +146,6 @@
           </div>
         </div>
 
-        <!-- EMAS -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
           <div class="flex justify-between items-start mb-3 relative z-10">
@@ -210,7 +203,6 @@
         </div>
       </div>
 
-      <!-- FILTER KATEGORI BERITA -->
       <div class="flex overflow-x-auto hide-scrollbar space-x-2 pb-2">
         <button onclick="filterNewsByCategory('semua')" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Semua</button>
         <button onclick="filterNewsByCategory('pangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Harga Pangan</button>
@@ -380,9 +372,6 @@
   </div>
 
   <script>
-    // ==========================================
-    // LOGIKA FILTER KATEGORI BERITA
-    // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
 
@@ -396,7 +385,6 @@
     function filterNewsByCategory(category) {
       currentCategory = category;
       
-      // Ubah gaya tombol (aktif/non-aktif)
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
         btn.classList.add('inactive');
@@ -410,7 +398,6 @@
     function applyNewsFilters() {
       let filteredNews = allNews;
 
-      // 1. Filter berdasarkan kategori (jika bukan 'semua')
       if (currentCategory !== 'semua') {
         const keywords = categoryKeywords[currentCategory] || [];
         filteredNews = filteredNews.filter(item => {
@@ -419,7 +406,6 @@
         });
       }
 
-      // 2. Filter berdasarkan kolom pencarian
       if (currentSearchQuery) {
         filteredNews = filteredNews.filter(item => 
           item.title.toLowerCase().includes(currentSearchQuery) || 
@@ -430,9 +416,6 @@
       renderNews(filteredNews);
     }
 
-    // ==========================================
-    // LOGIKA UTAMA & DATA FETCHING
-    // ==========================================
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
       menu.classList.toggle('hidden');
@@ -541,7 +524,7 @@
       }
     }
 
-    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30'; // Ambil lebih banyak untuk filter
+    const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30';
     let allNews = [];
     let activeNewsList = [];
 
@@ -680,7 +663,6 @@
       setTimeout(typeWriter, 500);
     }
 
-    // Event listener pencarian
     document.getElementById('search-news').addEventListener('input', (e) => {
       currentSearchQuery = e.target.value.toLowerCase();
       applyNewsFilters();
