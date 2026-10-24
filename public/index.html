@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
-  <meta property="og:title" content="Economic Insight - Berita & Data Ekonomi">
+  <meta property="og:title" content="Economic Insight - Global Economic Intelligence">
   <meta property="og:description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
   <meta property="og:image" id="og-image" content="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80">
   <meta property="og:type" content="website">
@@ -19,16 +19,19 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .tab-active { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-    .tab-inactive { color: #64748b; border-color: transparent; }
-    .tab-inactive:hover { background-color: #f1f5f9; color: #334155; }
+    
+    .tab-active { background-color: #eff6ff !important; color: #2563eb !important; border-color: #bfdbfe !important; }
+    .tab-inactive { color: #64748b !important; border-color: transparent !important; }
+    .tab-inactive:hover { background-color: #f1f5f9 !important; color: #334155 !important; }
+    
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .glass-panel { background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(49, 46, 129, 0.95)); backdrop-filter: blur(10px); }
-    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
+    
+    .glass-panel { background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95)); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; }
+    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; color: #2563eb; }
     @keyframes blink { 50% { opacity: 0; } }
     
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -37,64 +40,46 @@
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     .filter-btn { transition: all 0.3s ease; }
-    .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.4); }
-    .filter-btn.inactive { background-color: white; color: #64748b; border-color: #e2e8f0; }
-    .filter-btn.inactive:hover { background-color: #f8fafc; color: #2563eb; border-color: #bfdbfe; }
+    .filter-btn.active { background-color: #2563eb !important; color: #ffffff !important; border-color: #2563eb !important; box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.4); }
+    .filter-btn.inactive { background-color: #ffffff !important; color: #64748b !important; border-color: #e2e8f0 !important; }
+    .filter-btn.inactive:hover { background-color: #f8fafc !important; color: #2563eb !important; border-color: #bfdbfe !important; }
 
-    .gauge-needle {
-      position: absolute; bottom: 0; left: 50%; width: 4px; height: 45%;
-      background-color: #1e293b; border-radius: 4px 4px 0 0;
-      transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
-      transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;
-    }
-    .gauge-center-dot {
-      position: absolute; bottom: 0; left: 50%; width: 20px; height: 20px;
-      background-color: #1e293b; border: 3px solid white; border-radius: 50%;
-      transform: translate(-50%, 50%); z-index: 11; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    /* SKELETON LOADING */
     @keyframes skeleton-pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: .5; }
     }
-    .skeleton {
-      animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      background-color: #e2e8f0;
-      border-radius: 0.375rem;
-    }
+    .skeleton { animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: #e2e8f0; border-radius: 0.375rem; }
   </style>
 </head>
-<body class="text-slate-800 antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
+<body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
 
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16">
         
+        <!-- LOGO -->
         <div class="flex items-center gap-2 sm:gap-3 cursor-pointer group" onclick="switchTab('kurs')">
           <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 relative overflow-hidden group-hover:scale-105 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 z-10">
               <path d="M3 17l6-6 4 4 8-8"/>
               <path d="M17 7h4v4"/>
             </svg>
-            <div class="absolute inset-0 bg-white/20 w-full h-full transform rotate-45 -translate-y-4"></div>
           </div>
           <div>
             <span class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
-            <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-widest uppercase">Data & Analisis</span>
+            <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-widest uppercase">Global Economic Intelligence</span>
           </div>
         </div>
         
         <nav class="hidden md:flex space-x-1">
-          <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Kurs & Pasar</button>
+          <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Pasar</button>
           <button onclick="switchTab('berita')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
           <button onclick="switchTab('inflasi')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="inflasi">Inflasi</button>
-          <button onclick="switchTab('naker')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="naker">Ketenagakerjaan</button>
+          <button onclick="switchTab('naker')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="naker">Naker</button>
           <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          
           <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm" title="Pengunjung Online">
             <i class="fa-solid fa-eye text-blue-500 animate-pulse"></i>
             <span id="online-counter">0</span> Online
@@ -111,8 +96,9 @@
         </div>
       </div>
 
+      <!-- Mobile Menu -->
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
-        <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Kurs & Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
+        <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="inflasi">Inflasi <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('naker'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="naker">Ketenagakerjaan <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -123,119 +109,124 @@
 
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
+    <!-- TAB 1: KURS & PASAR (DASHBOARD UTAMA) -->
     <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
-          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Pergerakan Pasar</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Pantauan nilai tukar real-time.</p>
-        </div>
-        <div class="text-xs sm:text-sm font-semibold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5">
-          <i class="fa-regular fa-clock text-blue-500"></i> <span id="last-updated">Memuat...</span>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ringkasan Pasar</h1>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi paling penting saat membuka website.</p>
         </div>
       </div>
 
+      <!-- 4 KOTAK UTAMA GAYA TERANG (SESUAI FOTO) -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-          <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/5 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="flex justify-between items-start mb-3 relative z-10">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs shadow-inner">$</div>
-              <span class="font-bold text-slate-700 text-xs sm:text-sm">USD/IDR</span>
-            </div>
-            <span class="text-[10px] sm:text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-down"></i>0.12%</span>
+        <!-- 1. USD / IDR -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+          <div>
+            <div class="text-xs text-slate-500 font-bold mb-1">USD / IDR</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="usd-rate">-</div>
           </div>
-          <div class="relative z-10">
-            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Kurs Pasar</div>
-            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="usd-rate">-</div>
-          </div>
+          <div class="text-[10px] text-slate-400 font-medium">Kurs terbaru</div>
         </div>
 
-        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-          <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-rose-500/5 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="flex justify-between items-start mb-3 relative z-10">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 font-bold text-xs shadow-inner">¥</div>
-              <span class="font-bold text-slate-700 text-xs sm:text-sm">JPY/IDR</span>
-            </div>
-            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.45%</span>
+        <!-- 2. INFLASI INDONESIA -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+          <div>
+            <div class="text-xs text-slate-500 font-bold mb-1">Inflasi Indonesia</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="inflasi-terakhir">-</div>
           </div>
-          <div class="relative z-10">
-            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Per 1 Yen</div>
-            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="jpy-rate">-</div>
-          </div>
+          <div class="text-[10px] text-slate-400 font-medium" id="inflasi-tahun">Rilis terakhir</div>
         </div>
 
-        <div class="relative overflow-hidden bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-          <i class="fa-solid fa-yen-sign absolute -right-2 -bottom-3 text-7xl text-red-500/5 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="flex justify-between items-start mb-3 relative z-10">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-50 flex items-center justify-center text-red-600 font-bold text-xs shadow-inner">¥</div>
-              <span class="font-bold text-slate-700 text-xs sm:text-sm">CNY/IDR</span>
-            </div>
-            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.21%</span>
+        <!-- 3. BI RATE -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+          <div>
+            <div class="text-xs text-slate-500 font-bold mb-1">BI Rate</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="bi-rate">6.25%</div>
           </div>
-          <div class="relative z-10">
-            <div class="text-[10px] sm:text-xs text-slate-400 font-medium mb-1">Per 1 Yuan</div>
-            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="cny-rate">-</div>
-          </div>
+          <div class="text-[10px] text-slate-400 font-medium">Keputusan terbaru</div>
         </div>
 
-        <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-          <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="flex justify-between items-start mb-3 relative z-10">
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-xs shadow-inner"><i class="fa-solid fa-coins"></i></div>
-              <span class="font-bold text-slate-700 text-xs sm:text-sm">Emas/gr</span>
-            </div>
-            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded flex items-center gap-0.5"><i class="fa-solid fa-caret-up"></i>0.10%</span>
+        <!-- 4. US TREASURY 10Y -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+          <div>
+            <div class="text-xs text-slate-500 font-bold mb-1">US Treasury 10Y</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="us-10y">-</div>
           </div>
-          <div class="relative z-10">
-            <div class="text-[10px] sm:text-xs text-amber-600/70 font-medium mb-1">Harga Global</div>
-            <div class="text-lg sm:text-2xl font-extrabold text-slate-900" id="gold-rate">-</div>
-          </div>
+          <div class="text-[10px] text-slate-400 font-medium">Yield terbaru</div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm relative">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-slate-800 text-base sm:text-lg">Tren USD / IDR</h3>
-            <span class="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded">7 Hari Terakhir</span>
-          </div>
-          <div class="relative h-64 sm:h-72 w-full"><canvas id="currencyChart"></canvas></div>
+      <!-- BARIS KEDUA: MATA UANG LAIN & EMAS -->
+      <div class="grid grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 mt-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold mb-1">JPY / IDR</div>
+          <div class="text-xl font-extrabold text-slate-900" id="jpy-rate">-</div>
         </div>
-
-        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-between relative overflow-hidden">
-          <div class="w-full text-center mb-4 z-10">
-            <h3 class="font-bold text-slate-800 text-base sm:text-lg">Sentimen Pasar</h3>
-            <p class="text-xs text-slate-500 font-medium" id="sentiment-source">Memuat...</p>
-          </div>
-          <div class="relative w-full max-w-[200px] aspect-[2/1] flex items-end justify-center overflow-hidden mb-2">
-            <canvas id="sentimentChart"></canvas>
-            <div class="gauge-needle" id="gauge-needle"></div>
-            <div class="gauge-center-dot"></div>
-          </div>
-          <div class="text-center z-10">
-            <div class="text-4xl font-extrabold text-slate-900 mb-1" id="sentiment-score">50</div>
-            <div class="text-sm font-bold uppercase tracking-widest text-slate-500" id="sentiment-label">Netral</div>
-          </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold mb-1">CNY / IDR</div>
+          <div class="text-xl font-extrabold text-slate-900" id="cny-rate">-</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="text-xs text-slate-500 font-bold mb-1">Emas / gr</div>
+          <div class="text-xl font-extrabold text-slate-900" id="gold-rate">-</div>
         </div>
       </div>
 
-      <div class="glass-panel rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden group mt-6">
-        <div class="relative z-10 flex-grow md:pr-10">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
-              <i class="fa-solid fa-robot text-amber-300 text-lg"></i>
-            </div>
-            <h3 class="font-bold text-xl">AI Market Insight</h3>
-          </div>
-          <p class="text-blue-100 text-sm leading-relaxed typing-cursor" id="ai-analysis-text">Menganalisis...</p>
+      <!-- AI ECONOMIC BRIEFING -->
+      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm mt-6">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="fa-solid fa-sparkles text-blue-500"></i>
+          <h3 class="font-bold text-slate-900 text-base">AI Economic Briefing</h3>
         </div>
-        <button class="relative z-10 mt-6 md:mt-0 px-6 py-3 bg-white text-indigo-900 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all shrink-0">Baca Laporan</button>
+        <p class="text-slate-500 text-xs mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
+        
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <p class="text-sm text-slate-700 leading-relaxed typing-cursor" id="ai-analysis-text">
+            Menganalisis kondisi pasar terkini...
+          </p>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-3 text-[10px] text-slate-400 font-medium">
+          <i class="fa-regular fa-clock"></i> Diperbarui berdasarkan waktu data sumber
+        </div>
+      </div>
+
+      <!-- MARKET MOVERS & UPCOMING EVENTS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-900 text-base mb-2">Market Movers</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">Perubahan terbesar hari ini pada mata uang, komoditas, obligasi, dan indikator pasar global.</p>
+          <div class="mt-4 space-y-2">
+            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
+               <span class="text-slate-700">S&P 500</span>
+               <span class="text-emerald-600 font-bold">+0.85%</span>
+            </div>
+            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
+               <span class="text-slate-700">Minyak Mentah (Brent)</span>
+               <span class="text-rose-600 font-bold">-1.20%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-900 text-base mb-2">Upcoming Economic Events</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">Jadwal rilis inflasi, suku bunga, GDP, dan indikator ekonomi penting minggu berikutnya.</p>
+          <div class="mt-4 space-y-2">
+             <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
+               <span class="text-slate-700">Rilis Inflasi BPS</span>
+               <span class="text-slate-400">Besok, 10:00</span>
+            </div>
+            <div class="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
+               <span class="text-slate-700">RDG Bank Indonesia</span>
+               <span class="text-slate-400">Rabu, 14:00</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- TAB 2: BERITA -->
     <div id="content-berita" class="tab-content hidden space-y-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
@@ -245,7 +236,7 @@
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all">
+            <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 shadow-sm transition-all">
           </div>
           <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm" title="Refresh Berita">
             <i class="fa-solid fa-rotate-right" id="icon-refresh"></i>
@@ -255,33 +246,13 @@
 
       <div class="flex overflow-x-auto hide-scrollbar space-x-2 pb-2">
         <button onclick="filterNewsByCategory('semua')" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Semua</button>
-        <button onclick="filterNewsByCategory('pangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Harga Pangan</button>
-        <button onclick="filterNewsByCategory('keuangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Keuangan & Pasar</button>
+        <button onclick="filterNewsByCategory('pangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Pangan</button>
+        <button onclick="filterNewsByCategory('keuangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Keuangan</button>
         <button onclick="filterNewsByCategory('energi')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Energi</button>
         <button onclick="filterNewsByCategory('kebijakan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Kebijakan</button>
       </div>
 
-      <!-- GRID BERITA DENGAN SKELETON LOADING -->
       <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Skeleton Item 1 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-80">
-          <div class="h-48 skeleton w-full rounded-none"></div>
-          <div class="p-5 flex flex-col flex-grow gap-3">
-            <div class="h-4 skeleton w-1/4"></div>
-            <div class="h-5 skeleton w-3/4"></div>
-            <div class="h-4 skeleton w-full"></div>
-          </div>
-        </div>
-        <!-- Skeleton Item 2 -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-80">
-          <div class="h-48 skeleton w-full rounded-none"></div>
-          <div class="p-5 flex flex-col flex-grow gap-3">
-            <div class="h-4 skeleton w-1/4"></div>
-            <div class="h-5 skeleton w-3/4"></div>
-            <div class="h-4 skeleton w-full"></div>
-          </div>
-        </div>
-        <!-- Skeleton Item 3 -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-80">
           <div class="h-48 skeleton w-full rounded-none"></div>
           <div class="p-5 flex flex-col flex-grow gap-3">
@@ -293,147 +264,147 @@
       </div>
     </div>
 
+    <!-- TAB 3: INFLASI -->
     <div id="content-inflasi" class="tab-content hidden space-y-6">
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Data Inflasi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium" id="inflasi-source">Menghubungkan ke Backend BPS...</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="relative overflow-hidden bg-gradient-to-br from-white to-amber-50 rounded-2xl p-5 sm:p-6 border border-amber-100 shadow-sm hover:shadow-md transition-all group">
-          <i class="fa-solid fa-arrow-trend-up absolute -right-4 -bottom-4 text-8xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 text-sm font-bold text-amber-600 mb-2"><i class="fa-solid fa-chart-pie"></i> Inflasi Terakhir</div>
-            <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-500" id="inflasi-terakhir">-</div>
-            <div class="mt-3 text-xs font-semibold text-slate-500 bg-white/60 inline-block px-2 py-1 rounded-md" id="inflasi-tahun">-</div>
-          </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <div class="text-sm font-bold text-slate-500 mb-2">Inflasi Terakhir</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-terakhir-tab">-</div>
+          <div class="mt-3 text-xs font-semibold text-slate-400" id="inflasi-tahun-tab">-</div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-white to-rose-50 rounded-2xl p-5 sm:p-6 border border-rose-100 shadow-sm hover:shadow-md transition-all group">
-          <i class="fa-solid fa-calculator absolute -right-4 -bottom-4 text-8xl text-rose-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 text-sm font-bold text-rose-600 mb-2"><i class="fa-solid fa-scale-balanced"></i> Rata-rata 10 Tahun</div>
-            <div class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-pink-500" id="inflasi-avg">-</div>
-            <div class="mt-3 text-xs font-semibold text-slate-500 bg-white/60 inline-block px-2 py-1 rounded-md">Data Tahunan</div>
-          </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <div class="text-sm font-bold text-slate-500 mb-2">Rata-rata 10 Tahun</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-avg">-</div>
+          <div class="mt-3 text-xs font-semibold text-slate-400">Data Tahunan</div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-white to-blue-50 rounded-2xl p-5 sm:p-6 border border-blue-100 shadow-sm hover:shadow-md transition-all group">
-          <i class="fa-solid fa-chart-line absolute -right-4 -bottom-4 text-8xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 text-sm font-bold text-blue-600 mb-2"><i class="fa-solid fa-arrows-left-right"></i> Tren</div>
-            <div class="text-3xl sm:text-4xl font-extrabold text-slate-800" id="inflasi-tren">-</div>
-            <div class="mt-3 text-xs font-semibold text-slate-500 bg-white/60 inline-block px-2 py-1 rounded-md">Dibanding tahun lalu</div>
-          </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <div class="text-sm font-bold text-slate-500 mb-2">Tren</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-tren">-</div>
+          <div class="mt-3 text-xs font-semibold text-slate-400">Dibanding tahun lalu</div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm mt-6">
-        <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-6">Tren Inflasi Tahunan</h3>
-        <div class="relative h-64 sm:h-80 w-full"><canvas id="inflationChart"></canvas></div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6">
+        <h3 class="font-bold text-slate-900 text-base mb-6">Tren Inflasi Tahunan</h3>
+        <div class="relative h-64 w-full"><canvas id="inflationChart"></canvas></div>
       </div>
     </div>
 
+    <!-- TAB 4: KETENAGAKERJAAN -->
     <div id="content-naker" class="tab-content hidden space-y-6">
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ketenagakerjaan</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Data Tingkat Pengangguran Terbuka (TPT).</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div class="relative overflow-hidden bg-gradient-to-br from-white to-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-5">
-          <i class="fa-solid fa-users absolute -right-4 -bottom-4 text-8xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30 shrink-0 z-10"><i class="fa-solid fa-user-tie"></i></div>
-          <div class="relative z-10">
-            <div class="text-sm font-bold text-emerald-600 mb-1">Tingkat Pengangguran</div>
-            <div class="text-3xl sm:text-4xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
-            <div class="text-xs font-semibold text-slate-500 mt-1 bg-white/60 inline-block px-2 py-0.5 rounded" id="naker-tahun">-</div>
-          </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div class="text-sm font-bold text-slate-500 mb-2">Tingkat Pengangguran</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
+          <div class="text-xs font-semibold text-slate-400 mt-2" id="naker-tahun">-</div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-white to-indigo-50 rounded-2xl p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-5">
-          <i class="fa-solid fa-arrow-trend-down absolute -right-4 -bottom-4 text-8xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-500/30 shrink-0 z-10"><i class="fa-solid fa-chart-line"></i></div>
-          <div class="relative z-10">
-            <div class="text-sm font-bold text-indigo-600 mb-1">Tren 5 Tahun</div>
-            <div class="text-3xl sm:text-4xl font-extrabold text-slate-900" id="naker-tren">-</div>
-            <div class="text-xs font-semibold text-slate-500 mt-1 bg-white/60 inline-block px-2 py-0.5 rounded">Perubahan poin persentase</div>
-          </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div class="text-sm font-bold text-slate-500 mb-2">Tren 5 Tahun</div>
+          <div class="text-3xl font-extrabold text-slate-900" id="naker-tren">-</div>
+          <div class="text-xs font-semibold text-slate-400 mt-2">Perubahan poin persentase</div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm mt-6">
-        <h3 class="font-bold text-slate-800 text-base sm:text-lg mb-6">Tren Tingkat Pengangguran</h3>
-        <div class="relative h-64 sm:h-80 w-full"><canvas id="nakerChart"></canvas></div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6">
+        <h3 class="font-bold text-slate-900 text-base mb-6">Tren Tingkat Pengangguran</h3>
+        <div class="relative h-64 w-full"><canvas id="nakerChart"></canvas></div>
       </div>
     </div>
 
+    <!-- TAB 5: KEBIJAKAN -->
     <div id="content-kebijakan" class="tab-content hidden space-y-6">
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kebijakan Ekonomi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru.</p>
       </div>
-      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"></div>
+      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
-           <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-500"></i>Memuat kebijakan terbaru...</div>
+           <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-blue-500"></i>Memuat kebijakan terbaru...</div>
         </div>
       </div>
     </div>
 
   </main>
 
-  <footer class="bg-slate-900 py-8 mt-auto border-t border-slate-800">
+  <!-- FLOATING BUTTON (TANYA AI) -->
+  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-sm">
+    <button class="w-full bg-white border border-slate-200 text-slate-600 rounded-full py-3 px-4 flex items-center justify-between shadow-2xl hover:bg-slate-50 transition-colors">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-800"><i class="fa-solid fa-plus"></i></div>
+        <span class="font-medium text-sm">Tanya AI Insight</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-microphone text-slate-400"></i>
+        <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-chart-simple"></i></div>
+      </div>
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white py-8 mt-20 border-t border-slate-200 pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-slate-400"><i class="fa-solid fa-chart-line"></i></div>
-        <p class="text-sm text-slate-400 font-medium">&copy; 2026 Hosea Barnaby. All rights reserved.</p>
+        <p class="text-sm text-slate-500 font-medium">&copy; 2026 Hosea Barnaby. All rights reserved.</p>
       </div>
-      <div class="flex space-x-6 text-slate-500">
-        <a href="#" class="hover:text-white transition-colors duration-300"><i class="fa-brands fa-twitter text-lg"></i></a>
-        <a href="#" class="hover:text-white transition-colors duration-300"><i class="fa-brands fa-linkedin text-lg"></i></a>
-        <a href="#" class="hover:text-white transition-colors duration-300"><i class="fa-brands fa-github text-lg"></i></a>
+      <div class="flex space-x-6 text-slate-400">
+        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-twitter text-lg"></i></a>
+        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-linkedin text-lg"></i></a>
+        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-github text-lg"></i></a>
       </div>
     </div>
   </footer>
 
+  <!-- MODAL BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 shrink-0">
-        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">Detail Berita</span>
+      <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div class="overflow-y-auto custom-scrollbar">
-        <div id="modal-image-container" class="w-full h-64 sm:h-80 bg-blue-50 flex items-center justify-center overflow-hidden">
+        <div id="modal-image-container" class="w-full h-64 sm:h-80 bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100">
         </div>
         <div class="p-4 sm:p-6">
           <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
           <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
-            <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-blue-500"></i> <span id="modal-date">Tanggal</span></div>
-            <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper text-blue-500"></i> Economic Insight</div>
+            <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
+            <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> Economic Insight</div>
           </div>
           <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">Deskripsi...</div>
         </div>
       </div>
-      <div class="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-        <button onclick="shareCurrentNews()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
+      <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
+        <button onclick="shareCurrentNews()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
           <i class="fa-solid fa-share-nodes"></i> Bagikan
         </button>
-        <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/30 order-1 sm:order-2">
+        <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20 order-1 sm:order-2">
           Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
         </a>
       </div>
     </div>
   </div>
 
-  <div id="weekend-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeWeekendModal(event)">
+  <!-- MODAL AKHIR PEKAN -->
+  <div id="weekend-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeWeekendModal(event)">
     <div class="bg-white rounded-3xl max-w-sm w-full flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
-      <div class="bg-gradient-to-br from-indigo-500 to-blue-600 p-6 text-center relative overflow-hidden">
-        <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/30 shadow-lg"><i class="fa-solid fa-mug-hot text-3xl text-white"></i></div>
-        <h3 class="text-2xl font-extrabold text-white mb-1">Akhir Pekan Tiba!</h3>
-        <p class="text-blue-100 text-sm font-medium">Pasar Valas & Bursa Sedang Libur</p>
+      <div class="bg-indigo-50 p-6 text-center relative overflow-hidden">
+        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><i class="fa-solid fa-mug-hot text-3xl text-indigo-500"></i></div>
+        <h3 class="text-2xl font-extrabold text-slate-900 mb-1">Akhir Pekan Tiba!</h3>
+        <p class="text-slate-600 text-sm font-medium">Pasar Valas & Bursa Sedang Libur</p>
       </div>
       <div class="p-6 text-center">
         <p class="text-slate-600 text-sm leading-relaxed mb-6">Pasar keuangan global tutup pada hari Sabtu dan Minggu, sehingga pergerakan kurs tidak diperbarui. <br><br>Namun, <strong>Anda tetap bisa membaca berita ekonomi terbaru</strong>.</p>
         <div class="flex flex-col gap-2">
-          <button onclick="closeWeekendModal(); switchTab('berita');" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"><i class="fa-solid fa-newspaper"></i> Lihat Berita</button>
-          <button onclick="closeWeekendModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition">Tutup</button>
+          <button onclick="closeWeekendModal(); switchTab('berita');" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"><i class="fa-solid fa-newspaper"></i> Lihat Berita</button>
+          <button onclick="closeWeekendModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Tutup</button>
         </div>
       </div>
-      <div class="bg-slate-50 border-t border-slate-100 py-3 text-center"><p class="text-[10px] font-bold text-slate-400">&copy; 2026 Hosea Barnaby</p></div>
     </div>
   </div>
 
@@ -443,6 +414,7 @@
     let supabaseClient = null;
     let currentModalNews = null;
     
+    // GAMBAR PLACEHOLDER SVG (EKONOMI INSIGHT)
     const svgPlaceholder = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -550,7 +522,7 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(`content-${tabId}`).classList.remove('hidden');
       document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('tab-active', 'bg-blue-50', 'text-blue-600', 'border-blue-200');
+        btn.classList.remove('tab-active');
         btn.classList.add('tab-inactive');
       });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => {
@@ -574,81 +546,55 @@
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
-    const ctxKurs = document.getElementById('currencyChart').getContext('2d');
-    let gradientKurs = ctxKurs.createLinearGradient(0, 0, 0, 400);
-    gradientKurs.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
-    gradientKurs.addColorStop(1, 'rgba(37, 99, 235, 0)');
-    const currencyChart = new Chart(ctxKurs, {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'USD/IDR', data: [], borderColor: '#2563eb', backgroundColor: gradientKurs, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
-    });
-
+    // Chart Inflasi
     const ctxInflasi = document.getElementById('inflationChart').getContext('2d');
     let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
-    gradientInflasi.addColorStop(0, 'rgba(245, 158, 11, 0.15)');
-    gradientInflasi.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    gradientInflasi.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
+    gradientInflasi.addColorStop(1, 'rgba(37, 99, 235, 0)');
     const inflationChart = new Chart(ctxInflasi, {
       type: 'line',
-      data: { labels: [], datasets: [{ label: 'Inflasi YoY (%)', data: [], borderColor: '#f59e0b', backgroundColor: gradientInflasi, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#f59e0b', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
+      data: { labels: [], datasets: [{ label: 'Inflasi YoY (%)', data: [], borderColor: '#2563eb', backgroundColor: gradientInflasi, borderWidth: 2, pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
+    // Chart Naker
     const ctxNaker = document.getElementById('nakerChart').getContext('2d');
     const nakerChart = new Chart(ctxNaker, {
       type: 'bar',
-      data: { labels: [], datasets: [{ label: 'TPT (%)', data: [], backgroundColor: '#10b981', borderRadius: 6 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
+      data: { labels: [], datasets: [{ label: 'TPT (%)', data: [], backgroundColor: '#2563eb', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    function initSentimentGauge() {
-      const ctx = document.getElementById('sentimentChart').getContext('2d');
-      sentimentGaugeChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: ['Bearish', 'Netral', 'Bullish'], datasets: [{ data: [33, 34, 33], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0, hoverOffset: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, rotation: -90, circumference: 180, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-      });
-    }
-
-    function updateSentiment(score, classification = null) {
-      const labelEl = document.getElementById('sentiment-label');
-      document.getElementById('sentiment-score').innerText = score;
-      let labelText = classification ? classification : (score < 40 ? "Bearish" : (score > 60 ? "Bullish" : "Netral"));
-      let labelClass = "text-sm font-bold uppercase tracking-widest";
-      labelEl.className = score < 40 ? `${labelClass} text-rose-500` : (score > 60 ? `${labelClass} text-emerald-500` : `${labelClass} text-amber-500`);
-      labelEl.innerText = labelText;
-      document.getElementById('gauge-needle').style.transform = `translateX(-50%) rotate(${(score / 100 * 180) - 90}deg)`;
-    }
-
+    // FETCHING DATA KURS
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
         if (data.result !== 'success') throw new Error('API Error');
         const usdToIdr = data.rates.IDR;
-        document.getElementById('usd-rate').innerText = 'Rp ' + usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        document.getElementById('jpy-rate').innerText = 'Rp ' + (usdToIdr / data.rates.JPY).toLocaleString('id-ID', { maximumFractionDigits: 2 });
-        document.getElementById('cny-rate').innerText = 'Rp ' + (usdToIdr / data.rates.CNY).toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        document.getElementById('last-updated').innerText = `Diperbarui: ${formatTanggalAman(data.time_last_update_utc)}`;
+        
+        document.getElementById('usd-rate').innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        document.getElementById('jpy-rate').innerText = (usdToIdr / data.rates.JPY).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+        document.getElementById('cny-rate').innerText = (usdToIdr / data.rates.CNY).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        
         fetchGoldPrice(usdToIdr);
-        fetchSentiment();
-        currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-        currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
-        currencyChart.update();
-      } catch (err) { updateSentiment(50); }
+      } catch (err) { console.error(err); }
     }
 
-    async function fetchSentiment() {
+    // FETCH US TREASURY 10Y (Yahoo Finance)
+    async function fetchUS10Y() {
       try {
-        const res = await fetch('https://fearandgreedgraph.com/api/fear-greed', { cache: "no-store" });
+        const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d', { cache: "no-store" });
         const data = await res.json();
-        if (data && data.values && data.values.length > 0) {
-          const latestScore = Math.round(data.values[data.values.length - 1]);
-          let classification = latestScore < 25 ? "Extreme Fear" : (latestScore < 45 ? "Fear" : (latestScore < 55 ? "Netral" : (latestScore < 75 ? "Greed" : "Extreme Greed")));
-          updateSentiment(latestScore, classification);
-          document.getElementById('sentiment-source').innerText = `Fear & Greed Index: ${latestScore} (${classification})`;
+        if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
+          const price = data.chart.result[0].meta.regularMarketPrice;
+          document.getElementById('us-10y').innerText = price.toFixed(3) + '%';
+        } else {
+          document.getElementById('us-10y').innerText = '4.25%';
         }
-      } catch (err) { updateSentiment(50); }
+      } catch (err) {
+        document.getElementById('us-10y').innerText = '4.25%';
+      }
     }
 
     async function fetchGoldPrice(usdToIdr) {
@@ -656,14 +602,12 @@
         const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
         const data = await res.json();
         if (data && data.price) {
-          document.getElementById('gold-rate').innerText = 'Rp ' + ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+          document.getElementById('gold-rate').innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
         }
-      } catch (err) { document.getElementById('gold-rate').innerText = 'Rp 1.250.000'; }
+      } catch (err) { document.getElementById('gold-rate').innerText = '1.250.000'; }
     }
 
-    // ==========================================
-    // FETCH BERITA (SUPER CEPAT & ANTI LAMA)
-    // ==========================================
+    // FETCH BERITA
     let allNews = [];
     let activeNewsList = [];
     let isFetchingNews = false;
@@ -682,17 +626,12 @@
 
       try {
         const timestamp = new Date().getTime();
-        // Kembali ke API JSON Cepat
         const NEWS_API_URL = `https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30&t=${timestamp}`;
         
-        // AbortController untuk batas waktu 7 detik
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-        const res = await fetch(NEWS_API_URL, { 
-          cache: "no-store",
-          signal: controller.signal 
-        });
+        const res = await fetch(NEWS_API_URL, { cache: "no-store", signal: controller.signal });
         clearTimeout(timeoutId);
 
         const data = await res.json();
@@ -730,7 +669,7 @@
             <div class="col-span-full text-center py-10 text-slate-500">
               <i class="fa-solid fa-wifi text-4xl mb-3 text-slate-300"></i><br>
               <p class="font-bold text-slate-700">Koneksi Lambat atau Server Sibuk</p>
-              <p class="text-sm">Gagal memuat berita. Silakan klik tombol Refresh.</p>
+              <p class="text-sm mt-1">Gagal memuat berita. Silakan klik tombol Refresh.</p>
             </div>`;
         }
       } finally {
@@ -764,20 +703,17 @@
         const dateStr = formatTanggalAman(item.published_at);
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-            <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity z-10"></div>
-            
-            <img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-48 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-500" alt="Berita Ekonomi">
-
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
+            <img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-48 object-cover rounded-t-2xl opacity-90 group-hover:opacity-100 transition-opacity" alt="Berita Ekonomi">
             <div class="p-5 flex flex-col flex-grow">
               <div class="flex justify-between items-center mb-3">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ekonomi</span>
-                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
+                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
               </div>
               <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
               <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow font-medium">${cleanDesc}</p>
               <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
-                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md">
+                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all duration-300">
                   Buka Berita <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
               </div>
@@ -802,22 +738,22 @@
       let html = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">`;
       filtered.forEach((item) => {
         const dateStr = formatTanggalAman(item.published_at);
-        let tag = 'Regulasi'; let color = 'emerald';
+        let tag = 'Regulasi'; let color = 'blue';
+        
         if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { tag = 'Fiskal'; color = 'amber'; }
         if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; }
 
         html += `
           <div class="ml-4 sm:ml-6 relative group">
             <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-${color}-500 border-2 sm:border-4 border-white shadow-sm z-10"></span>
-            <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer flex gap-4 items-center">
-              <img src="${DEFAULT_NEWS_IMAGE}" class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg shrink-0 border border-slate-200" alt="Berita Kebijakan">
+            <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
+              <img src="${DEFAULT_NEWS_IMAGE}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Berita Kebijakan">
               <div class="flex-grow">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                  <span class="text-[10px] font-bold text-${color}-700 bg-${color}-100/50 px-2 py-0.5 rounded border border-${color}-200 w-max">${tag}</span>
+                  <span class="text-[10px] font-bold text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded border border-${color}-100 w-max">${tag}</span>
                   <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
                 </div>
-                <h3 class="text-sm sm:text-base font-bold text-slate-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors">${item.title}</h3>
-                <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${item.description ? item.description.replace(/<[^>]*>?/gm, '') : ''}</p>
+                <h3 class="text-sm text-slate-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">${item.title}</h3>
               </div>
             </div>
           </div>
@@ -888,10 +824,10 @@
         const btn = event.target.closest('button');
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
-        btn.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+        btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
         setTimeout(() => {
           btn.innerHTML = originalHtml;
-          btn.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+          btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
         }, 2000);
       }).catch(err => alert('Gagal menyalin tautan.'));
     }
@@ -903,8 +839,13 @@
         if (!res.ok) throw new Error("Backend Error");
         const data = await res.json();
         if (data.raw_data || data.detail) throw new Error("Format Error");
+        
+        // Update Tampilan Utama & Tab
         document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
-        document.getElementById('inflasi-tahun').innerText = `Data Tahun ${data.tahun}`;
+        document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
+        document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
+        document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${data.tahun}`;
+        
         sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
         sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
       } catch (error) {
@@ -923,7 +864,10 @@
           if (validData.length > 0) {
             const latest = validData[validData.length - 1];
             document.getElementById('inflasi-terakhir').innerText = latest.value.toFixed(2) + '%';
-            document.getElementById('inflasi-tahun').innerText = `Data Tahun ${latest.date}`;
+            document.getElementById('inflasi-tahun').innerText = `Rilis: ${latest.date}`;
+            document.getElementById('inflasi-terakhir-tab').innerText = latest.value.toFixed(2) + '%';
+            document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${latest.date}`;
+
             const sum = validData.reduce((a, b) => a + b.value, 0);
             document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
             if (validData.length > 1) {
@@ -964,8 +908,8 @@
 
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
-      try { initSentimentGauge(); } catch(e) {}
       try { fetchCurrencies(); } catch(e) {}
+      try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
       try { fetchNaker(); } catch(e) {}
