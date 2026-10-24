@@ -34,32 +34,16 @@
     .filter-btn.inactive { background-color: white; color: #64748b; border-color: #e2e8f0; }
     .filter-btn.inactive:hover { background-color: #f8fafc; color: #2563eb; border-color: #bfdbfe; }
 
-    /* Desain Jarum Gauge */
     .gauge-needle {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 4px;
-      height: 45%;
-      background-color: #1e293b;
-      border-radius: 4px 4px 0 0;
-      transform-origin: bottom center;
-      transform: translateX(-50%) rotate(-90deg); /* Mulai dari kiri */
-      transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 10;
+      position: absolute; bottom: 0; left: 50%; width: 4px; height: 45%;
+      background-color: #1e293b; border-radius: 4px 4px 0 0;
+      transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg);
+      transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;
     }
     .gauge-center-dot {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      background-color: #1e293b;
-      border: 3px solid white;
-      border-radius: 50%;
-      transform: translate(-50%, 50%);
-      z-index: 11;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      position: absolute; bottom: 0; left: 50%; width: 20px; height: 20px;
+      background-color: #1e293b; border: 3px solid white; border-radius: 50%;
+      transform: translate(-50%, 50%); z-index: 11; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
   </style>
 </head>
@@ -189,10 +173,7 @@
         </div>
       </div>
 
-      <!-- CHART & SENTIMEN & AI SECTION -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        
-        <!-- Kolom Kiri: Chart Tren -->
         <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm relative">
           <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-slate-800 text-base sm:text-lg">Tren USD / IDR</h3>
@@ -201,18 +182,14 @@
           <div class="relative h-64 sm:h-72 w-full"><canvas id="currencyChart"></canvas></div>
         </div>
 
-        <!-- Kolom Kanan: Sentimen Pasar (Gauge) -->
         <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-between relative overflow-hidden">
           <div class="w-full text-center mb-4 z-10">
             <h3 class="font-bold text-slate-800 text-base sm:text-lg">Sentimen Pasar</h3>
             <p class="text-xs text-slate-500 font-medium">Berdasarkan pergerakan kurs hari ini</p>
           </div>
           
-          <!-- Gauge Container -->
           <div class="relative w-full max-w-[200px] aspect-[2/1] flex items-end justify-center overflow-hidden mb-2">
-            <!-- Background Chart -->
             <canvas id="sentimentChart"></canvas>
-            <!-- Jarum Pointer -->
             <div class="gauge-needle" id="gauge-needle"></div>
             <div class="gauge-center-dot"></div>
           </div>
@@ -224,7 +201,6 @@
         </div>
       </div>
 
-      <!-- AI MARKET INSIGHT (Full Width di bawah) -->
       <div class="glass-panel rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden group mt-6">
         <div class="absolute -right-10 -top-10 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-blue-400 transition-colors duration-700"></div>
         <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-indigo-400 transition-colors duration-700"></div>
@@ -427,13 +403,73 @@
     </div>
   </div>
 
+  <!-- FLOATING WINDOW (MODAL) KHUSUS AKHIR PEKAN -->
+  <div id="weekend-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeWeekendModal(event)">
+    <div class="bg-white rounded-3xl max-w-sm w-full flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
+      
+      <!-- Header Gradient -->
+      <div class="bg-gradient-to-br from-indigo-500 to-blue-600 p-6 text-center relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+        <div class="absolute -left-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+        <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/30 shadow-lg">
+          <i class="fa-solid fa-mug-hot text-3xl text-white"></i>
+        </div>
+        <h3 class="text-2xl font-extrabold text-white mb-1">Akhir Pekan Tiba!</h3>
+        <p class="text-blue-100 text-sm font-medium">Pasar Valas & Bursa Sedang Libur</p>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 text-center">
+        <p class="text-slate-600 text-sm leading-relaxed mb-6">
+          Pasar keuangan global tutup pada hari Sabtu dan Minggu, sehingga pergerakan kurs tidak diperbarui. 
+          <br><br>
+          Namun, <strong>Anda tetap bisa membaca berita ekonomi dan analisis terbaru</strong> yang terus kami perbarui.
+        </p>
+        
+        <div class="flex flex-col gap-2">
+          <button onclick="closeWeekendModal(); switchTab('berita');" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-newspaper"></i> Lihat Berita Terbaru
+          </button>
+          <button onclick="closeWeekendModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition">
+            Tutup
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     // ==========================================
-    // KONFIGURASI & STATE
+    // LOGIKA POP-UP AKHIR PEKAN (SABTU/MINGGU)
+    // ==========================================
+    function checkWeekend() {
+      const today = new Date().getDay(); // 0 = Minggu, 6 = Sabtu
+      const hasSeenModal = sessionStorage.getItem('weekendModalSeen');
+
+      // Tampilkan hanya jika hari Sabtu/Minggu DAN belum pernah ditutup di sesi ini
+      if ((today === 0 || today === 6) && !hasSeenModal) {
+        setTimeout(() => {
+          document.getElementById('weekend-modal').classList.remove('hidden');
+        }, 1500); // Muncul setelah 1.5 detik agar website tidak kaget
+      }
+    }
+
+    function closeWeekendModal(event) {
+      const modal = document.getElementById('weekend-modal');
+      if (event && event.target.id !== 'weekend-modal') return;
+      
+      modal.classList.add('hidden');
+      // Simpan di session agar tidak muncul terus saat refresh
+      sessionStorage.setItem('weekendModalSeen', 'true');
+    }
+
+    // ==========================================
+    // STATE & KONFIGURASI UTAMA
     // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
-    let sentimentGaugeChart = null; // Untuk menyimpan instance Chart.js
+    let sentimentGaugeChart = null;
 
     const categoryKeywords = {
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
@@ -512,12 +548,11 @@
     }
 
     // ==========================================
-    // SETUP CHART UTAMA
+    // SETUP CHART
     // ==========================================
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
-    // 1. Chart Kurs
     const ctxKurs = document.getElementById('currencyChart').getContext('2d');
     let gradientKurs = ctxKurs.createLinearGradient(0, 0, 0, 400);
     gradientKurs.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
@@ -528,7 +563,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // 2. Chart Inflasi
     const ctxInflasi = document.getElementById('inflationChart').getContext('2d');
     let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
     gradientInflasi.addColorStop(0, 'rgba(245, 158, 11, 0.15)');
@@ -539,7 +573,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // 3. Chart Naker
     const ctxNaker = document.getElementById('nakerChart').getContext('2d');
     const nakerChart = new Chart(ctxNaker, {
       type: 'bar',
@@ -547,9 +580,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // ==========================================
-    // SETUP GAUGE CHART (SENTIMEN PASAR)
-    // ==========================================
     function initSentimentGauge() {
       const ctx = document.getElementById('sentimentChart').getContext('2d');
       sentimentGaugeChart = new Chart(ctx, {
@@ -557,28 +587,20 @@
         data: {
           labels: ['Bearish', 'Netral', 'Bullish'],
           datasets: [{
-            data: [33, 34, 33], // Proporsi 3 warna
-            backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], // Merah, Kuning, Hijau
+            data: [33, 34, 33],
+            backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
             borderWidth: 0,
             hoverOffset: 0
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          rotation: -90, // Mulai dari kiri
-          circumference: 180, // Setengah lingkaran
-          cutout: '75%', // Ketebalan cincin
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          }
+          responsive: true, maintainAspectRatio: false, rotation: -90, circumference: 180, cutout: '75%',
+          plugins: { legend: { display: false }, tooltip: { enabled: false } }
         }
       });
     }
 
     function updateSentiment(score) {
-      // 1. Update Angka & Label
       const labelEl = document.getElementById('sentiment-label');
       document.getElementById('sentiment-score').innerText = score;
       
@@ -593,15 +615,10 @@
         labelEl.className = "text-sm font-bold uppercase tracking-widest text-amber-500";
       }
 
-      // 2. Putar Jarum (Skor 0 = -90deg, Skor 100 = +90deg)
-      // Rumus: (Skor / 100 * 180) - 90
       const rotationAngle = (score / 100 * 180) - 90;
       document.getElementById('gauge-needle').style.transform = `translateX(-50%) rotate(${rotationAngle}deg)`;
     }
 
-    // ==========================================
-    // FETCH DATA KURS & EMAS (SIMULASI SENTIMEN)
-    // ==========================================
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -621,27 +638,21 @@
 
         fetchGoldPrice(usdToIdr);
 
-        // --- SIMULASI SENTIMEN PASAR BERDASARKAN NILAI TUKAR ---
-        // Jika USD > 17800 (Rupiah melemah), sentimen Bearish (skor rendah)
-        // Jika USD < 17500 (Rupiah menguat), sentimen Bullish (skor tinggi)
-        // *Angka ini disesuaikan dengan rentang kurs saat ini
         let simulatedScore = 50;
         if (usdToIdr > 17800) {
-            simulatedScore = Math.floor(Math.random() * 30); // 0 - 30 (Bearish)
+            simulatedScore = Math.floor(Math.random() * 30);
         } else if (usdToIdr < 17500) {
-            simulatedScore = Math.floor(Math.random() * 30) + 70; // 70 - 100 (Bullish)
+            simulatedScore = Math.floor(Math.random() * 30) + 70;
         } else {
-            simulatedScore = Math.floor(Math.random() * 30) + 35; // 35 - 65 (Netral)
+            simulatedScore = Math.floor(Math.random() * 30) + 35;
         }
         updateSentiment(simulatedScore);
 
-        // Update Chart Tren
         currencyChart.data.labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         currencyChart.data.datasets[0].data = [usdToIdr - 50, usdToIdr - 20, usdToIdr - 80, usdToIdr - 10, usdToIdr + 30, usdToIdr + 10, usdToIdr];
         currencyChart.update();
       } catch (err) { 
         console.error("Gagal ambil kurs:", err); 
-        // Fallback simulasi jika API error
         updateSentiment(50);
       }
     }
@@ -660,9 +671,6 @@
       }
     }
 
-    // ==========================================
-    // FETCH BERITA, KEBIJAKAN, & AI ANALISIS
-    // ==========================================
     const NEWS_API_URL = 'https://freenewsapi.ai/v1/search?host=infoekonomi.id&size=30';
     let allNews = [];
     let activeNewsList = [];
@@ -689,27 +697,21 @@
         container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Tidak ada berita di kategori ini.</div>`;
         return;
       }
-
       activeNewsList = newsArray;
 
       container.innerHTML = newsArray.map((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 120) + '...' : '';
-        
         return `
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
             <div class="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
-            
             <div class="p-5 sm:p-6 flex flex-col flex-grow">
               <div class="flex justify-between items-center mb-4">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ekonomi</span>
                 <div class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1.5"><i class="fa-regular fa-clock text-blue-400"></i> ${dateStr}</div>
               </div>
-              
               <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
-              
               <p class="text-xs sm:text-sm text-slate-500 line-clamp-3 mb-5 flex-grow font-medium">${cleanDesc}</p>
-              
               <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
                 <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md group-hover:scale-105">
                   Buka Berita <i class="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i>
@@ -751,7 +753,6 @@
             <span class="absolute -left-[31px] sm:-left-[41px] top-1 w-6 h-6 rounded-full bg-${color}-100 border-4 border-white shadow-sm flex items-center justify-center z-10 group-hover:scale-110 transition-transform">
                <span class="w-2 h-2 bg-${color}-500 rounded-full"></span>
             </span>
-            
             <div class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-5 rounded-2xl transition-all duration-300 hover:shadow-md">
               <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                 <span class="text-[10px] sm:text-xs font-bold text-${color}-700 bg-${color}-100/50 px-2.5 py-1 rounded-md flex items-center gap-1.5 w-max border border-${color}-200">
@@ -911,6 +912,7 @@
       fetchNews();
       fetchInflasi(); 
       fetchNaker();
+      checkWeekend(); // Cek apakah hari ini Sabtu/Minggu
     };
   </script>
 </body>
