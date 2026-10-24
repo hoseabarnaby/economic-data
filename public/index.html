@@ -146,8 +146,8 @@
         </div>
       </div>
 
-      <!-- 4 KOTAK UTAMA -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <!-- 5 KOTAK UTAMA -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
         <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
@@ -186,6 +186,16 @@
             <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="us-10y">-</div>
           </div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Yield terbaru</div>
+        </div>
+
+        <!-- 5. HARGA EMAS (FIX: Elemen ini ditambahkan) -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 sm:p-5 border border-yellow-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
+          <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10 group-hover:scale-110 transition-transform duration-500"></i>
+          <div class="relative z-10">
+            <div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="gold-rate">-</div>
+          </div>
+          <div class="text-[10px] text-slate-500 font-medium relative z-10">Spot price (XAU)</div>
         </div>
       </div>
 
@@ -293,11 +303,11 @@
       </div>
 
       <div class="flex overflow-x-auto hide-scrollbar space-x-2 pb-2">
-        <button onclick="filterNewsByCategory('semua')" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Semua</button>
-        <button onclick="filterNewsByCategory('pangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Pangan</button>
-        <button onclick="filterNewsByCategory('keuangan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Keuangan</button>
-        <button onclick="filterNewsByCategory('energi')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Energi</button>
-        <button onclick="filterNewsByCategory('kebijakan')" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Kebijakan</button>
+        <button onclick="filterNewsByCategory('semua', event)" class="filter-btn active px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Semua</button>
+        <button onclick="filterNewsByCategory('pangan', event)" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Pangan</button>
+        <button onclick="filterNewsByCategory('keuangan', event)" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Keuangan</button>
+        <button onclick="filterNewsByCategory('energi', event)" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Energi</button>
+        <button onclick="filterNewsByCategory('kebijakan', event)" class="filter-btn inactive px-5 py-2 rounded-full text-sm font-bold border whitespace-nowrap">Kebijakan</button>
       </div>
 
       <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -453,7 +463,7 @@
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-        <button onclick="shareCurrentNews()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
+        <button onclick="shareCurrentNews(event)" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
           <i class="fa-solid fa-share-nodes"></i> Bagikan
         </button>
         <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20 order-1 sm:order-2">
@@ -486,6 +496,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     let supabaseClient = null;
     let currentModalNews = null;
+    let activePolicyNews = []; // FIX: Variabel global untuk kebijakan
     
     const svgPlaceholder = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
@@ -589,12 +600,13 @@
       chatBody.scrollTop = chatBody.scrollHeight;
 
       try {
+        // FIX: Menggunakan optional chaining (?.) untuk mencegah error null
         const contextData = `
-          Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
-          Harga Emas: ${document.getElementById('gold-rate').innerText}
-          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
-          BI Rate: ${document.getElementById('bi-rate').innerText}
-          US Treasury 10Y: ${document.getElementById('us-10y').innerText}
+          Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
+          Harga Emas: ${document.getElementById('gold-rate')?.innerText || '-'}
+          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
+          BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
+          US Treasury 10Y: ${document.getElementById('us-10y')?.innerText || '-'}
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : 'Belum ada berita'}"
         `;
 
@@ -646,12 +658,17 @@
       kebijakan: ['pajak', 'subsidi', 'pemerintah', 'apbn', 'inflasi', 'bi', 'bank indonesia', 'regulasi', 'kebijakan', 'fiskal', 'moneter', 'insentif', 'menteri', 'presiden']
     };
 
-    function filterNewsByCategory(category) {
+    // FIX: Menambahkan parameter event
+    function filterNewsByCategory(category, event) {
       currentCategory = category;
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active'); btn.classList.add('inactive');
       });
-      event.target.classList.remove('inactive'); event.target.classList.add('active');
+      // FIX: Menggunakan event.currentTarget agar aman jika yang diklik adalah icon di dalam tombol
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.remove('inactive'); 
+        event.currentTarget.classList.add('active');
+      }
       applyNewsFilters();
     }
 
@@ -677,7 +694,9 @@
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`content-${tabId}`).classList.remove('hidden');
+      const targetTab = document.getElementById(`content-${tabId}`);
+      if (targetTab) targetTab.classList.remove('hidden'); // FIX: Cek null
+      
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('tab-active');
         btn.classList.add('tab-inactive');
@@ -735,7 +754,8 @@
         usdToIdrGlobal = rates.IDR;
 
         // Update Kotak Utama
-        document.getElementById('usd-rate').innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        const usdRateEl = document.getElementById('usd-rate');
+        if (usdRateEl) usdRateEl.innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
         // --- SETUP DATA TICKER & LIST ---
         const currenciesToShow = [
@@ -777,7 +797,7 @@
 
         // Render Ticker (Duplikasi agar berjalan mulus)
         const tickerTrack = document.getElementById('ticker-track');
-        tickerTrack.innerHTML = tickerHTML + tickerHTML;
+        if (tickerTrack) tickerTrack.innerHTML = tickerHTML + tickerHTML;
 
         // Render Daftar Kurs (Default hanya tampilkan 4)
         renderCurrencyList();
@@ -792,6 +812,8 @@
       const listContainer = document.getElementById('currency-list');
       const btnShowMore = document.getElementById('btn-show-more');
       
+      if (!listContainer) return;
+
       // Tentukan berapa yang mau ditampilkan
       const limit = showAllCurrencies ? allCurrencies.length : 4;
       const toDisplay = allCurrencies.slice(0, limit);
@@ -806,11 +828,15 @@
       `).join('');
 
       // Tampilkan tombol jika data lebih dari 4
-      if (allCurrencies.length > 4) {
-        btnShowMore.classList.remove('hidden');
-        btnShowMore.innerHTML = showAllCurrencies 
-          ? 'Tampilkan Lebih Sedikit <i class="fa-solid fa-chevron-up ml-1"></i>' 
-          : 'Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>';
+      if (btnShowMore) {
+        if (allCurrencies.length > 4) {
+          btnShowMore.classList.remove('hidden');
+          btnShowMore.innerHTML = showAllCurrencies 
+            ? 'Tampilkan Lebih Sedikit <i class="fa-solid fa-chevron-up ml-1"></i>' 
+            : 'Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>';
+        } else {
+          btnShowMore.classList.add('hidden');
+        }
       }
     }
 
@@ -823,25 +849,31 @@
       try {
         const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d', { cache: "no-store" });
         const data = await res.json();
+        const el = document.getElementById('us-10y');
         if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
           const price = data.chart.result[0].meta.regularMarketPrice;
-          document.getElementById('us-10y').innerText = price.toFixed(3) + '%';
+          if (el) el.innerText = price.toFixed(3) + '%';
         } else {
-          document.getElementById('us-10y').innerText = '4.25%';
+          if (el) el.innerText = '4.25%';
         }
       } catch (err) {
-        document.getElementById('us-10y').innerText = '4.25%';
+        const el = document.getElementById('us-10y');
+        if (el) el.innerText = '4.25%';
       }
     }
 
+    // FIX: Fungsi diperbaiki agar tidak error saat elemen gold-rate belum ada (null)
     async function fetchGoldPrice(usdToIdr) {
+      const el = document.getElementById('gold-rate');
       try {
         const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
         const data = await res.json();
-        if (data && data.price) {
-          document.getElementById('gold-rate').innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        if (data && data.price && el) {
+          el.innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
         }
-      } catch (err) { document.getElementById('gold-rate').innerText = '1.250.000'; }
+      } catch (err) { 
+        if (el) el.innerText = '1.250.000'; 
+      }
     }
 
     let allNews = [];
@@ -855,7 +887,7 @@
       if (isFetchingNews) return;
       isFetchingNews = true;
       
-      if (manualRefresh) {
+      if (manualRefresh && btnRefresh && iconRefresh) {
         btnRefresh.classList.add('opacity-50', 'cursor-not-allowed');
         iconRefresh.classList.add('fa-spin');
       }
@@ -881,7 +913,8 @@
         }));
 
         const now = new Date();
-        document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${now.toLocaleTimeString('id-ID')}`;
+        const timeEl = document.getElementById('news-timestamp');
+        if (timeEl) timeEl.innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${now.toLocaleTimeString('id-ID')}`;
 
         applyNewsFilters();
         renderKebijakan(allNews);
@@ -891,7 +924,7 @@
 
         checkSharedUrl();
 
-        if (manualRefresh) {
+        if (manualRefresh && btnRefresh) {
           btnRefresh.classList.replace('bg-blue-50', 'bg-emerald-50');
           btnRefresh.classList.replace('text-blue-600', 'text-emerald-600');
           btnRefresh.classList.replace('border-blue-100', 'border-emerald-100');
@@ -903,7 +936,7 @@
         }
       } catch (err) {
         console.error(err);
-        if (gridContainer.innerHTML.includes('skeleton') || gridContainer.innerHTML.includes('Memuat')) {
+        if (gridContainer && (gridContainer.innerHTML.includes('skeleton') || gridContainer.innerHTML.includes('Memuat'))) {
           gridContainer.innerHTML = `
             <div class="col-span-full text-center py-10 text-slate-500">
               <i class="fa-solid fa-wifi text-4xl mb-3 text-slate-300"></i><br>
@@ -913,8 +946,10 @@
         }
       } finally {
         isFetchingNews = false;
-        btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
-        iconRefresh.classList.remove('fa-spin');
+        if (btnRefresh && iconRefresh) {
+          btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
+          iconRefresh.classList.remove('fa-spin');
+        }
       }
     }
 
@@ -922,14 +957,17 @@
       const loadingEl = document.getElementById('ai-briefing-loading');
       const aiTextEl = document.getElementById('ai-analysis-text');
       
+      if (!loadingEl || !aiTextEl) return;
+
       const latestNews = newsArray.length > 0 ? newsArray[0].title : "Belum ada berita terbaru.";
 
       try {
+        // FIX: Menggunakan optional chaining
         const contextData = `
-          Kurs USD/IDR: ${document.getElementById('usd-rate').innerText}
-          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir').innerText}
-          BI Rate: ${document.getElementById('bi-rate').innerText}
-          US Treasury 10Y: ${document.getElementById('us-10y').innerText}
+          Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
+          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
+          BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
+          US Treasury 10Y: ${document.getElementById('us-10y')?.innerText || '-'}
           Berita Terbaru: "${latestNews}"
         `;
 
@@ -973,6 +1011,8 @@
 
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
+      if (!container) return;
+      
       if (newsArray.length === 0) {
         container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Tidak ada berita di kategori ini.</div>`;
         return;
@@ -1004,32 +1044,48 @@
 
     function renderKebijakan(newsArray) {
       const container = document.getElementById('kebijakan-list');
+      if (!container) return;
+
       const keywords = categoryKeywords['kebijakan'];
       const filtered = newsArray.filter(item => {
         const text = (item.title + ' ' + (item.description || '')).toLowerCase();
         return keywords.some(k => text.includes(k));
       }).slice(0, 5);
 
+      activePolicyNews = filtered; // FIX: Simpan ke variabel global
+
       if (filtered.length === 0) {
         container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm font-medium">Belum ada berita kebijakan terbaru hari ini.</div>`;
         return;
       }
       let html = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">`;
-      filtered.forEach((item) => {
+      
+      filtered.forEach((item, index) => {
         const dateStr = formatTanggalAman(item.published_at);
-        let tag = 'Regulasi'; let color = 'blue';
         
-        if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { tag = 'Fiskal'; color = 'amber'; }
-        if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { tag = 'Moneter'; color = 'indigo'; }
+        // FIX: Menghindari dynamic class Tailwind yang bisa gagal dirender
+        let tag = 'Regulasi'; 
+        let dotColor = 'bg-blue-500';
+        let textColor = 'text-blue-600';
+        let bgColor = 'bg-blue-50';
+        let borderColor = 'border-blue-100';
+        
+        if(item.title.toLowerCase().includes('pajak') || item.title.toLowerCase().includes('fiskal')) { 
+          tag = 'Fiskal'; dotColor = 'bg-amber-500'; textColor = 'text-amber-600'; bgColor = 'bg-amber-50'; borderColor = 'border-amber-100';
+        }
+        if(item.title.toLowerCase().includes('bi') || item.title.toLowerCase().includes('suku bunga')) { 
+          tag = 'Moneter'; dotColor = 'bg-indigo-500'; textColor = 'text-indigo-600'; bgColor = 'bg-indigo-50'; borderColor = 'border-indigo-100';
+        }
 
         html += `
           <div class="ml-4 sm:ml-6 relative group">
-            <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-${color}-500 border-2 sm:border-4 border-white shadow-sm z-10"></span>
-            <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
+            <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${dotColor} border-2 sm:border-4 border-white shadow-sm z-10"></span>
+            <!-- FIX: Menggunakan index dari array global activePolicyNews -->
+            <div onclick="openPolicyNewsModal(${index})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
               <img src="${DEFAULT_NEWS_IMAGE}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Berita Kebijakan">
               <div class="flex-grow">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                  <span class="text-[10px] font-bold text-${color}-600 bg-${color}-50 px-2 py-0.5 rounded border border-${color}-100 w-max">${tag}</span>
+                  <span class="text-[10px] font-bold ${textColor} ${bgColor} px-2 py-0.5 rounded border ${borderColor} w-max">${tag}</span>
                   <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
                 </div>
                 <h3 class="text-sm text-slate-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">${item.title}</h3>
@@ -1042,10 +1098,19 @@
       container.innerHTML = html;
     }
 
-    document.getElementById('search-news').addEventListener('input', (e) => {
-      currentSearchQuery = e.target.value.toLowerCase();
-      applyNewsFilters();
-    });
+    function openPolicyNewsModal(index) {
+      if (activePolicyNews[index]) {
+        openNewsModalByObject(activePolicyNews[index]);
+      }
+    }
+
+    const searchInput = document.getElementById('search-news');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.toLowerCase();
+        applyNewsFilters();
+      });
+    }
 
     function openNewsModal(index) {
       const news = activeNewsList[index];
@@ -1075,11 +1140,13 @@
       modal.classList.add('hidden');
     }
 
-    function shareCurrentNews() {
+    // FIX: Menambahkan parameter event
+    function shareCurrentNews(event) {
       if (!currentModalNews || !currentModalNews.url) return;
       const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
+      
       navigator.clipboard.writeText(shareUrl).then(() => {
-        const btn = event.target.closest('button');
+        const btn = event.currentTarget;
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
         btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
@@ -1102,14 +1169,18 @@
         document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
         document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${data.tahun}`;
         
-        sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
-        sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
+        if (sourceEl) {
+          sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
+          sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
+        }
 
         fetchWorldBankInflasi();
 
       } catch (error) {
-        sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
-        sourceEl.className = "text-sm text-amber-500 font-bold mt-1";
+        if (sourceEl) {
+          sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
+          sourceEl.className = "text-sm text-amber-500 font-bold mt-1";
+        }
         fetchWorldBankInflasi();
       }
     }
