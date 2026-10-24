@@ -865,9 +865,6 @@
     let activeNewsList = [];
     let isFetchingNews = false;
 
-    // ============================================================
-    // === PERUBAHAN UTAMA: API BERITA GRATIS TANPA LIMIT ===
-    // ============================================================
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -883,13 +880,9 @@
       try {
         const timestamp = new Date().getTime();
         
-        // Daftar endpoint API yang akan dicoba secara berurutan (fallback mechanism)
         const apiEndpoints = [
-          // 1. FreeNewsAPI dengan kata kunci "ekonomi" (paling relevan)
           `https://freenewsapi.ai/v1/search?lang=id&q=ekonomi&size=30&t=${timestamp}`,
-          // 2. FreeNewsAPI tanpa kata kunci (jika yang pertama kosong)
           `https://freenewsapi.ai/v1/search?lang=id&size=30&t=${timestamp}`,
-          // 3. FreeNewsAPI dengan kata kunci "bisnis"
           `https://freenewsapi.ai/v1/search?lang=id&q=bisnis&size=30&t=${timestamp}`
         ];
 
@@ -899,7 +892,7 @@
         for (const url of apiEndpoints) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // Timeout 8 detik
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             const res = await fetch(url, { 
               cache: "no-store", 
@@ -920,19 +913,20 @@
           } catch (err) {
             lastError = err;
             console.warn(`⚠️ Endpoint gagal: ${url}`, err.message);
-            // Lanjut ke endpoint berikutnya
           }
         }
 
         if (!data || !data.results) throw lastError || new Error("Semua sumber API berita gagal");
 
-        // Map data ke format yang digunakan aplikasi
+        // Map data ke format yang digunakan aplikasi, TERMASUK GAMBAR/THUMBNAIL
         allNews = data.results.map(item => ({
             title: item.title,
             url: item.url,
             published_at: item.published_at,
             description: item.description,
-            source: item.source || item.publisher || 'Berita Ekonomi'
+            source: item.source || item.publisher || 'Berita Ekonomi',
+            // Mengambil URL gambar dari berbagai kemungkinan nama field
+            image: item.image || item.thumbnail || item.urlToImage || item.cover_image || null 
         }));
 
         const now = new Date();
@@ -1044,9 +1038,14 @@
         const dateStr = formatTanggalAman(item.published_at);
         const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
         const sourceName = item.source || 'Ekonomi';
+        
+        // PERUBAHAN: Gunakan gambar asli jika ada, jika tidak pakai default
+        const imgSrc = item.image || DEFAULT_NEWS_IMAGE;
+        
         return `
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-            <img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-48 object-cover rounded-t-2xl opacity-90 group-hover:opacity-100 transition-opacity" alt="Berita Ekonomi">
+            <!-- PERUBAHAN: Tambah onerror untuk fallback jika link gambar rusak -->
+            <img src="${imgSrc}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-48 object-cover rounded-t-2xl opacity-90 group-hover:opacity-100 transition-opacity" alt="Thumbnail Berita">
             <div class="p-5 flex flex-col flex-grow">
               <div class="flex justify-between items-center mb-3">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 truncate max-w-[120px]" title="${sourceName}">${sourceName}</span>
@@ -1099,11 +1098,15 @@
           tag = 'Moneter'; dotColor = 'bg-indigo-500'; textColor = 'text-indigo-600'; bgColor = 'bg-indigo-50'; borderColor = 'border-indigo-100';
         }
 
+        // PERUBAHAN: Gunakan gambar asli jika ada, jika tidak pakai default
+        const imgSrc = item.image || DEFAULT_NEWS_IMAGE;
+
         html += `
           <div class="ml-4 sm:ml-6 relative group">
             <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${dotColor} border-2 sm:border-4 border-white shadow-sm z-10"></span>
             <div onclick="openPolicyNewsModal(${index})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
-              <img src="${DEFAULT_NEWS_IMAGE}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Berita Kebijakan">
+              <!-- PERUBAHAN: Tambah onerror -->
+              <img src="${imgSrc}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Thumbnail Kebijakan">
               <div class="flex-grow">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
                   <span class="text-[10px] font-bold ${textColor} ${bgColor} px-2 py-0.5 rounded border ${borderColor} w-max">${tag}</span>
@@ -1152,7 +1155,9 @@
       const sourceEl = document.getElementById('modal-source');
       if (sourceEl) sourceEl.innerText = news.source || 'Economic Insight';
 
-      document.getElementById('modal-image-container').innerHTML = `<img src="${DEFAULT_NEWS_IMAGE}" class="w-full h-full object-cover">`;
+      // PERUBAHAN: Gunakan gambar asli di modal, tambahkan onerror
+      const imgSrc = news.image || DEFAULT_NEWS_IMAGE;
+      document.getElementById('modal-image-container').innerHTML = `<img src="${imgSrc}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
 
       currentModalNews = news;
       document.getElementById('news-modal').classList.remove('hidden');
