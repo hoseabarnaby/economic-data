@@ -19,7 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   
-  <!-- Tambahan script untuk TradingView Widget -->
+  <!-- Script untuk TradingView Widget -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
   <style>
@@ -242,7 +242,7 @@
       <!-- IHSG & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         
-        <!-- KIRI: IHSG MENGGUNAKAN TRADINGVIEW -->
+        <!-- KIRI: IHSG MENGGUNAKAN TRADINGVIEW (STATIS) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
           <div class="flex justify-between items-start mb-4">
             <div>
@@ -254,7 +254,7 @@
           </div>
           
           <!-- Container untuk TradingView Chart -->
-          <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100" id="tradingview_ihsg"></div>
+          <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100 pointer-events-none" id="tradingview_ihsg"></div>
         </div>
 
         <!-- KANAN: Upcoming Economic Events (REAL-TIME) -->
@@ -735,21 +735,29 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // === FUNGSI TRADINGVIEW UNTUK IHSG ===
+    // === FUNGSI TRADINGVIEW UNTUK IHSG (STATIS) ===
     function initTradingViewChart() {
       new TradingView.widget({
         "width": "100%",
         "height": "100%",
-        "symbol": "IDX:COMPOSITE", // Simbol untuk IHSG di TradingView
-        "interval": "D", // Timeframe: Harian
+        "symbol": "IDX:COMPOSITE", 
+        "interval": "D", 
         "timezone": "Asia/Jakarta",
         "theme": "light",
-        "style": "1", // 1 = Candlestick, 2 = Bar, 3 = Line
+        "style": "1", 
         "locale": "id",
         "toolbar_bg": "#f1f3f6",
         "enable_publishing": false,
-        "hide_side_toolbar": false, // Tampilkan toolbar untuk indikator
-        "allow_symbol_change": false, // Kunci simbol agar tetap IHSG
+        
+        // --- KONFIGURASI AGAR STATIS ---
+        "hide_side_toolbar": true, // Sembunyikan menu gambar di kiri
+        "hide_top_toolbar": true, // Sembunyikan menu di atas agar lebih bersih
+        "enableScrolling": false, // Nonaktifkan fitur geser (pan)
+        "enableScaleZ": false, // Nonaktifkan zoom sumbu waktu
+        "disable_mouse_wheel": true, // Nonaktifkan zoom pakai scroll mouse
+        "allow_symbol_change": false, // Kunci agar tidak bisa ganti simbol
+        // ------------------------------
+
         "container_id": "tradingview_ihsg"
       });
     }
@@ -1281,7 +1289,7 @@
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
       try { fetchCurrenciesForTicker(); } catch(e) {}
-      try { initTradingViewChart(); } catch(e) {} // Ganti fetchIHSG dengan TradingView
+      try { initTradingViewChart(); } catch(e) {} // Inisialisasi TradingView
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchInflasi(); } catch(e) {}
