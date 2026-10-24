@@ -69,47 +69,15 @@
     .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
     .markdown-body li { margin-bottom: 0.25rem; }
 
-    /* ==========================================
-       CSS UNTUK RUNNING TEXT (MARQUEE TICKER)
-       ========================================== */
     .ticker-container {
-      width: 100%;
-      overflow: hidden;
-      background-color: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.75rem;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      padding: 12px 0;
-      position: relative;
+      width: 100%; overflow: hidden; background-color: #ffffff; border: 1px solid #e2e8f0;
+      border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 12px 0; position: relative;
     }
-    
-    .ticker-track {
-      display: flex;
-      width: max-content;
-      animation: tickerScroll 30s linear infinite;
-    }
-
-    .ticker-container:hover .ticker-track {
-      animation-play-state: paused; /* Berhenti saat di-hover */
-    }
-
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0 1.5rem;
-      border-right: 1px solid #f1f5f9;
-      white-space: nowrap;
-    }
-
-    .ticker-item:last-child {
-      border-right: none;
-    }
-
-    @keyframes tickerScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); } /* Karena kita duplikat isinya, geser setengah lebar */
-    }
+    .ticker-track { display: flex; width: max-content; animation: tickerScroll 30s linear infinite; }
+    .ticker-container:hover .ticker-track { animation-play-state: paused; }
+    .ticker-item { display: flex; align-items: center; gap: 0.5rem; padding: 0 1.5rem; border-right: 1px solid #f1f5f9; white-space: nowrap; }
+    .ticker-item:last-child { border-right: none; }
+    @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
@@ -228,7 +196,6 @@
         </div>
         <div class="ticker-container">
           <div class="ticker-track" id="ticker-track">
-            <!-- Diisi oleh JavaScript -->
             <div class="text-sm text-slate-500 px-4 py-2">Memuat data mata uang...</div>
           </div>
         </div>
@@ -248,72 +215,59 @@
           </div>
           <p class="text-blue-100 text-sm leading-relaxed mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
           
-          <!-- Loading AI -->
           <div id="ai-briefing-loading" class="flex items-center gap-2 text-blue-200 text-sm">
              <span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span> Menghubungi DeepSeek AI...
           </div>
 
-          <!-- Hasil AI (Markdown) -->
-          <div class="markdown-body" id="ai-analysis-text" style="display: none;">
-          </div>
+          <div class="markdown-body" id="ai-analysis-text" style="display: none;"></div>
         </div>
         <button class="relative z-10 mt-6 md:mt-0 px-6 py-3 bg-white text-indigo-900 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all shrink-0">
           Baca Laporan Lengkap
         </button>
       </div>
 
-      <!-- MARKET MOVERS & UPCOMING EVENTS (SETENGAH-SETENGAH) -->
+      <!-- DAFTAR KURS & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <!-- KIRI: Market Movers -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        
+        <!-- KIRI: Daftar Kurs Mata Uang -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-arrow-right-arrow-left text-blue-500"></i> Market Movers (Mata Uang)
+            <i class="fa-solid fa-money-bill-transfer text-blue-500"></i> Nilai Tukar Mata Uang
           </h3>
-          <p class="text-slate-500 text-xs leading-relaxed mb-4">Pergerakan mata uang utama terhadap Rupiah hari ini.</p>
-          <div class="space-y-3">
-            <!-- Top Gainer -->
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">GBP / IDR <span class="text-[10px] text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded ml-1">Gainer</span></span>
-               <span class="text-emerald-600 font-bold">+0.85%</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">AUD / IDR <span class="text-[10px] text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded ml-1">Gainer</span></span>
-               <span class="text-emerald-600 font-bold">+0.45%</span>
-            </div>
-            <!-- Top Loser -->
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">JPY / IDR <span class="text-[10px] text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1">Loser</span></span>
-               <span class="text-rose-600 font-bold">-1.20%</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-               <span class="text-slate-700 font-medium">CNY / IDR <span class="text-[10px] text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded ml-1">Loser</span></span>
-               <span class="text-rose-600 font-bold">-0.50%</span>
-            </div>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Kurs terhadap Rupiah berdasarkan data pasar terbaru.</p>
+          
+          <div id="currency-list" class="space-y-3 flex-grow">
+            <!-- Diisi oleh JS -->
           </div>
+
+          <button id="btn-show-more" onclick="toggleCurrencyList()" class="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-blue-600 text-sm font-bold rounded-xl transition-colors border border-slate-200 hidden">
+            Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>
+          </button>
         </div>
 
-        <!-- KANAN: Upcoming Economic Events -->
+        <!-- KANAN: Upcoming Economic Events (Jadwal Akurat) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-            <i class="fa-regular fa-calendar-days text-indigo-500"></i> Upcoming Economic Events
+            <i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi
           </h3>
-          <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal rilis data ekonomi dan kebijakan penting minggu ini.</p>
+          <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal reguler rilis data dan kebijakan penting (Waktu Indonesia Barat).</p>
+          
           <div class="space-y-3">
              <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-               <span class="text-slate-700 font-medium">Rilis Inflasi BPS</span>
-               <span class="text-slate-400 text-xs font-semibold">Besok, 10:00</span>
+               <span class="text-slate-700 font-medium">Rilis Inflasi (BPS)</span>
+               <span class="text-slate-400 text-xs font-semibold">Awal bulan, 11:00</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
                <span class="text-slate-700 font-medium">RDG Bank Indonesia</span>
-               <span class="text-slate-400 text-xs font-semibold">Rabu, 14:00</span>
+               <span class="text-slate-400 text-xs font-semibold">Bulanan, 14:00</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
                <span class="text-slate-700 font-medium">FOMC Meeting (The Fed)</span>
-               <span class="text-slate-400 text-xs font-semibold">Kamis, 02:00</span>
+               <span class="text-slate-400 text-xs font-semibold">8x setahun, 01:00</span>
             </div>
              <div class="flex justify-between items-center text-sm">
-               <span class="text-slate-700 font-medium">Rilis Data GDP</span>
-               <span class="text-slate-400 text-xs font-semibold">Jumat, 09:00</span>
+               <span class="text-slate-700 font-medium">Rilis Data PDB (BPS)</span>
+               <span class="text-slate-400 text-xs font-semibold">Triwulanan, 11:00</span>
             </div>
           </div>
         </div>
@@ -766,6 +720,11 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
+    // === STATE UNTUK KURS ===
+    let allCurrencies = [];
+    let showAllCurrencies = false;
+    let usdToIdrGlobal = 0;
+
     async function fetchCurrencies() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
@@ -773,32 +732,31 @@
         if (data.result !== 'success') throw new Error('API Error');
         
         const rates = data.rates;
-        const idrRate = rates.IDR;
+        usdToIdrGlobal = rates.IDR;
 
         // Update Kotak Utama
-        document.getElementById('usd-rate').innerText = idrRate.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        document.getElementById('usd-rate').innerText = usdToIdrGlobal.toLocaleString('id-ID', { maximumFractionDigits: 0 });
         
-        // --- UPDATE RUNNING TEXT (TICKER) ---
+        // --- SETUP DATA TICKER & LIST ---
         const currenciesToShow = [
-          { code: 'EUR', label: 'EUR/IDR', icon: 'fa-euro-sign' },
-          { code: 'GBP', label: 'GBP/IDR', icon: 'fa-sterling-sign' },
-          { code: 'JPY', label: 'JPY/IDR', icon: 'fa-yen-sign' },
-          { code: 'SGD', label: 'SGD/IDR', icon: 'fa-dollar-sign' },
-          { code: 'AUD', label: 'AUD/IDR', icon: 'fa-dollar-sign' },
-          { code: 'CNY', label: 'CNY/IDR', icon: 'fa-yen-sign' },
-          { code: 'KRW', label: 'KRW/IDR', icon: 'fa-won-sign' }
+          { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
+          { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
+          { code: 'JPY', label: 'JPY / IDR', icon: 'fa-yen-sign' },
+          { code: 'SGD', label: 'SGD / IDR', icon: 'fa-dollar-sign' },
+          { code: 'AUD', label: 'AUD / IDR', icon: 'fa-dollar-sign' },
+          { code: 'CNY', label: 'CNY / IDR', icon: 'fa-yen-sign' },
+          { code: 'KRW', label: 'KRW / IDR', icon: 'fa-won-sign' }
         ];
 
         let tickerHTML = '';
+        allCurrencies = []; // Reset
+
         currenciesToShow.forEach(curr => {
           const rateAgainstUsd = rates[curr.code];
           if(rateAgainstUsd) {
-            const rateInIdr = idrRate / rateAgainstUsd;
-            // Simulasi pergerakan naik/turun (karena API gratis tidak menyediakan data harian)
-            const isUp = Math.random() > 0.5; 
-            const colorClass = isUp ? 'text-emerald-600' : 'text-rose-600';
-            const iconClass = isUp ? 'fa-caret-up' : 'fa-caret-down';
+            const rateInIdr = usdToIdrGlobal / rateAgainstUsd;
             
+            // Untuk Ticker
             tickerHTML += `
               <div class="ticker-item">
                 <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
@@ -806,22 +764,59 @@
                 <span class="font-extrabold text-slate-900 text-sm">
                   ${rateInIdr.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
                 </span>
-                <span class="text-xs font-bold ${colorClass}">
-                  <i class="fa-solid ${iconClass}"></i> ${(Math.random() * 0.5).toFixed(2)}%
-                </span>
               </div>
             `;
+
+            // Untuk Daftar Bawah (Market Movers diganti)
+            allCurrencies.push({
+              ...curr,
+              rate: rateInIdr
+            });
           }
         });
 
-        // Duplikasi HTML agar running text tidak putus
+        // Render Ticker (Duplikasi agar berjalan mulus)
         const tickerTrack = document.getElementById('ticker-track');
         tickerTrack.innerHTML = tickerHTML + tickerHTML;
 
+        // Render Daftar Kurs (Default hanya tampilkan 4)
+        renderCurrencyList();
+
         // Fetch Gold Price
-        fetchGoldPrice(idrRate);
+        fetchGoldPrice(usdToIdrGlobal);
 
       } catch (err) { console.error(err); }
+    }
+
+    function renderCurrencyList() {
+      const listContainer = document.getElementById('currency-list');
+      const btnShowMore = document.getElementById('btn-show-more');
+      
+      // Tentukan berapa yang mau ditampilkan
+      const limit = showAllCurrencies ? allCurrencies.length : 4;
+      const toDisplay = allCurrencies.slice(0, limit);
+
+      listContainer.innerHTML = toDisplay.map(curr => `
+        <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
+           <span class="text-slate-700 font-medium">${curr.label}</span>
+           <span class="text-slate-900 font-bold">
+              Rp ${curr.rate.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
+           </span>
+        </div>
+      `).join('');
+
+      // Tampilkan tombol jika data lebih dari 4
+      if (allCurrencies.length > 4) {
+        btnShowMore.classList.remove('hidden');
+        btnShowMore.innerHTML = showAllCurrencies 
+          ? 'Tampilkan Lebih Sedikit <i class="fa-solid fa-chevron-up ml-1"></i>' 
+          : 'Tampilkan Lebih Banyak <i class="fa-solid fa-chevron-down ml-1"></i>';
+      }
+    }
+
+    function toggleCurrencyList() {
+      showAllCurrencies = !showAllCurrencies;
+      renderCurrencyList();
     }
 
     async function fetchUS10Y() {
