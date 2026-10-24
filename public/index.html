@@ -11,6 +11,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- PUSTAKA SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
@@ -76,11 +79,19 @@
           <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
         </nav>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
+          
+          <!-- INDIKATOR ONLINE (IKON MATA) -->
+          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm" title="Pengunjung Online">
+            <i class="fa-solid fa-eye text-blue-500 animate-pulse"></i>
+            <span id="online-counter">...</span> Online
+          </div>
+
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold shadow-sm">
             <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             Live Data
           </div>
+          
           <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2 bg-slate-100 rounded-lg transition-colors">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
@@ -88,6 +99,11 @@
       </div>
 
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
+        <!-- Tampilkan jumlah online di mobile menu juga -->
+        <div class="flex items-center justify-between px-4 py-2 mb-2 bg-blue-50 rounded-xl">
+          <span class="text-sm font-semibold text-blue-700"><i class="fa-solid fa-eye mr-2"></i>Pengunjung Online</span>
+          <span class="font-bold text-blue-700" id="online-counter-mobile">...</span>
+        </div>
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Kurs & Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="inflasi">Inflasi <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -407,7 +423,6 @@
   <div id="weekend-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeWeekendModal(event)">
     <div class="bg-white rounded-3xl max-w-sm w-full flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
       
-      <!-- Header Gradient -->
       <div class="bg-gradient-to-br from-indigo-500 to-blue-600 p-6 text-center relative overflow-hidden">
         <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
         <div class="absolute -left-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
@@ -418,7 +433,6 @@
         <p class="text-blue-100 text-sm font-medium">Pasar Valas & Bursa Sedang Libur</p>
       </div>
 
-      <!-- Body -->
       <div class="p-6 text-center">
         <p class="text-slate-600 text-sm leading-relaxed mb-6">
           Pasar keuangan global tutup pada hari Sabtu dan Minggu, sehingga pergerakan kurs tidak diperbarui. 
@@ -436,7 +450,6 @@
         </div>
       </div>
 
-      <!-- Tambahan Copyright di Modal -->
       <div class="bg-slate-50 border-t border-slate-100 py-3 text-center">
         <p class="text-[10px] font-bold text-slate-400">&copy; 2026 Hosea Barnaby</p>
       </div>
@@ -445,6 +458,52 @@
   </div>
 
   <script>
+    // ==========================================
+    // 🔥 KONFIGURASI SUPABASE (GANTI DENGAN MILIK ANDA)
+    // ==========================================
+    const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
+
+    let supabase = null;
+    if (SUPABASE_URL !== 'MASUKKAN_PROJECT_URL_ANDA_DISINI') {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // ==========================================
+    // LOGIKA PENGUNJUNG ONLINE (SUPABASE PRESENCE)
+    // ==========================================
+    async function initOnlineCounter() {
+      if (!supabase) {
+        document.getElementById('online-counter').innerText = '0';
+        document.getElementById('online-counter-mobile').innerText = '0';
+        return;
+      }
+
+      const roomOne = supabase.channel('economic-insight-room');
+
+      roomOne.on('presence', { event: 'sync' }, () => {
+        const newState = roomOne.presenceState();
+        // Menghitung jumlah total user yang sedang online di room ini
+        let count = 0;
+        for (const key in newState) {
+          count += newState[key].length;
+        }
+        
+        // Update UI
+        document.getElementById('online-counter').innerText = count;
+        document.getElementById('online-counter-mobile').innerText = count + ' Pengunjung';
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Daftarkan user ini sebagai online dengan ID unik random
+          await roomOne.track({
+            online_at: new Date().toISOString(),
+            user_id: crypto.randomUUID()
+          });
+        }
+      });
+    }
+
     // ==========================================
     // LOGIKA POP-UP AKHIR PEKAN (SABTU/MINGGU)
     // ==========================================
@@ -910,6 +969,7 @@
     // INISIALISASI AWAL
     // ==========================================
     window.onload = () => {
+      initOnlineCounter(); // Mulai hitung pengunjung online
       initSentimentGauge();
       fetchCurrencies();
       fetchNews();
