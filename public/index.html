@@ -128,50 +128,30 @@
 
       <!-- 5 KOTAK UTAMA DENGAN SOURCE & UPDATE TIME -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
-        <!-- USD/IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 border border-blue-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
-          <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div>
-            <div class="text-[9px] text-slate-400" id="update-usd">-</div>
-          </div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
         </div>
-        <!-- Inflasi -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-amber-600 font-bold mb-1">Inflasi Indonesia</div><div class="text-2xl font-extrabold text-slate-900" id="inflasi-terakhir">-</div></div>
-          <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold" id="source-inflasi">Sumber: -</div>
-            <div class="text-[9px] text-slate-400" id="update-inflasi">-</div>
-          </div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold" id="source-inflasi">Sumber: -</div><div class="text-[9px] text-slate-400" id="update-inflasi">-</div></div>
         </div>
-        <!-- BI Rate -->
         <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 border border-indigo-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-indigo-600 font-bold mb-1">BI Rate</div><div class="text-2xl font-extrabold text-slate-900" id="bi-rate">6.25%</div></div>
-          <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold">Sumber: Bank Indonesia</div>
-            <div class="text-[9px] text-slate-400" id="update-bi">-</div>
-          </div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Bank Indonesia</div><div class="text-[9px] text-slate-400" id="update-bi">-</div></div>
         </div>
-        <!-- US 10Y -->
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
-          <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold">Sumber: Yahoo Finance</div>
-            <div class="text-[9px] text-slate-400" id="update-us10y">-</div>
-          </div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Yahoo Finance</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
-        <!-- Emas -->
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div><div class="text-2xl font-extrabold text-slate-900" id="gold-rate">-</div></div>
-          <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold">Sumber: GoldAPI</div>
-            <div class="text-[9px] text-slate-400" id="update-gold">-</div>
-          </div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: GoldAPI</div><div class="text-[9px] text-slate-400" id="update-gold">-</div></div>
         </div>
       </div>
 
@@ -293,7 +273,7 @@
       
       <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
-          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari Yahoo Finance.
+          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari API Bursa.
         </div>
       </div>
 
@@ -397,25 +377,38 @@
     }
 
     // ==========================================
-    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
+    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (API.CO.ID)
     // ==========================================
     async function fetchLiveStockPrice(ticker) {
+      // API KEY SUDAH DIMASUKKAN
+      const API_KEY = 'j9DmBqLDaOvrwLFwRBWi5pqs1VOJkUakgZrhUWehb6EJq95hD0';
+      
       try {
-        // Ticker otomatis ditambah .JK untuk Bursa Efek Indonesia
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`;
-        // Menggunakan proxy agar tidak diblokir browser
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const url = `https://use.api.co.id/idx/v2/chart/quote/${ticker}`;
         
-        const res = await fetch(proxyUrl, { cache: "no-store" });
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-api-co-id': API_KEY,
+            'Accept': 'application/json'
+          }
+        });
+
         const data = await res.json();
-        
-        if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-            const harga = data.chart.result[0].meta.regularMarketPrice;
-            console.log(`✅ Sukses ambil harga ${ticker} dari Yahoo: Rp ${harga}`);
+
+        // Cek apakah request berhasil
+        if (data && data.is_success && data.data) {
+          const harga = data.data.last || data.data.close || data.data.price || (data.data.data && data.data.data.last);
+          
+          if (harga) {
+            console.log(`✅ Sukses ambil harga ${ticker} dari API.co.id: Rp ${harga}`);
             return harga;
+          }
         }
+        console.error("❌ Gagal ambil harga dari API.co.id. Respons:", data);
+        
       } catch (error) { 
-        console.error("❌ Gagal ambil harga dari Yahoo:", error); 
+        console.error("❌ Error koneksi ke API.co.id:", error); 
       }
       return null;
     }
@@ -454,7 +447,7 @@
           if (price) {
             stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
           } else {
-            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari Yahoo Finance saat ini.`;
+            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari API Bursa saat ini.`;
           }
         }
 
