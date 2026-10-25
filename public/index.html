@@ -1195,18 +1195,26 @@
     }
 
     // ==========================================
-    // FUNGSI SHARE DENGAN API BACKEND VERCEL
+    // FUNGSI SHARE DENGAN API BACKEND VERCEL (FIXED)
     // ==========================================
     function shareCurrentNews(event) {
       if (!currentModalNews || !currentModalNews.url) return;
 
       const title = currentModalNews.title;
       const cleanDesc = currentModalNews.description ? currentModalNews.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Baca berita ekonomi selengkapnya.';
-      const image = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat';
-      const originalUrl = currentModalNews.url;
+      
+      // Pengecekan Gambar (Wajib HTTPS dan bukan data URI)
+      let image = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
+      if (image.startsWith('http://')) {
+          image = image.replace('http://', 'https://');
+      }
+      if (image.startsWith('data:')) {
+          image = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
+      }
 
-      // Arahkan ke endpoint /api/preview milik Python Anda
+      const originalUrl = currentModalNews.url;
       const apiUrl = window.location.origin + '/api/preview';
+      
       const params = new URLSearchParams({
         title: title,
         desc: cleanDesc,
