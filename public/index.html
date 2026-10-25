@@ -861,11 +861,9 @@
       const img = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
       const originalUrl = currentModalNews.url;
       
-      // 1. Buat ID unik pendek (6 karakter)
       const shortId = Math.random().toString(36).substring(2, 8);
       
       try {
-        // 2. Simpan ke database Supabase
         const { error } = await supabaseClient
           .from('share_links')
           .insert([{ 
@@ -878,7 +876,6 @@
 
         if (error) throw error;
 
-        // 3. Buat link pendek & copy ke clipboard
         const shortUrl = `${window.location.origin}/api/preview?id=${shortId}`;
         
         navigator.clipboard.writeText(shortUrl).then(() => {
@@ -927,6 +924,9 @@
       setInterval(fetchNews, 300000);
     };
 
+    // ==========================================
+    // FUNGSI CEK URL SHARE (LANGSUNG EKSEKUSI MODAL)
+    // ==========================================
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedUrl = urlParams.get('news_url');
@@ -938,6 +938,7 @@
 
       switchTab('berita');
       
+      // JIKA DATA TITLE ADA DI URL (Dari API Python), LANGSUNG BUKA MODAL
       if (sharedTitle) {
           const fallbackNews = {
               title: sharedTitle,
@@ -952,6 +953,7 @@
           return;
       }
 
+      // JIKA TIDAK ADA DATA LENGKAP, COBA CARI DI DAFTAR BERITA
       const sharedNews = allNews.find(n => n.url === sharedUrl);
       if (sharedNews) {
           openNewsModalByObject(sharedNews);
@@ -959,6 +961,7 @@
       }
     }
 
+    // Panggil seketika saat halaman dimuat
     try { checkSharedUrl(); } catch(e) { console.error(e); }
   </script>
 </body>
