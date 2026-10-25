@@ -10,7 +10,7 @@
   <meta property="og:image" id="og-image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
 
-  <!-- FAVICON BARU -->
+  <!-- FAVICON -->
   <link rel="icon" href="logo.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -75,16 +75,16 @@
 
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-      <div class="flex items-center justify-between h-16">
+      <div class="flex items-center justify-between h-20"> <!-- Header diperbesar sedikit -->
         
-        <!-- LOGO BARU -->
-        <div class="flex items-center gap-2 sm:gap-3 cursor-pointer group" onclick="switchTab('kurs')">
-          <div class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
+        <!-- LOGO HEADER DIPERBESAR -->
+        <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('kurs')">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform">
             <img src="logo.png" alt="Economic Insight Logo" class="w-full h-full object-contain drop-shadow-sm">
           </div>
           <div>
-            <span class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
-            <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-widest uppercase">Global Economic Intelligence</span>
+            <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
+            <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium tracking-widest uppercase">Global Economic Intelligence</span>
           </div>
         </div>
         
@@ -101,7 +101,7 @@
         </div>
       </div>
 
-      <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
+      <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('global'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="global">Global <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -940,7 +940,6 @@
 
       switchTab('berita');
       
-      // JIKA DATA TITLE ADA DI URL (Dari API Python), LANGSUNG BUKA MODAL
       if (sharedTitle) {
           const fallbackNews = {
               title: sharedTitle,
@@ -955,7 +954,6 @@
           return;
       }
 
-      // JIKA TIDAK ADA DATA LENGKAP, COBA CARI DI DAFTAR BERITA
       const sharedNews = allNews.find(n => n.url === sharedUrl);
       if (sharedNews) {
           openNewsModalByObject(sharedNews);
@@ -963,7 +961,6 @@
       }
     }
 
-    // Panggil seketika saat halaman dimuat
     try { checkSharedUrl(); } catch(e) { console.error(e); }
   </script>
 </body>
