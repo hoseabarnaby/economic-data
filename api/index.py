@@ -2,13 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from urllib.parse import unquote
+from urllib.parse import unquote, urlencode
 import requests
 import os
 
 app = FastAPI()
 
-# Izinkan frontend Vercel untuk mengakses API ini
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,19 +15,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ambil API Key dari Environment Variable Vercel
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# ==========================================
-# 1. ENDPOINT UNTUK INFLASI (Dipanggil oleh /api/inflasi)
-# ==========================================
 @app.get("/api/inflasi")
 def get_inflasi():
     return {"nilai": 2.56, "tahun": 2026}
 
-# ==========================================
-# 2. ENDPOINT UNTUK CHAT DEEPSEEK (Dipanggil oleh /api/chat)
-# ==========================================
 class ChatRequest(BaseModel):
     message: str
     context: str
@@ -79,32 +71,30 @@ Panduan Anda:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
 
-# ==========================================
-# 3. ENDPOINT UNTUK SHARE PREVIEW (OG TAGS)
-# ==========================================
 @app.get("/api/preview")
 def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekonomi terbaru.", img: str = "", url: str = ""):
-    # Decode URL parameter
     title = unquote(title).replace('"', '&quot;')
     desc = unquote(desc).replace('"', '&quot;')
     img = unquote(img)
     url = unquote(url)
 
-    # Paksa HTTPS untuk gambar
     if img.startswith('http://'):
         img = img.replace('http://', 'https://')
         
-    # Jika gambar kosong, pakai default
     if not img or img.startswith('data:image'):
         img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight'
 
-    # ==========================================
-    # PERBAIKAN: ARAHKAN KE WEBSITE VERCEL ANDA
-    # ==========================================
     my_website = "https://economic-data-lake.vercel.app/"
     
-    # URL ini akan memicu fungsi checkSharedUrl() di index.html untuk membuka modal
-    redirect_url = f"{my_website}?news_url={url}"
+    # PERBAIKAN: Kirim semua data (title, desc, img) ke URL redirect
+    query_params = urlencode({
+        'news_url': url,
+        'title': title,
+        'desc': desc,
+        'img': img
+    })
+    
+    redirect_url = f"{my_website}?{query_params}"
 
     html_content = f"""<!DOCTYPE html>
 <html lang="id">
@@ -112,7 +102,6 @@ def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekono
     <meta charset="UTF-8">
     <title>{title}</title>
     
-    <!-- Open Graph Tags -->
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{desc}" />
     <meta property="og:image" content="{img}" />
@@ -124,7 +113,6 @@ def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekono
     <meta name="twitter:description" content="{desc}">
     <meta name="twitter:image" content="{img}">
     
-    <!-- Redirect ke website sendiri dengan parameter news_url -->
     <meta http-equiv="refresh" content="0; url={redirect_url}" />
 </head>
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background-color: #f8fafc;">
@@ -136,7 +124,6 @@ def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekono
 </html>"""
 
     return HTMLResponse(content=html_content, status_code=200)
-
 
 @app.get("/api")
 def read_root():
