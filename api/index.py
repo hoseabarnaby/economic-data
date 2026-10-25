@@ -24,7 +24,6 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 # ==========================================
 @app.get("/api/inflasi")
 def get_inflasi():
-    # Data simulasi. Bisa diganti dengan data BPS asli jika sudah siap.
     return {"nilai": 2.56, "tahun": 2026}
 
 # ==========================================
@@ -81,23 +80,31 @@ Panduan Anda:
         raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
 
 # ==========================================
-# 3. ENDPOINT UNTUK SHARE PREVIEW / OG TAGS (Dipanggil oleh /api/preview)
+# 3. ENDPOINT UNTUK SHARE PREVIEW (OG TAGS)
 # ==========================================
 @app.get("/api/preview")
-def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekonomi terbaru.", img: str = "", url: str = "https://economic-data-lake.vercel.app/"):
-    # Decode URL (mengubah %20 menjadi spasi, dll)
+def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekonomi terbaru.", img: str = "", url: str = ""):
+    # Decode URL parameter
     title = unquote(title).replace('"', '&quot;')
     desc = unquote(desc).replace('"', '&quot;')
     img = unquote(img)
     url = unquote(url)
 
-    # Paksa HTTPS untuk gambar (WhatsApp menolak HTTP)
+    # Paksa HTTPS untuk gambar
     if img.startswith('http://'):
         img = img.replace('http://', 'https://')
         
-    # Jika gambar kosong atau berupa data URI, gunakan gambar default
+    # Jika gambar kosong, pakai default
     if not img or img.startswith('data:image'):
         img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight'
+
+    # ==========================================
+    # PERBAIKAN: ARAHKAN KE WEBSITE VERCEL ANDA
+    # ==========================================
+    my_website = "https://economic-data-lake.vercel.app/"
+    
+    # URL ini akan memicu fungsi checkSharedUrl() di index.html untuk membuka modal
+    redirect_url = f"{my_website}?news_url={url}"
 
     html_content = f"""<!DOCTYPE html>
 <html lang="id">
@@ -105,33 +112,32 @@ def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekono
     <meta charset="UTF-8">
     <title>{title}</title>
     
-    <!-- Open Graph Tags untuk WhatsApp / Facebook / Telegram -->
+    <!-- Open Graph Tags -->
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{desc}" />
     <meta property="og:image" content="{img}" />
-    <meta property="og:url" content="{url}" />
+    <meta property="og:url" content="{redirect_url}" />
     <meta property="og:type" content="article" />
 
-    <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{title}">
     <meta name="twitter:description" content="{desc}">
     <meta name="twitter:image" content="{img}">
     
-    <!-- Redirect ke Website Asli -->
-    <meta http-equiv="refresh" content="0; url={url}" />
+    <!-- Redirect ke website sendiri dengan parameter news_url -->
+    <meta http-equiv="refresh" content="0; url={redirect_url}" />
 </head>
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background-color: #f8fafc;">
     <div style="text-align:center;">
-        <h3 style="color: #1e293b;">Mengalihkan ke berita...</h3>
-        <p><a href="{url}" style="color: #2563eb; text-decoration: none; font-weight: bold;">Klik di sini jika tidak dialihkan secara otomatis</a></p>
+        <h3 style="color: #1e293b;">Membuka berita di Economic Insight...</h3>
+        <p><a href="{redirect_url}" style="color: #2563eb; text-decoration: none; font-weight: bold;">Klik di sini jika tidak dialihkan secara otomatis</a></p>
     </div>
 </body>
 </html>"""
 
     return HTMLResponse(content=html_content, status_code=200)
 
-# Endpoint Health Check (Untuk memastikan server hidup)
+
 @app.get("/api")
 def read_root():
     return {"status": "Backend Python Vercel Aktif"}
