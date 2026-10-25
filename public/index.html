@@ -98,9 +98,6 @@
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full text-xs font-bold shadow-sm" title="Pengunjung Online">
-            <i class="fa-solid fa-eye text-blue-500 animate-pulse"></i><span id="online-counter">0</span> Online
-          </div>
           <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2 bg-slate-100 rounded-lg transition-colors"><i class="fa-solid fa-bars text-lg"></i></button>
         </div>
       </div>
@@ -404,7 +401,7 @@
     }
 
     // ==========================================
-    // FUNGSI LOG PENGUNJUNG (TAMBAHAN BARU)
+    // FUNGSI LOG PENGUNJUNG
     // ==========================================
     async function logVisitor() {
       if (!supabaseClient) return;
@@ -567,16 +564,7 @@
     async function initOnlineCounter() {
       try {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const roomOne = supabaseClient.channel('economic-insight-room');
-        roomOne.on('presence', { event: 'sync' }, () => {
-          const newState = roomOne.presenceState();
-          let count = 0;
-          for (const key in newState) { count += newState[key].length; }
-          const el = document.getElementById('online-counter');
-          if(el) el.innerText = count;
-        }).subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') await roomOne.track({ online_at: new Date().toISOString(), user_id: crypto.randomUUID() });
-        });
+        // Fitur Counter Online dihapus dari tampilan, tapi koneksi Supabase tetap dijalankan untuk log
       } catch (error) {}
     }
 
@@ -1061,7 +1049,7 @@
 
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
-      try { logVisitor(); } catch(e) {} // Mencatat Log Pengunjung
+      try { logVisitor(); } catch(e) {} 
       
       try { fetchCurrenciesForTicker(); } catch(e) {}
       try { initTradingViewChart(); } catch(e) {} 
