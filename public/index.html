@@ -212,18 +212,17 @@
         </div>
       </div>
 
-      <!-- FEAR AND GREED INDEX SECTION -->
+      <!-- FEAR AND GREED INDEX SECTION (UKURAN DIPERBAIKI) -->
       <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
         <h3 class="font-bold text-slate-900 text-base mb-2">Market Sentiment (Fear & Greed)</h3>
         <p class="text-slate-500 text-xs text-center mb-4 max-w-lg">Indeks sentimen pasar (Crypto & Global Macro) yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
         
-        <!-- DIPERKECIL: max-w-[280px] dan h-[140px] -->
-        <div class="relative w-full max-w-[280px] h-[140px] flex justify-center overflow-hidden">
+        <div class="relative w-full max-w-[280px] h-[160px] flex justify-center overflow-hidden">
           <canvas id="fearGreedChart"></canvas>
           <!-- Overlay Text -->
-          <div class="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-0">
+          <div class="absolute bottom-2 left-0 right-0 flex flex-col items-center justify-end pb-0">
             <span class="text-3xl font-extrabold leading-none" id="fng-value">-</span>
-            <span class="text-xs font-bold uppercase tracking-widest mt-1 mb-2" id="fng-label">Loading...</span>
+            <span class="text-xs font-bold uppercase tracking-widest mt-1 mb-1" id="fng-label">Loading...</span>
             <span class="text-[9px] text-slate-400">Sumber: Alternative.me</span>
           </div>
         </div>
@@ -362,6 +361,19 @@
     let gdpChart = null, globalInflationChart = null, unemploymentChart = null, tradeChart = null, fearGreedChart = null;
     const countryColors = { IDN: '#ef4444', CHN: '#eab308', USA: '#3b82f6', JPN: '#8b5cf6', KOR: '#14b8a6' };
     const countryNames = { IDN: 'Indonesia', CHN: 'China', USA: 'Amerika Serikat', JPN: 'Jepang', KOR: 'Korea Selatan' };
+
+    // === FITUR TUTUP TOOLTIP DI HP ===
+    document.addEventListener('click', function(e) {
+      // Jika yang diklik bukan canvas (grafik)
+      if (!e.target.closest('canvas')) {
+        [gdpChart, globalInflationChart, unemploymentChart, tradeChart, fearGreedChart].forEach(chart => {
+          if (chart && chart.tooltip) {
+            chart.tooltip.setActiveElements([], {x: 0, y: 0});
+            chart.update();
+          }
+        });
+      }
+    });
 
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     function switchTab(tabId) {
@@ -680,14 +692,15 @@
       const commonOptions = {
         responsive: true, 
         maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
+        // PERBAIKAN: Hanya muncul jika pas di titiknya
+        interaction: { mode: 'nearest', intersect: true }, 
         plugins: { 
           legend: { 
             position: 'bottom', 
             labels: { boxWidth: 12, usePointStyle: true, padding: 20, font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } } 
           },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
             titleFont: { size: 13, family: "'Plus Jakarta Sans', sans-serif" },
             bodyFont: { size: 12, family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' },
             padding: 12, cornerRadius: 8, displayColors: true,
@@ -736,16 +749,16 @@
     });
 
     // ==========================================
-    // FUNGSI FEAR AND GREED INDEX (FIXED LOGIC & SIZE)
+    // FUNGSI FEAR AND GREED INDEX
     // ==========================================
     async function fetchFearGreedIndex() {
       const valueEl = document.getElementById('fng-value');
       const labelEl = document.getElementById('fng-label');
       const ctx = document.getElementById('fearGreedChart').getContext('2d');
 
-      let value = 50; // Default Netral
+      let value = 50; 
       let label = "Neutral";
-      let color = "#eab308"; // Kuning
+      let color = "#eab308"; 
 
       try {
         const res = await fetch('https://api.alternative.me/fng/');
@@ -755,24 +768,21 @@
           value = parseInt(json.data[0].value);
           label = json.data[0].value_classification;
           
-          // Tentukan warna berdasarkan value
-          if (value <= 25) color = "#ef4444";      // Extreme Fear (Merah)
-          else if (value <= 45) color = "#f97316"; // Fear (Oranye)
-          else if (value <= 55) color = "#eab308"; // Neutral (Kuning)
-          else if (value <= 75) color = "#84cc16"; // Greed (Hijau Muda)
-          else color = "#22c55e";                  // Extreme Greed (Hijau)
+          if (value <= 25) color = "#ef4444";      
+          else if (value <= 45) color = "#f97316"; 
+          else if (value <= 55) color = "#eab308"; 
+          else if (value <= 75) color = "#84cc16"; 
+          else color = "#22c55e";                  
         }
       } catch (e) {
         console.warn("Gagal ambil data Fear & Greed, pakai default.");
       }
 
-      // Set Text di HTML
       valueEl.innerText = value;
       valueEl.style.color = color;
       labelEl.innerText = label;
       labelEl.style.color = color;
 
-      // Gambar Gauge Chart
       if (fearGreedChart) fearGreedChart.destroy();
       
       fearGreedChart = new Chart(ctx, {
@@ -780,13 +790,9 @@
         data: {
           labels: ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"],
           datasets: [{
-            data: [25, 20, 10, 20, 25], // Pembagian rentang
+            data: [25, 20, 10, 20, 25], 
             backgroundColor: [
-              '#ef4444', // Extreme Fear
-              '#f97316', // Fear
-              '#eab308', // Neutral
-              '#84cc16', // Greed
-              '#22c55e'  // Extreme Greed
+              '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'
             ],
             borderWidth: 0,
             hoverOffset: 4
@@ -813,26 +819,22 @@
             const { ctx, data, chartArea: { width, height } } = chart;
             ctx.save();
             
-            // PERBAIKAN RUMUS: Titik tengah (50) = 0 radian. 
-            // Kiri (0) = -PI/2, Kanan (100) = +PI/2
             const angle = (value / 100 * Math.PI) - (Math.PI / 2);
             
             const centerX = width / 2;
             const centerY = height; 
-            const needleLength = height * 0.75; // Sedikit lebih pendek
+            const needleLength = height * 0.75; 
 
             ctx.translate(centerX, centerY);
             ctx.rotate(angle);
             
-            // Gambar Jarum
             ctx.beginPath();
-            ctx.moveTo(-6, 0); // Lebar pangkal jarum
+            ctx.moveTo(-6, 0); 
             ctx.lineTo(0, -needleLength);
             ctx.lineTo(6, 0);
             ctx.fillStyle = color;
             ctx.fill();
             
-            // Gambar Bulatan di tengah jarum
             ctx.beginPath();
             ctx.arc(0, 0, 6, 0, Math.PI * 2);
             ctx.fillStyle = '#1e293b'; 
