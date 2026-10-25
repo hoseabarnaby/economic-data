@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Economic Insight</title>
   
-  <!-- Open Graph Meta Tags (Default) -->
   <meta property="og:title" id="og-title" content="Economic Insight - Global Economic Intelligence">
   <meta property="og:description" id="og-description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
   <meta property="og:image" id="og-image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
@@ -19,8 +18,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  
-  <!-- Script untuk TradingView Widget -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
   <style>
@@ -37,9 +34,6 @@
     
     .glass-panel { background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(49, 46, 129, 0.95)); backdrop-filter: blur(10px); }
     
-    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; color: #bfdbfe; }
-    @keyframes blink { 50% { opacity: 0; } }
-    
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -50,28 +44,21 @@
     .filter-btn.inactive { background-color: #ffffff !important; color: #64748b !important; border-color: #e2e8f0 !important; }
     .filter-btn.inactive:hover { background-color: #f8fafc !important; color: #2563eb !important; border-color: #bfdbfe !important; }
 
-    @keyframes skeleton-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: .5; }
-    }
+    @keyframes skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     .skeleton { animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: #e2e8f0; border-radius: 0.375rem; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .chat-popup { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
     .dot { animation: bounce 1.4s infinite ease-in-out both; width: 6px; height: 6px; background-color: #64748b; border-radius: 50%; display: inline-block; margin: 0 2px;}
     .dot:nth-child(1) { animation-delay: -0.32s; }
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    .markdown-body { font-size: 0.875rem; line-height: 1.6; color: #f8fafc; }
-    .markdown-body p { margin-bottom: 0.75rem; }
-    .markdown-body strong { font-weight: 700; color: #ffffff; }
-    .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
-    .markdown-body li { margin-bottom: 0.25rem; }
+    /* CSS KHUSUS UNTUK MARKDOWN CHAT (Latar Putih) */
+    .markdown-chat { font-size: 0.95rem; line-height: 1.7; color: #334155; }
+    .markdown-chat p { margin-bottom: 0.75rem; }
+    .markdown-chat strong { font-weight: 700; color: #0f172a; }
+    .markdown-chat ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+    .markdown-chat li { margin-bottom: 0.5rem; }
+    .markdown-chat h1, .markdown-chat h2, .markdown-chat h3 { font-weight: 800; color: #0f172a; margin-top: 1rem; margin-bottom: 0.5rem; }
 
     .ticker-container {
       width: 100%; overflow: hidden; background-color: #ffffff; border: 1px solid #e2e8f0;
@@ -104,12 +91,14 @@
           </div>
         </div>
         
+        <!-- MENU NAVIGASI (TAMBAH TAB AI CHAT) -->
         <nav class="hidden md:flex space-x-1">
           <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Pasar</button>
           <button onclick="switchTab('berita')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
           <button onclick="switchTab('inflasi')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="inflasi">Inflasi</button>
           <button onclick="switchTab('naker')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="naker">Naker</button>
           <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
+          <button onclick="switchTab('ai-chat')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive text-blue-600" data-tab="ai-chat"><i class="fa-solid fa-robot mr-1"></i> AI Chat</button>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
@@ -118,23 +107,20 @@
             <span id="online-counter">0</span> Online
           </div>
 
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-bold shadow-sm">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            Live Data
-          </div>
-          
           <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-blue-600 focus:outline-none p-2 bg-slate-100 rounded-lg transition-colors">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
         </div>
       </div>
 
+      <!-- MENU MOBILE -->
       <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('inflasi'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="inflasi">Inflasi <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('naker'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="naker">Ketenagakerjaan <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('kebijakan'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="kebijakan">Kebijakan <i class="fa-solid fa-chevron-right text-xs"></i></button>
+        <button onclick="switchTab('ai-chat'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center text-blue-600" data-tab="ai-chat">AI Chat <i class="fa-solid fa-chevron-right text-xs"></i></button>
       </div>
     </div>
   </header>
@@ -150,125 +136,53 @@
         </div>
       </div>
 
-      <!-- 5 KOTAK UTAMA -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
-        <!-- 1. USD / IDR -->
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="usd-rate">-</div>
-          </div>
+          <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Kurs terbaru</div>
         </div>
-
-        <!-- 2. INFLASI INDONESIA -->
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="text-xs text-amber-600 font-bold mb-1">Inflasi Indonesia</div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="inflasi-terakhir">-</div>
-          </div>
+          <div class="relative z-10"><div class="text-xs text-amber-600 font-bold mb-1">Inflasi Indonesia</div><div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="inflasi-terakhir">-</div></div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10" id="inflasi-tahun">Rilis terakhir</div>
         </div>
-
-        <!-- 3. BI RATE -->
         <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 sm:p-5 border border-indigo-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="text-xs text-indigo-600 font-bold mb-1">BI Rate</div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="bi-rate">6.25%</div>
-          </div>
+          <div class="relative z-10"><div class="text-xs text-indigo-600 font-bold mb-1">BI Rate</div><div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="bi-rate">6.25%</div></div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Keputusan terbaru</div>
         </div>
-
-        <!-- 4. US TREASURY 10Y -->
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="us-10y">-</div>
-          </div>
+          <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="us-10y">-</div></div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Yield terbaru</div>
         </div>
-
-        <!-- 5. HARGA EMAS -->
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 sm:p-5 border border-yellow-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between h-32 group">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10 group-hover:scale-110 transition-transform duration-500"></i>
-          <div class="relative z-10">
-            <div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="gold-rate">-</div>
-          </div>
+          <div class="relative z-10"><div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div><div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="gold-rate">-</div></div>
           <div class="text-[10px] text-slate-500 font-medium relative z-10">Spot price (XAU)</div>
         </div>
       </div>
 
-      <!-- RUNNING TEXT (TICKER) MATA UANG DUNIA -->
       <div class="mt-4">
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">
-          <i class="fa-solid fa-globe mr-1"></i> Global Currency Ticker
-        </div>
-        <div class="ticker-container">
-          <div class="ticker-track" id="ticker-track">
-            <div class="text-sm text-slate-500 px-4 py-2">Memuat data mata uang...</div>
-          </div>
-        </div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1"><i class="fa-solid fa-globe mr-1"></i> Global Currency Ticker</div>
+        <div class="ticker-container"><div class="ticker-track" id="ticker-track"><div class="text-sm text-slate-500 px-4 py-2">Memuat data mata uang...</div></div></div>
       </div>
 
-      <!-- AI ECONOMIC BRIEFING (DEEPSEEK) -->
-      <div class="glass-panel rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden group mt-6">
-        <div class="absolute -right-10 -top-10 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-blue-400 transition-colors duration-700"></div>
-        <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 group-hover:bg-indigo-400 transition-colors duration-700"></div>
-        
-        <div class="relative z-10 flex-grow md:pr-10 w-full">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
-              <i class="fa-solid fa-sparkles text-amber-300 text-lg"></i>
-            </div>
-            <h3 class="font-bold text-xl">AI Economic Briefing</h3>
-          </div>
-          <p class="text-blue-100 text-sm leading-relaxed mb-4">Ringkasan otomatis kondisi ekonomi, pergerakan pasar, faktor pendorong, dan risiko yang perlu diperhatikan.</p>
-          
-          <div id="ai-briefing-loading" class="flex items-center gap-2 text-blue-200 text-sm">
-             <span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span><span class="dot" style="background-color: #bfdbfe;"></span> Menghubungi DeepSeek AI...
-          </div>
-
-          <div class="markdown-body" id="ai-analysis-text" style="display: none;"></div>
-        </div>
-        <button class="relative z-10 mt-6 md:mt-0 px-6 py-3 bg-white text-indigo-900 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all shrink-0">
-          Baca Laporan Lengkap
-        </button>
-      </div>
-
-      <!-- IHSG & UPCOMING EVENTS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        
-        <!-- KIRI: IHSG MENGGUNAKAN TRADINGVIEW (STATIS) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                <i class="fa-solid fa-chart-line text-blue-500"></i> Indeks Harga Saham Gabungan (IHSG)
-              </h3>
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Indeks Harga Saham Gabungan (IHSG)</h3>
               <p class="text-slate-500 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
             </div>
           </div>
-          
-          <!-- Container untuk TradingView Chart -->
           <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100 pointer-events-none" id="tradingview_ihsg"></div>
         </div>
-
-        <!-- KANAN: Upcoming Economic Events (REAL-TIME) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
-          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2">
-            <i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi
-          </h3>
+          <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2"><i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi</h3>
           <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal rilis data dan kebijakan global terdekat (Waktu Indonesia Barat).</p>
-          
-          <!-- Container untuk data dinamis -->
-          <div id="calendar-list" class="space-y-3 flex-grow">
-             <div class="text-center text-slate-400 py-4 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>
-          </div>
+          <div id="calendar-list" class="space-y-3 flex-grow"><div class="text-center text-slate-400 py-4 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div></div>
         </div>
       </div>
     </div>
@@ -285,9 +199,7 @@
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 shadow-sm transition-all">
           </div>
-          <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm" title="Refresh Berita">
-            <i class="fa-solid fa-rotate-right" id="icon-refresh"></i>
-          </button>
+          <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm" title="Refresh Berita"><i class="fa-solid fa-rotate-right" id="icon-refresh"></i></button>
         </div>
       </div>
 
@@ -302,11 +214,7 @@
       <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-80">
           <div class="h-48 skeleton w-full rounded-none"></div>
-          <div class="p-5 flex flex-col flex-grow gap-3">
-            <div class="h-4 skeleton w-1/4"></div>
-            <div class="h-5 skeleton w-3/4"></div>
-            <div class="h-4 skeleton w-full"></div>
-          </div>
+          <div class="p-5 flex flex-col flex-grow gap-3"><div class="h-4 skeleton w-1/4"></div><div class="h-5 skeleton w-3/4"></div><div class="h-4 skeleton w-full"></div></div>
         </div>
       </div>
     </div>
@@ -319,25 +227,16 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <div class="text-sm font-bold text-slate-500 mb-2">Inflasi Terakhir</div>
-          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-terakhir-tab">-</div>
-          <div class="mt-3 text-xs font-semibold text-slate-400" id="inflasi-tahun-tab">-</div>
+          <div class="text-sm font-bold text-slate-500 mb-2">Inflasi Terakhir</div><div class="text-3xl font-extrabold text-slate-900" id="inflasi-terakhir-tab">-</div><div class="mt-3 text-xs font-semibold text-slate-400" id="inflasi-tahun-tab">-</div>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <div class="text-sm font-bold text-slate-500 mb-2">Rata-rata 10 Tahun</div>
-          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-avg">-</div>
-          <div class="mt-3 text-xs font-semibold text-slate-400">Data Tahunan</div>
+          <div class="text-sm font-bold text-slate-500 mb-2">Rata-rata 10 Tahun</div><div class="text-3xl font-extrabold text-slate-900" id="inflasi-avg">-</div><div class="mt-3 text-xs font-semibold text-slate-400">Data Tahunan</div>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <div class="text-sm font-bold text-slate-500 mb-2">Tren</div>
-          <div class="text-3xl font-extrabold text-slate-900" id="inflasi-tren">-</div>
-          <div class="mt-3 text-xs font-semibold text-slate-400">Dibanding tahun lalu</div>
+          <div class="text-sm font-bold text-slate-500 mb-2">Tren</div><div class="text-3xl font-extrabold text-slate-900" id="inflasi-tren">-</div><div class="mt-3 text-xs font-semibold text-slate-400">Dibanding tahun lalu</div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6">
-        <h3 class="font-bold text-slate-900 text-base mb-6">Tren Inflasi Tahunan</h3>
-        <div class="relative h-64 w-full"><canvas id="inflationChart"></canvas></div>
-      </div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6"><h3 class="font-bold text-slate-900 text-base mb-6">Tren Inflasi Tahunan</h3><div class="relative h-64 w-full"><canvas id="inflationChart"></canvas></div></div>
     </div>
 
     <!-- TAB 4: KETENAGAKERJAAN -->
@@ -347,21 +246,10 @@
         <p class="text-sm text-slate-500 mt-1 font-medium">Data Tingkat Pengangguran Terbuka (TPT).</p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <div class="text-sm font-bold text-slate-500 mb-2">Tingkat Pengangguran</div>
-          <div class="text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div>
-          <div class="text-xs font-semibold text-slate-400 mt-2" id="naker-tahun">-</div>
-        </div>
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <div class="text-sm font-bold text-slate-500 mb-2">Tren 5 Tahun</div>
-          <div class="text-3xl font-extrabold text-slate-900" id="naker-tren">-</div>
-          <div class="text-xs font-semibold text-slate-400 mt-2">Perubahan poin persentase</div>
-        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"><div class="text-sm font-bold text-slate-500 mb-2">Tingkat Pengangguran</div><div class="text-3xl font-extrabold text-slate-900" id="naker-terakhir">-</div><div class="text-xs font-semibold text-slate-400 mt-2" id="naker-tahun">-</div></div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm"><div class="text-sm font-bold text-slate-500 mb-2">Tren 5 Tahun</div><div class="text-3xl font-extrabold text-slate-900" id="naker-tren">-</div><div class="text-xs font-semibold text-slate-400 mt-2">Perubahan poin persentase</div></div>
       </div>
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6">
-        <h3 class="font-bold text-slate-900 text-base mb-6">Tren Tingkat Pengangguran</h3>
-        <div class="relative h-64 w-full"><canvas id="nakerChart"></canvas></div>
-      </div>
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6"><h3 class="font-bold text-slate-900 text-base mb-6">Tren Tingkat Pengangguran</h3><div class="relative h-64 w-full"><canvas id="nakerChart"></canvas></div></div>
     </div>
 
     <!-- TAB 5: KEBIJAKAN -->
@@ -377,53 +265,43 @@
       </div>
     </div>
 
+    <!-- TAB 6: AI CHAT (MENU BARU) -->
+    <div id="content-ai-chat" class="tab-content hidden h-[75vh] flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+      <div class="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+             <i class="fa-solid fa-robot text-xl"></i>
+          </div>
+          <div>
+             <div class="font-bold text-lg leading-tight">AI Economic Insight</div>
+             <div class="text-xs text-blue-100">Asisten Analis Ekonomi DeepSeek</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
+          Halo! Saya asisten AI Anda. Silakan tanya apa saja terkait kondisi ekonomi, pasar, atau berita terbaru hari ini.
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
+          <strong>Tips:</strong> Agar jawaban tidak bertele-tele dan hemat API, saya akan berusaha menjawab sesingkat mungkin. <br><br>
+          Contoh: <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis singkat IHSG hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis singkat IHSG hari ini?"</span>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-white flex gap-3 shrink-0">
+        <input type="text" id="chat-input" placeholder="Tanya AI di sini..." class="flex-grow px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors" onkeypress="if(event.key === 'Enter') sendAIMessage()">
+        <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl flex items-center justify-center transition-colors shadow-sm font-bold">
+          <i class="fa-solid fa-paper-plane mr-2"></i> Kirim
+        </button>
+      </div>
+    </div>
+
   </main>
 
-  <!-- FLOATING AI CHATBOT BUTTON -->
-  <button onclick="toggleAIChat()" id="ai-fab" class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/30 transition-transform hover:scale-110">
-    <i class="fa-solid fa-robot text-white text-2xl"></i>
-  </button>
-
-  <!-- AI CHATBOT WINDOW -->
-  <div id="ai-chat-window" class="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden chat-popup">
-    <div class="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-           <i class="fa-solid fa-robot text-sm"></i>
-        </div>
-        <div>
-           <div class="font-bold text-sm leading-tight">AI Economic Insight</div>
-           <div class="text-[10px] text-blue-100">Asisten Analis Ekonomi</div>
-        </div>
-      </div>
-      <button onclick="toggleAIChat()" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    
-    <div class="p-4 h-80 overflow-y-auto bg-slate-50 text-sm custom-scrollbar" id="chat-messages">
-      <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
-        Halo! Saya AI dari Economic Insight. Silakan tanya apa saja terkait kondisi ekonomi, kurs, atau berita terbaru hari ini.
-      </div>
-      <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mb-3 text-slate-700 leading-relaxed">
-        Anda bisa bertanya: <br>
-        <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="document.getElementById('chat-input').value='Bagaimana analisis kamu terhadap kurs hari ini?'; document.getElementById('chat-input').focus();">"Bagaimana analisis kamu terhadap kurs hari ini?"</span>
-      </div>
-    </div>
-
-    <div class="p-3 border-t border-slate-200 bg-white flex gap-2 shrink-0">
-      <input type="text" id="chat-input" placeholder="Tanya AI..." class="flex-grow px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors" onkeypress="if(event.key === 'Enter') sendAIMessage()">
-      <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-sm">
-        <i class="fa-solid fa-paper-plane text-sm"></i>
-      </button>
-    </div>
-  </div>
-
-  <footer class="bg-white py-8 mt-20 border-t border-slate-200 pb-24">
+  <footer class="bg-white py-8 mt-20 border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <p class="text-sm text-slate-500 font-medium">&copy; 2026 Hosea Barnaby. All rights reserved.</p>
-      </div>
+      <p class="text-sm text-slate-500 font-medium">&copy; 2026 Hosea Barnaby. All rights reserved.</p>
       <div class="flex space-x-6 text-slate-400">
         <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-twitter text-lg"></i></a>
         <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-linkedin text-lg"></i></a>
@@ -439,131 +317,81 @@
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <div class="overflow-y-auto custom-scrollbar">
-        <div id="modal-image-container" class="w-full h-64 sm:h-80 bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100">
-        </div>
+      <div class="overflow-y-auto">
+        <div id="modal-image-container" class="w-full h-64 sm:h-80 bg-slate-100 flex items-center justify-center overflow-hidden border-b border-slate-100"></div>
         <div class="p-4 sm:p-6">
           <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3" id="modal-title">Judul Berita</h2>
-          <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 sm:mb-6 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mb-4 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
             <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="modal-source">Sumber</span></div>
           </div>
-          <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed text-sm" id="modal-desc">Deskripsi...</div>
+          <div class="text-slate-600 leading-relaxed text-sm" id="modal-desc">Deskripsi...</div>
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-        <button onclick="shareCurrentNews(event)" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1">
-          <i class="fa-solid fa-share-nodes"></i> Bagikan
-        </button>
-        <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20 order-1 sm:order-2">
-          Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL AKHIR PEKAN -->
-  <div id="weekend-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeWeekendModal(event)">
-    <div class="bg-white rounded-3xl max-w-sm w-full flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
-      <div class="bg-indigo-50 p-6 text-center relative overflow-hidden">
-        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><i class="fa-solid fa-mug-hot text-3xl text-indigo-500"></i></div>
-        <h3 class="text-2xl font-extrabold text-slate-900 mb-1">Akhir Pekan Tiba!</h3>
-        <p class="text-slate-600 text-sm font-medium">Pasar Valas & Bursa Sedang Libur</p>
-      </div>
-      <div class="p-6 text-center">
-        <p class="text-slate-600 text-sm leading-relaxed mb-6">Pasar keuangan global tutup pada hari Sabtu dan Minggu, sehingga pergerakan kurs tidak diperbarui. <br><br>Namun, <strong>Anda tetap bisa membaca berita ekonomi terbaru</strong>.</p>
-        <div class="flex flex-col gap-2">
-          <button onclick="closeWeekendModal(); switchTab('berita');" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"><i class="fa-solid fa-newspaper"></i> Lihat Berita</button>
-          <button onclick="closeWeekendModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Tutup</button>
-        </div>
+        <button onclick="shareCurrentNews(event)" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1"><i class="fa-solid fa-share-nodes"></i> Bagikan</button>
+        <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20 order-1 sm:order-2">Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>
       </div>
     </div>
   </div>
 
   <script>
+    // URL SUPABASE & KONSTANTA GAMBAR
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     let supabaseClient = null;
     let currentModalNews = null;
     let activePolicyNews = [];
+    let allNews = [];
     
     const svgPlaceholder = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <defs>
-          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#2563eb" />
-            <stop offset="100%" stop-color="#4f46e5" />
-          </linearGradient>
-          <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle fill="#ffffff" opacity="0.1" cx="2" cy="2" r="1.5"></circle>
-          </pattern>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2563eb" /><stop offset="100%" stop-color="#4f46e5" /></linearGradient>
+          <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle fill="#ffffff" opacity="0.1" cx="2" cy="2" r="1.5"></circle></pattern>
         </defs>
-        <rect width="800" height="400" fill="url(#grad)" />
-        <rect width="800" height="400" fill="url(#dots)" />
-        
-        <g transform="translate(360, 130) scale(3.5)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 17l6-6 4 4 8-8" />
-          <path d="M17 7h4v4" />
-        </g>
-        
+        <rect width="800" height="400" fill="url(#grad)" /><rect width="800" height="400" fill="url(#dots)" />
+        <g transform="translate(360, 130) scale(3.5)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8" /><path d="M17 7h4v4" /></g>
         <text x="400" y="260" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="42" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="1">Economic Insight</text>
         <text x="400" y="300" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="18" font-weight="600" fill="#bfdbfe" text-anchor="middle" letter-spacing="3">BERITA EKONOMI TERBARU</text>
       </svg>
     `;
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
-    async function initOnlineCounter() {
-      const counterDesktop = document.getElementById('online-counter');
-      if (SUPABASE_URL.includes('MASUKKAN') || SUPABASE_ANON_KEY.includes('MASUKKAN') || typeof window.supabase === 'undefined') {
-        if(counterDesktop) counterDesktop.innerText = '0';
-        return; 
+    // FUNGSI NAVIGASI
+    function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const targetTab = document.getElementById(`content-${tabId}`);
+      if (targetTab) {
+          targetTab.classList.remove('hidden');
+          if(tabId === 'ai-chat') targetTab.classList.add('flex'); // Agar chat full height
       }
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active'); btn.classList.add('tab-inactive');
+      });
+      document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => {
+        activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active');
+      });
+    }
+
+    function formatTanggalAman(dateString, withDay = false) {
+      if (!dateString) return '-';
       try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const roomOne = supabaseClient.channel('economic-insight-room');
-        roomOne.on('presence', { event: 'sync' }, () => {
-          const newState = roomOne.presenceState();
-          let count = 0;
-          for (const key in newState) { count += newState[key].length; }
-          if(counterDesktop) counterDesktop.innerText = count;
-        }).subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await roomOne.track({ online_at: new Date().toISOString(), user_id: crypto.randomUUID() });
-          }
-        });
-      } catch (error) {
-        if(counterDesktop) counterDesktop.innerText = '0';
-      }
+        const cleanDateStr = dateString.replace(' ', 'T');
+        const dateObj = new Date(cleanDateStr);
+        if (isNaN(dateObj.getTime())) return dateString;
+        const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta', hour12: false };
+        if (withDay) options.weekday = 'long';
+        let formatted = dateObj.toLocaleString('id-ID', options);
+        return formatted.replace('.', ':') + ' WIB';
+      } catch (e) { return dateString; }
     }
 
-    function checkWeekend() {
-      const today = new Date().getDay();
-      const hasSeenModal = sessionStorage.getItem('weekendModalSeen');
-      if ((today === 0 || today === 6) && !hasSeenModal) {
-        setTimeout(() => { document.getElementById('weekend-modal').classList.remove('hidden'); }, 1500);
-      }
-    }
-    function closeWeekendModal(event) {
-      const modal = document.getElementById('weekend-modal');
-      if (event && event.target.id !== 'weekend-modal') return;
-      modal.classList.add('hidden');
-      sessionStorage.setItem('weekendModalSeen', 'true');
-    }
-
-    function toggleAIChat() {
-      const chat = document.getElementById('ai-chat-window');
-      const fab = document.getElementById('ai-fab');
-      if (chat.classList.contains('hidden')) {
-        chat.classList.remove('hidden');
-        chat.classList.add('flex');
-        fab.classList.add('scale-0');
-      } else {
-        chat.classList.add('hidden');
-        chat.classList.remove('flex');
-        fab.classList.remove('scale-0');
-      }
-    }
-
+    // ==========================================
+    // LOGIKA AI CHAT (DIPERBARUI)
+    // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
@@ -571,8 +399,9 @@
 
       const chatBody = document.getElementById('chat-messages');
       
+      // Tampilkan pesan user
       chatBody.innerHTML += `
-        <div class="bg-blue-600 text-white p-3 rounded-xl rounded-tr-sm shadow-sm mb-3 ml-8 text-sm leading-relaxed">
+        <div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">
           ${text}
         </div>
       `;
@@ -580,10 +409,11 @@
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
 
+      // Loading indicator
       const loadingId = 'loading-' + Date.now();
       chatBody.innerHTML += `
-        <div id="${loadingId}" class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-12 text-slate-700 flex items-center gap-1">
-           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <div id="${loadingId}" class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[80%] text-slate-700 flex items-center gap-2">
+           <span class="dot"></span><span class="dot"></span><span class="dot"></span> <span class="text-xs text-slate-400 ml-2">Menganalisis...</span>
         </div>
       `;
       chatBody.scrollTop = chatBody.scrollHeight;
@@ -598,14 +428,14 @@
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : 'Belum ada berita'}"
         `;
 
+        // PROMPT DIPERBARUI: Agar jawaban to the point dan hemat token
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: text,
-            context: contextData
+            context: contextData,
+            system_prompt: "Anda adalah analis ekonomi profesional. Jawablah dengan SANGAT SINGKAT, padat, dan to-the-point. Gunakan maksimal 3 kalimat atau maksimal 3 poin bullet. Jangan bertele-tele atau memberikan pengantar yang tidak perlu. Fokus langsung pada data dan kesimpulan."
           })
         });
 
@@ -614,10 +444,11 @@
 
         if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
 
+        // Render Markdown dengan class khusus (markdown-chat)
         let reply = marked.parse(data.reply);
         
         chatBody.innerHTML += `
-          <div class="bg-white p-3 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-3 mr-4 text-slate-700 text-sm leading-relaxed markdown-body">
+          <div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">
             ${reply}
           </div>
         `;
@@ -626,7 +457,7 @@
         console.error(error);
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
         chatBody.innerHTML += `
-          <div class="bg-rose-50 p-3 rounded-xl rounded-tl-sm border border-rose-200 shadow-sm mb-3 mr-8 text-rose-700 text-sm leading-relaxed">
+          <div class="bg-rose-50 p-4 rounded-xl rounded-tl-sm border border-rose-200 shadow-sm mb-4 mr-auto max-w-[80%] text-rose-700 text-sm">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i> Error: ${error.message}
           </div>
         `;
@@ -635,166 +466,43 @@
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    let currentCategory = 'semua';
-    let currentSearchQuery = '';
-
-    const categoryKeywords = {
-      pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
-      keuangan: ['saham', 'ihsg', 'dolar', 'rupiah', 'kurs', 'bank', 'investasi', 'obligasi', 'modal', 'bursa', 'uang', 'fintech', 'kripto', 'bitcoin', 'emas'],
-      energi: ['bbm', 'minyak', 'gas', 'batu bara', 'listrik', 'energi', 'pertamina', 'tambang', 'oplos', 'solar', 'subsidi energi'],
-      kebijakan: [
-        'pajak', 'apbn', 'fiskal', 'subsidi', 'defisit', 'utang negara', 'bea cukai', 'penerimaan negara', 'belanja negara',
-        'bi rate', 'suku bunga', 'bank indonesia', 'moneter', 'inflasi', 'likuiditas', 'rdg', 'gubernur bi', 'perry warjiyo',
-        'regulasi ekonomi', 'ruu', 'omnibus law', 'peraturan pemerintah', 'perpres', 'investasi asing', 'izin usaha', 'kementerian keuangan', 'sri mulyani', 'kebijakan ekonomi', 'larangan ekspor', 'larangan impor', 'bea masuk'
-      ]
-    };
-
-    function matchesKeywords(text, keywords) {
-      return keywords.some(k => {
-        const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-        return regex.test(text);
-      });
-    }
-
-    function filterNewsByCategory(category, event) {
-      currentCategory = category;
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active'); btn.classList.add('inactive');
-      });
-      if (event && event.currentTarget) {
-        event.currentTarget.classList.remove('inactive'); 
-        event.currentTarget.classList.add('active');
-      }
-      applyNewsFilters();
-    }
-
-    function applyNewsFilters() {
-      let filteredNews = allNews;
-      if (currentCategory !== 'semua') {
-        const keywords = categoryKeywords[currentCategory] || [];
-        filteredNews = filteredNews.filter(item => {
-          const text = (item.title + ' ' + (item.description || '')).toLowerCase();
-          return matchesKeywords(text, keywords);
-        });
-      }
-      if (currentSearchQuery) {
-        filteredNews = filteredNews.filter(item => 
-          item.title.toLowerCase().includes(currentSearchQuery) || 
-          (item.description && item.description.toLowerCase().includes(currentSearchQuery))
-        );
-      }
-      renderNews(filteredNews);
-    }
-
-    function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      const targetTab = document.getElementById(`content-${tabId}`);
-      if (targetTab) targetTab.classList.remove('hidden');
-      
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('tab-active');
-        btn.classList.add('tab-inactive');
-      });
-      document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => {
-        activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active');
-      });
-      if (tabId === 'inflasi' && inflationChart) inflationChart.resize();
-      if (tabId === 'naker' && nakerChart) nakerChart.resize();
-    }
-
-    // FIX: Fungsi format tanggal yang lebih pintar menangani format tanggal API
-    function formatTanggalAman(dateString, withDay = false) {
-      if (!dateString) return '-';
+    // ==========================================
+    // LOGIKA DATA PASAR (IHSG, KURS, DLL)
+    // ==========================================
+    async function initOnlineCounter() {
+      const counterDesktop = document.getElementById('online-counter');
       try {
-        // Kadang API ngirim format "2026-10-25 12:00:00" (pakai spasi, bukan 'T')
-        // Kita ubah spasinya jadi 'T' agar bisa dibaca Javascript
-        const cleanDateStr = dateString.replace(' ', 'T');
-        const dateObj = new Date(cleanDateStr);
-        
-        if (isNaN(dateObj.getTime())) return dateString;
-        
-        const options = { 
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit', 
-          minute: '2-digit',
-          timeZone: 'Asia/Jakarta',
-          hour12: false // Format 24 jam (misal 13:00 bukan 1:00 PM)
-        };
-        if (withDay) options.weekday = 'long';
-        
-        let formatted = dateObj.toLocaleString('id-ID', options);
-        // Ganti titik jadi titik dua untuk jam (misal 12.00 jadi 12:00)
-        formatted = formatted.replace('.', ':'); 
-        return formatted + ' WIB';
-      } catch (e) { return dateString; }
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const roomOne = supabaseClient.channel('economic-insight-room');
+        roomOne.on('presence', { event: 'sync' }, () => {
+          const newState = roomOne.presenceState();
+          let count = 0;
+          for (const key in newState) { count += newState[key].length; }
+          if(counterDesktop) counterDesktop.innerText = count;
+        }).subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await roomOne.track({ online_at: new Date().toISOString(), user_id: crypto.randomUUID() });
+          }
+        });
+      } catch (error) { if(counterDesktop) counterDesktop.innerText = '0'; }
     }
-
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-    Chart.defaults.color = '#64748b';
-
-    const ctxInflasi = document.getElementById('inflationChart').getContext('2d');
-    let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
-    gradientInflasi.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
-    gradientInflasi.addColorStop(1, 'rgba(37, 99, 235, 0)');
-    const inflationChart = new Chart(ctxInflasi, {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: 'Inflasi YoY (%)', data: [], borderColor: '#2563eb', backgroundColor: gradientInflasi, borderWidth: 2, pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
-    });
-
-    const ctxNaker = document.getElementById('nakerChart').getContext('2d');
-    const nakerChart = new Chart(ctxNaker, {
-      type: 'bar',
-      data: { labels: [], datasets: [{ label: 'TPT (%)', data: [], backgroundColor: '#2563eb', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
-    });
 
     function initTradingViewChart() {
       new TradingView.widget({
-        "width": "100%",
-        "height": "100%",
-        "symbol": "IDX:COMPOSITE", 
-        "interval": "D", 
-        "timezone": "Asia/Jakarta",
-        "theme": "light",
-        "style": "1", 
-        "locale": "id",
-        "toolbar_bg": "#f1f3f6",
-        "enable_publishing": false,
-        "hide_side_toolbar": true, 
-        "hide_top_toolbar": true, 
-        "enableScrolling": false, 
-        "enableScaleZ": false, 
-        "disable_mouse_wheel": true, 
-        "allow_symbol_change": false, 
-        "container_id": "tradingview_ihsg"
+        "width": "100%", "height": "100%", "symbol": "IDX:COMPOSITE", "interval": "D", "timezone": "Asia/Jakarta",
+        "theme": "light", "style": "1", "locale": "id", "toolbar_bg": "#f1f3f6",
+        "hide_side_toolbar": true, "hide_top_toolbar": true, "enableScrolling": false, "enableScaleZ": false, 
+        "disable_mouse_wheel": true, "allow_symbol_change": false, "container_id": "tradingview_ihsg"
       });
     }
 
     async function fetchUS10Y() {
       try {
-        const targetUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d';
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-        
-        const res = await fetch(proxyUrl, { cache: "no-store" });
+        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d')}`, { cache: "no-store" });
         const data = await res.json();
         const el = document.getElementById('us-10y');
-        
-        if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          const price = data.chart.result[0].meta.regularMarketPrice;
-          if (el) el.innerText = price.toFixed(3) + '%';
-        } else {
-          if (el) el.innerText = '4.25%';
-        }
-      } catch (err) {
-        const el = document.getElementById('us-10y');
-        if (el) el.innerText = '4.25%';
-      }
+        if (data?.chart?.result?.length > 0 && el) el.innerText = data.chart.result[0].meta.regularMarketPrice.toFixed(3) + '%';
+      } catch (err) { if (document.getElementById('us-10y')) document.getElementById('us-10y').innerText = '4.25%'; }
     }
 
     async function fetchGoldPrice(usdToIdr) {
@@ -802,510 +510,198 @@
       try {
         const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
         const data = await res.json();
-        if (data && data.price && el) {
-          el.innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        }
-      } catch (err) { 
-        if (el) el.innerText = '1.250.000'; 
-      }
+        if (data && data.price && el) el.innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+      } catch (err) { if (el) el.innerText = '1.250.000'; }
     }
 
     async function fetchCurrenciesForTicker() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
-        if (data.result !== 'success') throw new Error('API Error');
-        
-        const rates = data.rates;
-        const usdToIdr = rates.IDR;
-
-        const usdRateEl = document.getElementById('usd-rate');
-        if (usdRateEl) usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        
-        const currenciesToShow = [
-          { code: 'EUR', label: 'EUR / IDR', icon: 'fa-euro-sign' },
-          { code: 'GBP', label: 'GBP / IDR', icon: 'fa-sterling-sign' },
-          { code: 'JPY', label: 'JPY / IDR', icon: 'fa-yen-sign' },
-          { code: 'SGD', label: 'SGD / IDR', icon: 'fa-dollar-sign' },
-          { code: 'AUD', label: 'AUD / IDR', icon: 'fa-dollar-sign' },
-          { code: 'CNY', label: 'CNY / IDR', icon: 'fa-yen-sign' },
-          { code: 'KRW', label: 'KRW / IDR', icon: 'fa-won-sign' }
-        ];
-
-        let tickerHTML = '';
-        currenciesToShow.forEach(curr => {
-          const rateAgainstUsd = rates[curr.code];
-          if(rateAgainstUsd) {
-            const rateInIdr = usdToIdr / rateAgainstUsd;
-            tickerHTML += `
-              <div class="ticker-item">
-                <i class="fa-solid ${curr.icon} text-slate-400 text-xs"></i>
-                <span class="font-bold text-slate-700 text-sm">${curr.label}</span>
-                <span class="font-extrabold text-slate-900 text-sm">
-                  ${rateInIdr.toLocaleString('id-ID', { maximumFractionDigits: curr.code === 'JPY' || curr.code === 'KRW' ? 2 : 0 })}
-                </span>
-              </div>
-            `;
-          }
-        });
-
-        const tickerTrack = document.getElementById('ticker-track');
-        if (tickerTrack) tickerTrack.innerHTML = tickerHTML + tickerHTML;
-
-        fetchGoldPrice(usdToIdr);
-
+        if (data.result === 'success') {
+          const rates = data.rates;
+          const usdToIdr = rates.IDR;
+          const usdRateEl = document.getElementById('usd-rate');
+          if (usdRateEl) usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+          
+          let tickerHTML = '';
+          ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'].forEach(code => {
+            if(rates[code]) {
+              const rate = usdToIdr / rates[code];
+              tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
+            }
+          });
+          const track = document.getElementById('ticker-track');
+          if (track) track.innerHTML = tickerHTML + tickerHTML;
+          fetchGoldPrice(usdToIdr);
+        }
       } catch (err) { console.error(err); }
     }
 
     async function fetchEconomicCalendar() {
       const container = document.getElementById('calendar-list');
-      if (!container) return;
-
       try {
         const res = await fetch('https://biquote.io/api/calendar/upcoming?limit=5&importance=high', { cache: "no-store" });
         const events = await res.json();
-
-        if (!events || events.length === 0) {
-          container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada jadwal rilis penting terdekat.</div>`;
-          return;
-        }
-
+        if (!events || events.length === 0) throw new Error("Kosong");
         container.innerHTML = events.map(event => {
-          const eventDate = new Date(event.time);
-          const dateStr = eventDate.toLocaleString('id-ID', { 
-            timeZone: 'Asia/Jakarta', 
-            day: 'numeric', 
-            month: 'short', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }).replace('.', ':') + ' WIB';
-
-          let badgeClass = 'bg-blue-50 text-blue-600 border-blue-100';
-          if (event.importance === 'high') badgeClass = 'bg-rose-50 text-rose-600 border-rose-100';
-          else if (event.importance === 'medium') badgeClass = 'bg-amber-50 text-amber-600 border-amber-100';
-
+          const dateStr = new Date(event.time).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', ':') + ' WIB';
           return `
-            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-              <div class="flex flex-col">
-                <span class="text-slate-800 font-bold">${event.name}</span>
-                <span class="text-slate-400 text-xs font-medium">${event.countryCode} - ${event.currency}</span>
-              </div>
-              <div class="text-right flex flex-col items-end">
-                <span class="text-slate-500 text-xs font-semibold">${dateStr}</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border mt-1 ${badgeClass}">${event.importance}</span>
-              </div>
-            </div>
-          `;
+            <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0">
+              <div class="flex flex-col"><span class="text-slate-800 font-bold">${event.name}</span><span class="text-slate-400 text-xs">${event.countryCode}</span></div>
+              <span class="text-slate-500 text-xs font-semibold">${dateStr}</span>
+            </div>`;
         }).join('');
-
-      } catch (error) {
-        console.error("Gagal mengambil jadwal ekonomi:", error);
-        container.innerHTML = `<div class="text-center text-rose-500 py-4 text-sm">Gagal memuat jadwal. Silakan refresh halaman.</div>`;
-      }
+      } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
-    let allNews = [];
-    let activeNewsList = [];
-    let isFetchingNews = false;
+    // ==========================================
+    // LOGIKA BERITA
+    // ==========================================
+    let currentCategory = 'semua';
+    let currentSearchQuery = '';
+    const categoryKeywords = {
+      pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
+      keuangan: ['saham', 'ihsg', 'dolar', 'rupiah', 'kurs', 'bank', 'investasi', 'obligasi', 'modal', 'bursa', 'uang', 'fintech', 'kripto', 'bitcoin', 'emas'],
+      energi: ['bbm', 'minyak', 'gas', 'batu bara', 'listrik', 'energi', 'pertamina', 'tambang', 'oplos', 'solar', 'subsidi energi'],
+      kebijakan: ['pajak', 'apbn', 'fiskal', 'subsidi', 'defisit', 'utang', 'bea cukai', 'bi rate', 'suku bunga', 'bank indonesia', 'moneter', 'inflasi', 'rdg', 'sri mulyani', 'larangan ekspor', 'larangan impor']
+    };
+
+    function matchesKeywords(text, keywords) {
+      return keywords.some(k => {
+        const regex = new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        return regex.test(text);
+      });
+    }
+
+    function filterNewsByCategory(category, event) {
+      currentCategory = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => { btn.classList.remove('active'); btn.classList.add('inactive'); });
+      if (event && event.currentTarget) { event.currentTarget.classList.remove('inactive'); event.currentTarget.classList.add('active'); }
+      applyNewsFilters();
+    }
+
+    function applyNewsFilters() {
+      let filtered = allNews;
+      if (currentCategory !== 'semua') {
+        filtered = filtered.filter(item => matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords[currentCategory] || []));
+      }
+      if (currentSearchQuery) {
+        filtered = filtered.filter(item => item.title.toLowerCase().includes(currentSearchQuery) || (item.description && item.description.toLowerCase().includes(currentSearchQuery)));
+      }
+      renderNews(filtered);
+    }
 
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
       const iconRefresh = document.getElementById('icon-refresh');
-      if (isFetchingNews) return;
-      isFetchingNews = true;
-      
-      if (manualRefresh && btnRefresh && iconRefresh) {
-        btnRefresh.classList.add('opacity-50', 'cursor-not-allowed');
-        iconRefresh.classList.add('fa-spin');
-      }
+      if (manualRefresh && btnRefresh && iconRefresh) { btnRefresh.classList.add('opacity-50'); iconRefresh.classList.add('fa-spin'); }
 
       try {
         const timestamp = new Date().getTime();
-        
-        const apiEndpoints = [
+        const urls = [
           `https://freenewsapi.ai/v1/search?lang=id&q=ekonomi&size=30&t=${timestamp}`,
-          `https://freenewsapi.ai/v1/search?lang=id&size=30&t=${timestamp}`,
-          `https://freenewsapi.ai/v1/search?lang=id&q=bisnis&size=30&t=${timestamp}`
+          `https://freenewsapi.ai/v1/search?lang=id&size=30&t=${timestamp}`
         ];
-
         let data = null;
-        let lastError = null;
-
-        for (const url of apiEndpoints) {
+        for (const url of urls) {
           try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-            const res = await fetch(url, { 
-              cache: "no-store", 
-              signal: controller.signal,
-              headers: { 'Accept': 'application/json' }
-            });
-            clearTimeout(timeoutId);
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+            const res = await fetch(url, { cache: "no-store" });
             const json = await res.json();
-            
-            if (json && json.results && json.results.length > 0) {
-              data = json;
-              console.log(`✅ Berita berhasil dimuat dari: ${url.split('?')[1]}`);
-              break;
-            }
-          } catch (err) {
-            lastError = err;
-            console.warn(`⚠️ Endpoint gagal: ${url}`, err.message);
-          }
+            if (json && json.results && json.results.length > 0) { data = json; break; }
+          } catch(e) {}
         }
-
-        if (!data || !data.results) throw lastError || new Error("Semua sumber API berita gagal");
-
+        if (!data) throw new Error("Gagal muat berita");
+        
         allNews = data.results.map(item => ({
-            title: item.title,
-            url: item.url,
-            published_at: item.published_at,
-            description: item.description,
-            source: item.source || item.publisher || 'Berita Ekonomi',
-            // FIX: Abaikan gambar dari API, paksa pakai DEFAULT_NEWS_IMAGE
-            image: DEFAULT_NEWS_IMAGE 
+            title: item.title, url: item.url, published_at: item.published_at, description: item.description,
+            source: item.source || 'Ekonomi', image: DEFAULT_NEWS_IMAGE // Paksa pakai gambar default
         }));
 
-        const now = new Date();
-        const timeEl = document.getElementById('news-timestamp');
-        if (timeEl) timeEl.innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${now.toLocaleTimeString('id-ID')}`;
-
+        document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
         applyNewsFilters();
         renderKebijakan(allNews);
-        generateAIBriefing(allNews);
-        checkSharedUrl();
-
-        if (manualRefresh && btnRefresh) {
-          btnRefresh.classList.replace('bg-blue-50', 'bg-emerald-50');
-          btnRefresh.classList.replace('text-blue-600', 'text-emerald-600');
-          btnRefresh.classList.replace('border-blue-100', 'border-emerald-100');
-          setTimeout(() => {
-            btnRefresh.classList.replace('bg-emerald-50', 'bg-blue-50');
-            btnRefresh.classList.replace('text-emerald-600', 'text-blue-600');
-            btnRefresh.classList.replace('border-emerald-100', 'border-blue-100');
-          }, 1000);
-        }
       } catch (err) {
-        console.error("Fetch News Error:", err);
-        if (gridContainer && (gridContainer.innerHTML.includes('skeleton') || gridContainer.innerHTML.includes('Memuat'))) {
-          gridContainer.innerHTML = `
-            <div class="col-span-full text-center py-10 text-slate-500">
-              <i class="fa-solid fa-wifi text-4xl mb-3 text-slate-300"></i><br>
-              <p class="font-bold text-slate-700">Koneksi Lambat atau Server Sibuk</p>
-              <p class="text-sm mt-1 mb-4">Gagal memuat berita dari semua sumber. Silakan klik tombol Refresh.</p>
-              <button onclick="fetchNews(true)" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-500 transition">
-                <i class="fa-solid fa-rotate-right mr-1"></i> Coba Lagi
-              </button>
-            </div>`;
+        if (gridContainer && gridContainer.innerHTML.includes('skeleton')) {
+          gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Gagal memuat berita. Silakan refresh.</div>`;
         }
       } finally {
-        isFetchingNews = false;
-        if (btnRefresh && iconRefresh) {
-          btnRefresh.classList.remove('opacity-50', 'cursor-not-allowed');
-          iconRefresh.classList.remove('fa-spin');
-        }
-      }
-    }
-
-    async function generateAIBriefing(newsArray) {
-      const loadingEl = document.getElementById('ai-briefing-loading');
-      const aiTextEl = document.getElementById('ai-analysis-text');
-      
-      if (!loadingEl || !aiTextEl) return;
-
-      const latestNews = newsArray.length > 0 ? newsArray[0].title : "Belum ada berita terbaru.";
-
-      try {
-        const contextData = `
-          Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
-          Inflasi Indonesia: ${document.getElementById('inflasi-terakhir')?.innerText || '-'}
-          BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
-          US Treasury 10Y: ${document.getElementById('us-10y')?.innerText || '-'}
-          Berita Terbaru: "${latestNews}"
-        `;
-
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: "Berikan ringkasan briefing pasar ekonomi hari ini secara sangat singkat (maksimal 3 kalimat). Fokus pada pergerakan kurs, inflasi, dan berita utama.",
-            context: contextData
-          })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error("Gagal mengambil AI Briefing");
-
-        loadingEl.style.display = 'none';
-        aiTextEl.style.display = 'block';
-        aiTextEl.innerHTML = marked.parse(data.reply);
-
-      } catch (error) {
-        console.error(error);
-        loadingEl.style.display = 'none';
-        aiTextEl.style.display = 'block';
-        aiTextEl.innerHTML = "Gagal memuat AI Briefing. Pastikan API Key DeepSeek sudah diatur di Vercel.";
-      }
-    }
-
-    function checkSharedUrl() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sharedUrl = urlParams.get('news_url');
-      if (sharedUrl) {
-        const sharedNews = allNews.find(n => n.url === sharedUrl);
-        if (sharedNews) {
-          switchTab('berita');
-          openNewsModalByObject(sharedNews);
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        if (btnRefresh && iconRefresh) { btnRefresh.classList.remove('opacity-50'); iconRefresh.classList.remove('fa-spin'); }
       }
     }
 
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
       if (!container) return;
+      if (newsArray.length === 0) { container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Tidak ada berita.</div>`; return; }
       
-      if (newsArray.length === 0) {
-        container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Tidak ada berita di kategori ini.</div>`;
-        return;
-      }
-      activeNewsList = newsArray;
-      container.innerHTML = newsArray.map((item, index) => {
-        const dateStr = formatTanggalAman(item.published_at);
-        const cleanDesc = item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '';
-        
-        // FIX: Paksa pakai Default Image (Banner Biru)
-        const imgSrc = DEFAULT_NEWS_IMAGE;
-        
-        return `
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-            <img src="${imgSrc}" class="w-full h-48 object-cover rounded-t-2xl opacity-90 group-hover:opacity-100 transition-opacity" alt="Thumbnail Berita">
-            <div class="p-5 flex flex-col flex-grow">
-              <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 truncate max-w-[120px]">BERITA EKONOMI</span>
-                <div class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 whitespace-nowrap"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
-              </div>
-              <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
-              <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow font-medium">${cleanDesc}</p>
-              <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
-                <button onclick="openNewsModal(${index})" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all duration-300">
-                  Buka Berita <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                </button>
-              </div>
+      container.innerHTML = newsArray.map((item, index) => `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
+          <img src="${item.image}" class="w-full h-48 object-cover rounded-t-2xl" alt="Berita">
+          <div class="p-5 flex flex-col flex-grow">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">BERITA EKONOMI</span>
+              <div class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3">${item.title}</h3>
+            <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : ''}</p>
+            <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
+              <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">Buka Berita <i class="fa-solid fa-arrow-right"></i></button>
             </div>
           </div>
-        `;
-      }).join('');
+        </div>
+      `).join('');
     }
 
     function renderKebijakan(newsArray) {
       const container = document.getElementById('kebijakan-list');
-      if (!container) return;
-
-      const keywords = categoryKeywords['kebijakan'];
-      const filtered = newsArray.filter(item => {
-        const text = (item.title + ' ' + (item.description || '')).toLowerCase();
-        return matchesKeywords(text, keywords);
-      }).slice(0, 5);
-
-      activePolicyNews = filtered;
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm font-medium">Belum ada berita kebijakan ekonomi terbaru hari ini.</div>`;
-        return;
-      }
-      let html = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">`;
+      const filtered = newsArray.filter(item => matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords['kebijakan'])).slice(0, 5);
+      if (filtered.length === 0) { container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada berita kebijakan.</div>`; return; }
       
-      filtered.forEach((item, index) => {
-        const dateStr = formatTanggalAman(item.published_at);
-        
-        let tag = 'Regulasi'; 
-        let dotColor = 'bg-blue-500';
-        let textColor = 'text-blue-600';
-        let bgColor = 'bg-blue-50';
-        let borderColor = 'border-blue-100';
-        
-        const titleLower = item.title.toLowerCase();
-        
-        if (titleLower.match(/\b(pajak|apbn|fiskal|subsidi|defisit|utang|bea cukai)\b/)) { 
-          tag = 'Fiskal'; dotColor = 'bg-amber-500'; textColor = 'text-amber-600'; bgColor = 'bg-amber-50'; borderColor = 'border-amber-100';
-        } else if (titleLower.match(/\b(bi rate|suku bunga|bank indonesia|moneter|inflasi|rdg)\b/)) { 
-          tag = 'Moneter'; dotColor = 'bg-indigo-500'; textColor = 'text-indigo-600'; bgColor = 'bg-indigo-50'; borderColor = 'border-indigo-100';
-        }
-
-        // FIX: Paksa pakai Default Image
-        const imgSrc = DEFAULT_NEWS_IMAGE;
-
-        html += `
-          <div class="ml-4 sm:ml-6 relative group">
-            <span class="absolute -left-[23px] sm:-left-[31px] top-4 w-3 h-3 sm:w-4 sm:h-4 rounded-full ${dotColor} border-2 sm:border-4 border-white shadow-sm z-10"></span>
-            <div onclick="openPolicyNewsModal(${index})" class="bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 p-3 sm:p-4 rounded-xl transition-all duration-300 cursor-pointer flex gap-4 items-center">
-              <img src="${imgSrc}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200" alt="Thumbnail Kebijakan">
-              <div class="flex-grow">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                  <span class="text-[10px] font-bold ${textColor} ${bgColor} px-2 py-0.5 rounded border ${borderColor} w-max">${tag}</span>
-                  <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1"><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
-                </div>
-                <h3 class="text-sm text-slate-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">${item.title}</h3>
-              </div>
+      container.innerHTML = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">` + filtered.map(item => `
+        <div class="ml-4 relative group">
+          <span class="absolute -left-[23px] top-4 w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></span>
+          <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 p-4 rounded-xl cursor-pointer flex gap-4 items-center">
+            <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200">
+            <div>
+              <span class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-calendar"></i> ${formatTanggalAman(item.published_at)}</span>
+              <h3 class="text-sm text-slate-900 mt-1 line-clamp-2">${item.title}</h3>
             </div>
           </div>
-        `;
-      });
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    function openPolicyNewsModal(index) {
-      if (activePolicyNews[index]) {
-        openNewsModalByObject(activePolicyNews[index]);
-      }
-    }
-
-    const searchInput = document.getElementById('search-news');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        currentSearchQuery = e.target.value.toLowerCase();
-        applyNewsFilters();
-      });
-    }
-
-    function openNewsModal(index) {
-      const news = activeNewsList[index];
-      if (!news) return;
-      openNewsModalByObject(news);
+        </div>
+      `).join('') + `</div>`;
     }
 
     function openNewsModalByObject(news) {
-      if (!news) return;
-      const dateStr = formatTanggalAman(news.published_at, true);
-      const fullDesc = news.description ? news.description.replace(/<[^>]*>?/gm, '') : 'Tidak ada deskripsi lengkap.';
-      
       document.getElementById('modal-title').innerText = news.title;
-      document.getElementById('modal-date').innerText = dateStr;
-      document.getElementById('modal-desc').innerText = fullDesc;
+      document.getElementById('modal-date').innerText = formatTanggalAman(news.published_at, true);
+      document.getElementById('modal-desc').innerText = news.description ? news.description.replace(/<[^>]*>?/gm, '') : 'Tidak ada deskripsi.';
       document.getElementById('modal-link').href = news.url || '#';
-      
-      const sourceEl = document.getElementById('modal-source');
-      if (sourceEl) sourceEl.innerText = news.source || 'Economic Insight';
-
-      // FIX: Paksa pakai Default Image di dalam Modal
-      const imgSrc = DEFAULT_NEWS_IMAGE;
-      document.getElementById('modal-image-container').innerHTML = `<img src="${imgSrc}" class="w-full h-full object-cover">`;
-
+      document.getElementById('modal-source').innerText = news.source || 'Economic Insight';
+      document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" class="w-full h-full object-cover">`;
       currentModalNews = news;
       document.getElementById('news-modal').classList.remove('hidden');
     }
 
     function closeNewsModal(event) {
-      const modal = document.getElementById('news-modal');
       if (event && event.target.id !== 'news-modal') return;
-      modal.classList.add('hidden');
+      document.getElementById('news-modal').classList.add('hidden');
     }
 
-    // ==========================================
-    // FUNGSI SHARE (LANGSUNG KE WEB)
-    // ==========================================
     function shareCurrentNews(event) {
-      if (!currentModalNews || !currentModalNews.url) return;
-      
-      // Langsung tembak ke URL website Anda dengan parameter
+      if (!currentModalNews) return;
       const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
-      
       navigator.clipboard.writeText(shareUrl).then(() => {
         const btn = event.currentTarget;
         const originalHtml = btn.innerHTML;
-        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
-        btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
-        setTimeout(() => {
-          btn.innerHTML = originalHtml;
-          btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
-        }, 2000);
-      }).catch(err => alert('Gagal menyalin tautan.'));
+        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Tersalin!`;
+        setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+      });
     }
 
-    async function fetchInflasi() {
-      const sourceEl = document.getElementById('inflasi-source');
-      try {
-        const res = await fetch('/api/inflasi'); 
-        if (!res.ok) throw new Error("Backend Error");
-        const data = await res.json();
-        
-        document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
-        document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
-        document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
-        document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${data.tahun}`;
-        
-        if (sourceEl) {
-          sourceEl.innerText = "Sumber: BPS (via Backend Vercel)";
-          sourceEl.className = "text-sm text-emerald-600 font-bold mt-1";
-        }
-
-        fetchWorldBankInflasi();
-
-      } catch (error) {
-        if (sourceEl) {
-          sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data.";
-          sourceEl.className = "text-sm text-amber-500 font-bold mt-1";
-        }
-        fetchWorldBankInflasi();
-      }
-    }
-
-    async function fetchWorldBankInflasi() {
-      try {
-        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/FP.CPI.TOTL.ZG?format=json&per_page=60');
-        const json = await res.json();
-        if (json && json.length > 1 && Array.isArray(json[1])) {
-          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
-          if (validData.length > 0) {
-            const latest = validData[validData.length - 1];
-            
-            const sum = validData.reduce((a, b) => a + b.value, 0);
-            document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
-            
-            if (validData.length > 1) {
-              const prev = validData[validData.length - 2];
-              const diff = latest.value - prev.value;
-              document.getElementById('inflasi-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
-            }
-            
-            inflationChart.data.labels = validData.map(d => d.date);
-            inflationChart.data.datasets[0].data = validData.map(d => d.value);
-            inflationChart.update();
-          }
-        }
-      } catch (err) {}
-    }
-
-    async function fetchNaker() {
-      try {
-        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/SL.UEM.TOTL.ZS?format=json&per_page=60');
-        const json = await res.json();
-        if (json && json.length > 1 && Array.isArray(json[1])) {
-          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
-          if (validData.length > 0) {
-            const latest = validData[validData.length - 1];
-            document.getElementById('naker-terakhir').innerText = latest.value.toFixed(2) + '%';
-            document.getElementById('naker-tahun').innerText = `Data Tahun ${latest.date}`;
-            if (validData.length > 1) {
-              const prev = validData[validData.length - 2];
-              const diff = latest.value - prev.value;
-              document.getElementById('naker-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
-            }
-            nakerChart.data.labels = validData.map(d => d.date);
-            nakerChart.data.datasets[0].data = validData.map(d => d.value);
-            nakerChart.update();
-          }
-        }
-      } catch (err) {}
-    }
+    const searchInput = document.getElementById('search-news');
+    if (searchInput) searchInput.addEventListener('input', (e) => { currentSearchQuery = e.target.value.toLowerCase(); applyNewsFilters(); });
 
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
@@ -1313,15 +709,10 @@
       try { initTradingViewChart(); } catch(e) {} 
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
-      try { fetchInflasi(); } catch(e) {}
-      try { fetchNaker(); } catch(e) {}
-      try { checkWeekend(); } catch(e) {}
-      
-      // Fetch jadwal ekonomi real-time
       try { fetchEconomicCalendar(); } catch(e) {} 
-
-      setInterval(fetchCurrenciesForTicker, 3600000); // 1 jam
-      setInterval(fetchNews, 300000); // 5 menit
+      
+      setInterval(fetchCurrenciesForTicker, 3600000);
+      setInterval(fetchNews, 300000);
     };
   </script>
 </body>
