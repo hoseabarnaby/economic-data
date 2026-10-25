@@ -152,7 +152,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ringkasan Pasar</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Data Realtime</p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi paling penting saat membuka website.</p>
         </div>
       </div>
 
@@ -518,21 +518,6 @@
     `;
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
-    // FUNGSI UNTUK UPDATE META TAGS (OG & Twitter)
-    function updateMetaTags(imageUrl, title, description) {
-      const finalImg = imageUrl || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat';
-      
-      // Update Open Graph
-      document.getElementById('og-title').setAttribute('content', title || 'Economic Insight');
-      document.getElementById('og-description').setAttribute('content', description || 'Pantau berita ekonomi terbaru.');
-      document.getElementById('og-image').setAttribute('content', finalImg);
-      
-      // Update Twitter
-      document.getElementById('twitter-title').setAttribute('content', title || 'Economic Insight');
-      document.getElementById('twitter-description').setAttribute('content', description || 'Pantau berita ekonomi terbaru.');
-      document.getElementById('twitter-image').setAttribute('content', finalImg);
-    }
-
     async function initOnlineCounter() {
       const counterDesktop = document.getElementById('online-counter');
       if (SUPABASE_URL.includes('MASUKKAN') || SUPABASE_ANON_KEY.includes('MASUKKAN') || typeof window.supabase === 'undefined') {
@@ -757,7 +742,6 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
     });
 
-    // === FUNGSI TRADINGVIEW UNTUK IHSG (STATIS) ===
     function initTradingViewChart() {
       new TradingView.widget({
         "width": "100%",
@@ -861,7 +845,6 @@
       } catch (err) { console.error(err); }
     }
 
-    // === FUNGSI UNTUK MENGAMBIL JADWAL EKONOMI REAL-TIME ===
     async function fetchEconomicCalendar() {
       const container = document.getElementById('calendar-list');
       if (!container) return;
@@ -1202,10 +1185,6 @@
       document.getElementById('modal-image-container').innerHTML = `<img src="${imgSrc}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
 
       currentModalNews = news;
-      
-      // UPDATE META TAGS UNTUK SHARE LINK
-      updateMetaTags(news.image, news.title, news.description);
-
       document.getElementById('news-modal').classList.remove('hidden');
     }
 
@@ -1213,18 +1192,29 @@
       const modal = document.getElementById('news-modal');
       if (event && event.target.id !== 'news-modal') return;
       modal.classList.add('hidden');
-      
-      // KEMBALIKAN META TAGS KE DEFAULT SAAT MODAL DITUTUP
-      updateMetaTags(
-          'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat',
-          'Economic Insight - Global Economic Intelligence',
-          'Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.'
-      );
     }
 
+    // ==========================================
+    // FUNGSI SHARE DENGAN API BACKEND VERCEL
+    // ==========================================
     function shareCurrentNews(event) {
       if (!currentModalNews || !currentModalNews.url) return;
-      const shareUrl = window.location.origin + window.location.pathname + '?news_url=' + encodeURIComponent(currentModalNews.url);
+
+      const title = currentModalNews.title;
+      const cleanDesc = currentModalNews.description ? currentModalNews.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Baca berita ekonomi selengkapnya.';
+      const image = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat';
+      const originalUrl = currentModalNews.url;
+
+      // Arahkan ke endpoint /api/preview milik Python Anda
+      const apiUrl = window.location.origin + '/api/preview';
+      const params = new URLSearchParams({
+        title: title,
+        desc: cleanDesc,
+        img: image,
+        url: originalUrl
+      });
+      
+      const shareUrl = `${apiUrl}?${params.toString()}`;
       
       navigator.clipboard.writeText(shareUrl).then(() => {
         const btn = event.currentTarget;
