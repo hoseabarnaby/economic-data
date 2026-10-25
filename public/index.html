@@ -831,7 +831,6 @@
       const title = currentModalNews.title;
       const cleanDesc = currentModalNews.description ? currentModalNews.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Baca berita ekonomi selengkapnya.';
       
-      // Pastikan gambar valid dan pakai https
       let img = currentModalNews.image;
       if (!img || img.startsWith('data:')) {
           img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
@@ -840,8 +839,6 @@
       
       const originalUrl = currentModalNews.url;
       const baseUrl = window.location.origin;
-      
-      // Tambahkan timestamp untuk menghancurkan cache WhatsApp
       const timestamp = new Date().getTime(); 
       
       const previewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}&t=${timestamp}`;
@@ -884,6 +881,46 @@
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
     };
+
+    // ==========================================
+    // FUNGSI CEK URL SHARE (DIPERBARUI)
+    // ==========================================
+    function checkSharedUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedUrl = urlParams.get('news_url');
+      const sharedTitle = urlParams.get('title');
+      const sharedDesc = urlParams.get('desc');
+      const sharedImg = urlParams.get('img');
+
+      if (!sharedUrl) return;
+
+      switchTab('berita');
+      
+      // JIKA DATA TITLE ADA DI URL (Dari API Python), LANGSUNG BUKA MODAL
+      if (sharedTitle) {
+          const fallbackNews = {
+              title: sharedTitle,
+              description: sharedDesc || 'Baca berita selengkapnya...',
+              image: sharedImg || DEFAULT_NEWS_IMAGE,
+              url: sharedUrl,
+              source: 'Economic Insight',
+              published_at: new Date().toISOString()
+          };
+          openNewsModalByObject(fallbackNews);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return;
+      }
+
+      // JIKA TIDAK ADA DATA LENGKAP, COBA CARI DI DAFTAR BERITA
+      const sharedNews = allNews.find(n => n.url === sharedUrl);
+      if (sharedNews) {
+          openNewsModalByObject(sharedNews);
+          window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Panggil pengecekan URL saat halaman dimuat (tidak peduli fetchNews berhasil atau tidak)
+    setTimeout(() => { try { checkSharedUrl(); } catch(e) {} }, 1000);
   </script>
 </body>
 </html>
