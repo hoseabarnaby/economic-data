@@ -823,33 +823,35 @@
     }
 
     // ==========================================
-    // FUNGSI SHARE (LINK PREVIEW VIA API PYTHON)
+    // FUNGSI SHARE (LINK PREVIEW VIA API)
     // ==========================================
     function shareCurrentNews(event) {
       if (!currentModalNews) return;
       
-      // 1. Ambil data dari berita yang sedang dibuka
       const title = currentModalNews.title;
       const cleanDesc = currentModalNews.description ? currentModalNews.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Baca berita ekonomi selengkapnya.';
       
-      // 2. Pastikan gambar adalah URL absolut
+      // Pastikan gambar valid dan pakai https
       let img = currentModalNews.image;
       if (!img || img.startsWith('data:')) {
           img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
       }
+      if (img.startsWith('http://')) img = img.replace('http://', 'https://');
       
       const originalUrl = currentModalNews.url;
-      
-      // 3. Arahkan ke API Python (preview.py) yang sudah kita buat
       const baseUrl = window.location.origin;
-      const previewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}`;
+      
+      // Tambahkan timestamp untuk menghancurkan cache WhatsApp
+      const timestamp = new Date().getTime(); 
+      
+      const previewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}&t=${timestamp}`;
       
       navigator.clipboard.writeText(previewUrl).then(() => {
         const btn = event.currentTarget;
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
         setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-      });
+      }).catch(err => alert('Gagal menyalin tautan.'));
     }
 
     const searchInput = document.getElementById('search-news');
