@@ -327,7 +327,7 @@
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-        <button onclick="shareCurrentNews(event)" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1"><i class="fa-solid fa-share-nodes"></i> Bagikan</button>
+        <button onclick="shareCurrentNews(event)" id="btn-share" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition shadow-sm order-2 sm:order-1"><i class="fa-solid fa-share-nodes"></i> Bagikan</button>
         <a href="#" id="modal-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20 order-1 sm:order-2">Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>
       </div>
     </div>
@@ -359,7 +359,6 @@
     const countryColors = { IDN: '#ef4444', CHN: '#eab308', USA: '#3b82f6', JPN: '#8b5cf6', KOR: '#14b8a6' };
     const countryNames = { IDN: 'Indonesia', CHN: 'China', USA: 'Amerika Serikat', JPN: 'Jepang', KOR: 'Korea Selatan' };
 
-    // Fungsi untuk menutup tooltip di HP
     document.addEventListener('click', function(e) {
       if (!e.target.closest('canvas')) {
         [gdpChart, globalInflationChart, unemploymentChart, tradeChart, fearGreedChart].forEach(chart => {
@@ -405,41 +404,24 @@
     // ==========================================
     async function logVisitor() {
       if (!supabaseClient) return;
-      
       try {
         const ua = navigator.userAgent;
-        let device = "Desktop";
-        let os = "Unknown";
-        let browser = "Unknown";
-
+        let device = "Desktop", os = "Unknown", browser = "Unknown";
         if (/android/i.test(ua)) device = "Mobile (Android)";
         if (/iPad|iPhone|iPod/.test(ua)) device = "Mobile (iOS)";
-        
         if (/windows/i.test(ua)) os = "Windows";
         else if (/mac/i.test(ua)) os = "MacOS";
         else if (/linux/i.test(ua)) os = "Linux";
         else if (/android/i.test(ua)) os = "Android";
         else if (/ios|iphone|ipad/i.test(ua)) os = "iOS";
-
         if (/chrome|crios/i.test(ua)) browser = "Chrome";
         else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
         else if (/safari/i.test(ua)) browser = "Safari";
         else if (/edg/i.test(ua)) browser = "Edge";
-
         const ipRes = await fetch('https://api.ipify.org?format=json');
         const ipData = await ipRes.json();
-        const ip = ipData.ip;
-
-        await supabaseClient.from('visitor_logs').insert([{ 
-            device_type: device, 
-            os: os, 
-            browser: browser, 
-            ip_address: ip 
-        }]);
-        console.log("✅ Kunjungan berhasil dicatat");
-      } catch (e) {
-        console.warn("Gagal mencatat kunjungan", e);
-      }
+        await supabaseClient.from('visitor_logs').insert([{ device_type: device, os: os, browser: browser, ip_address: ipData.ip }]);
+      } catch (e) {}
     }
 
     // ==========================================
@@ -447,38 +429,19 @@
     // ==========================================
     async function fetchLiveStockPrice(ticker) {
       const API_KEY = 'j9DmBqLDaOvrwLFwRBWi5pqs1VOJkUakgZrhUWehb6EJq95hD0';
-      
       try {
         const url = `https://use.api.co.id/idx/v2/chart/quote/${ticker}`;
-        
-        const res = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'x-api-co-id': API_KEY,
-            'Accept': 'application/json'
-          }
-        });
-
+        const res = await fetch(url, { method: 'GET', headers: { 'x-api-co-id': API_KEY, 'Accept': 'application/json' } });
         const data = await res.json();
-
         if (data && data.is_success && data.data) {
-          const harga = data.data.last || data.data.close || data.data.price || (data.data.data && data.data.data.last);
-          
-          if (harga) {
-            console.log(`✅ Sukses ambil harga ${ticker} dari API.co.id: Rp ${harga}`);
-            return harga;
-          }
+          return data.data.last || data.data.close || data.data.price || (data.data.data && data.data.data.last);
         }
-        console.error("❌ Gagal ambil harga dari API.co.id. Respons:", data);
-        
-      } catch (error) { 
-        console.error("❌ Error koneksi ke API.co.id:", error); 
-      }
+      } catch (error) {}
       return null;
     }
 
     // ==========================================
-    // LOGIKA AI CHAT (RESTRIKSI & REAL-TIME)
+    // LOGIKA AI CHAT
     // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
@@ -487,7 +450,6 @@
 
       const chatBody = document.getElementById('chat-messages');
       chatBody.innerHTML += `<div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">${text}</div>`;
-      
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
 
@@ -507,12 +469,8 @@
         if (matches && matches.length > 0) {
           const ticker = matches[0];
           const price = await fetchLiveStockPrice(ticker);
-          
-          if (price) {
-            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
-          } else {
-            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari API Bursa saat ini.`;
-          }
+          if (price) stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
+          else stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari API Bursa saat ini.`;
         }
 
         const contextData = `
@@ -562,10 +520,7 @@
     // LOGIKA DATA PASAR
     // ==========================================
     async function initOnlineCounter() {
-      try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // Fitur Counter Online dihapus dari tampilan, tapi koneksi Supabase tetap dijalankan untuk log
-      } catch (error) {}
+      try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
     function initTradingViewChart() {
@@ -581,10 +536,8 @@
       try {
         const res = await fetch('https://calcfi.app/api/rates/10-year-treasury', { cache: "no-store" });
         const data = await res.json();
-        
         const el = document.getElementById('us-10y');
         const rate = data.value || data.rate || (Array.isArray(data) ? data[0] : null) || data;
-        
         if (typeof rate === 'number' && el) {
             el.innerText = rate.toFixed(3) + '%';
             document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
@@ -658,18 +611,9 @@
     // ==========================================
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
-      
-      if (selectedCountries.length === 0) {
-        alert("Pilih minimal satu negara.");
-        return;
-      }
+      if (selectedCountries.length === 0) { alert("Pilih minimal satu negara."); return; }
 
-      const indicators = {
-        gdp: 'NY.GDP.MKTP.KD.ZG',
-        inflation: 'FP.CPI.TOTL.ZG',
-        unemployment: 'SL.UEM.TOTL.ZS',
-        trade: 'NE.RSB.GNFS.ZS'
-      };
+      const indicators = { gdp: 'NY.GDP.MKTP.KD.ZG', inflation: 'FP.CPI.TOTL.ZG', unemployment: 'SL.UEM.TOTL.ZS', trade: 'NE.RSB.GNFS.ZS' };
 
       const fetchIndicator = async (indicatorCode) => {
         try {
@@ -677,7 +621,6 @@
           const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2024`;
           const res = await fetch(url);
           const json = await res.json();
-          
           if (!json || json.length < 2) return [];
           
           const rawData = json[1].filter(d => d.value !== null);
@@ -688,93 +631,27 @@
               const found = rawData.find(d => d.countryiso3code === country && d.date === year);
               return found ? found.value : null;
             });
-
-            return {
-              label: countryNames[country],
-              data: countryData,
-              borderColor: countryColors[country],
-              backgroundColor: countryColors[country] + '33',
-              borderWidth: 3,
-              pointBackgroundColor: countryColors[country],
-              pointBorderColor: '#ffffff',
-              pointBorderWidth: 1.5,
-              pointRadius: 3,
-              pointHoverRadius: 6,
-              tension: 0.4
-            };
+            return { label: countryNames[country], data: countryData, borderColor: countryColors[country], backgroundColor: countryColors[country] + '33', borderWidth: 3, pointBackgroundColor: countryColors[country], pointBorderColor: '#ffffff', pointBorderWidth: 1.5, pointRadius: 3, pointHoverRadius: 6, tension: 0.4 };
           });
-
           return { labels: years, datasets: datasets };
-        } catch (e) {
-          console.error("Fetch error:", e);
-          return { labels: [], datasets: [] };
-        }
+        } catch (e) { return { labels: [], datasets: [] }; }
       };
 
-      const [gdpData, infData, unempData, tradeData] = await Promise.all([
-        fetchIndicator(indicators.gdp),
-        fetchIndicator(indicators.inflation),
-        fetchIndicator(indicators.unemployment),
-        fetchIndicator(indicators.trade)
-      ]);
+      const [gdpData, infData, unempData, tradeData] = await Promise.all([ fetchIndicator(indicators.gdp), fetchIndicator(indicators.inflation), fetchIndicator(indicators.unemployment), fetchIndicator(indicators.trade) ]);
 
       const commonOptions = {
-        responsive: true, 
-        maintainAspectRatio: false,
-        interaction: { mode: 'nearest', intersect: true }, 
-        plugins: { 
-          legend: { 
-            position: 'bottom', 
-            labels: { boxWidth: 12, usePointStyle: true, padding: 20, font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } } 
-          },
-          tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-            titleFont: { size: 13, family: "'Plus Jakarta Sans', sans-serif" },
-            bodyFont: { size: 12, family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' },
-            padding: 12, cornerRadius: 8, displayColors: true,
-            callbacks: {
-              label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) label += ': ';
-                if (context.parsed.y !== null) label += context.parsed.y + '%';
-                return label;
-              }
-            }
-          }
-        },
-        scales: { 
-          y: { 
-            grid: { color: '#f1f5f9', drawBorder: false, borderDash: [5, 5] }, 
-            ticks: { font: { size: 11 }, callback: function(value) { return value + '%'; } } 
-          }, 
-          x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 11 } } } 
-        }
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true }, 
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, padding: 20, font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleFont: { size: 13, family: "'Plus Jakarta Sans', sans-serif" }, bodyFont: { size: 12, family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' }, padding: 12, cornerRadius: 8, displayColors: true, callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) label += ': '; if (context.parsed.y !== null) label += context.parsed.y + '%'; return label; } } } },
+        scales: { y: { grid: { color: '#f1f5f9', drawBorder: false, borderDash: [5, 5] }, ticks: { font: { size: 11 }, callback: function(value) { return value + '%'; } } }, x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 11 } } } }
       };
 
-      if (gdpChart) gdpChart.destroy();
-      gdpChart = new Chart(document.getElementById('gdpChart').getContext('2d'), {
-        type: 'line', data: gdpData, options: commonOptions
-      });
-
-      if (globalInflationChart) globalInflationChart.destroy();
-      globalInflationChart = new Chart(document.getElementById('globalInflationChart').getContext('2d'), {
-        type: 'line', data: infData, options: commonOptions
-      });
-
-      if (unemploymentChart) unemploymentChart.destroy();
-      unemploymentChart = new Chart(document.getElementById('unemploymentChart').getContext('2d'), {
-        type: 'line', data: unempData, options: commonOptions
-      });
-
-      if (tradeChart) tradeChart.destroy();
-      tradeChart = new Chart(document.getElementById('tradeChart').getContext('2d'), {
-        type: 'line', data: tradeData, options: commonOptions
-      });
+      if (gdpChart) gdpChart.destroy(); gdpChart = new Chart(document.getElementById('gdpChart').getContext('2d'), { type: 'line', data: gdpData, options: commonOptions });
+      if (globalInflationChart) globalInflationChart.destroy(); globalInflationChart = new Chart(document.getElementById('globalInflationChart').getContext('2d'), { type: 'line', data: infData, options: commonOptions });
+      if (unemploymentChart) unemploymentChart.destroy(); unemploymentChart = new Chart(document.getElementById('unemploymentChart').getContext('2d'), { type: 'line', data: unempData, options: commonOptions });
+      if (tradeChart) tradeChart.destroy(); tradeChart = new Chart(document.getElementById('tradeChart').getContext('2d'), { type: 'line', data: tradeData, options: commonOptions });
     }
 
-    document.querySelectorAll('.country-checkbox').forEach(cb => {
-      cb.addEventListener('change', fetchGlobalData);
-    });
+    document.querySelectorAll('.country-checkbox').forEach(cb => { cb.addEventListener('change', fetchGlobalData); });
 
     // ==========================================
     // FUNGSI FEAR AND GREED INDEX
@@ -784,90 +661,40 @@
       const labelEl = document.getElementById('fng-label');
       const ctx = document.getElementById('fearGreedChart').getContext('2d');
 
-      let value = 50; 
-      let label = "Neutral";
-      let color = "#eab308"; 
+      let value = 50, label = "Neutral", color = "#eab308"; 
 
       try {
         const res = await fetch('https://api.alternative.me/fng/');
         const json = await res.json();
-        
         if (json.data && json.data.length > 0) {
           value = parseInt(json.data[0].value);
           label = json.data[0].value_classification;
-          
           if (value <= 25) color = "#ef4444";      
           else if (value <= 45) color = "#f97316"; 
           else if (value <= 55) color = "#eab308"; 
           else if (value <= 75) color = "#84cc16"; 
           else color = "#22c55e";                  
         }
-      } catch (e) {
-        console.warn("Gagal ambil data Fear & Greed, pakai default.");
-      }
+      } catch (e) {}
 
-      valueEl.innerText = value;
-      valueEl.style.color = color;
-      labelEl.innerText = label;
-      labelEl.style.color = color;
+      valueEl.innerText = value; valueEl.style.color = color;
+      labelEl.innerText = label; labelEl.style.color = color;
 
       if (fearGreedChart) fearGreedChart.destroy();
       
       fearGreedChart = new Chart(ctx, {
         type: 'doughnut',
-        data: {
-          labels: ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"],
-          datasets: [{
-            data: [25, 20, 10, 20, 25], 
-            backgroundColor: [
-              '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'
-            ],
-            borderWidth: 0,
-            hoverOffset: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '75%',
-          rotation: -90,
-          circumference: 180,
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false } 
-          },
-          animation: {
-            animateScale: true,
-            animateRotate: true
-          }
-        },
+        data: { labels: ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"], datasets: [{ data: [25, 20, 10, 20, 25], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', rotation: -90, circumference: 180, plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { animateScale: true, animateRotate: true } },
         plugins: [{
           id: 'needle',
           afterDatasetDraw: function(chart) {
-            const { ctx, data, chartArea: { width, height } } = chart;
+            const { ctx, chartArea: { width, height } } = chart;
             ctx.save();
-            
             const angle = (value / 100 * Math.PI) - (Math.PI / 2);
-            
-            const centerX = width / 2;
-            const centerY = height; 
-            const needleLength = height * 0.65; 
-
-            ctx.translate(centerX, centerY);
-            ctx.rotate(angle);
-            
-            ctx.beginPath();
-            ctx.moveTo(-6, 0); 
-            ctx.lineTo(0, -needleLength);
-            ctx.lineTo(6, 0);
-            ctx.fillStyle = color;
-            ctx.fill();
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, 6, 0, Math.PI * 2);
-            ctx.fillStyle = '#1e293b'; 
-            ctx.fill();
-
+            ctx.translate(width / 2, height); ctx.rotate(angle);
+            ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(0, -height * 0.65); ctx.lineTo(6, 0); ctx.fillStyle = color; ctx.fill();
+            ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fillStyle = '#1e293b'; ctx.fill();
             ctx.restore();
           }
         }]
@@ -875,7 +702,7 @@
     }
 
     // ==========================================
-    // LOGIKA BERITA
+    // LOGIKA BERITA (DIPERBARUI - CLEANING TEKS)
     // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
@@ -884,11 +711,7 @@
       pangan: ['pangan', 'beras', 'cabai', 'bawang', 'daging', 'telur', 'minyak goreng', 'gula', 'sayur', 'buah', 'petani', 'panen', 'bulog', 'sembako', 'jagung'],
       keuangan: ['saham', 'ihsg', 'dolar', 'rupiah', 'kurs', 'bank', 'investasi', 'obligasi', 'modal', 'bursa', 'uang', 'fintech', 'kripto', 'bitcoin', 'emas'],
       energi: ['bbm', 'minyak', 'gas', 'batu bara', 'listrik', 'energi', 'pertamina', 'tambang', 'oplos', 'solar', 'subsidi energi'],
-      kebijakan: [
-        'pajak', 'apbn', 'fiskal', 'subsidi', 'defisit', 'utang', 'bea cukai', 
-        'bi rate', 'suku bunga', 'bank indonesia', 'moneter', 'inflasi', 'rdg', 'sri mulyani', 
-        'larangan ekspor', 'larangan impor', 'pemerintah', 'menteri', 'dpr', 'ruu', 'perpres'
-      ]
+      kebijakan: ['pajak', 'apbn', 'fiskal', 'subsidi', 'defisit', 'utang', 'bea cukai', 'bi rate', 'suku bunga', 'bank indonesia', 'moneter', 'inflasi', 'rdg', 'sri mulyani', 'larangan ekspor', 'larangan impor', 'pemerintah', 'menteri', 'dpr', 'ruu', 'perpres']
     };
 
     function matchesKeywords(text, keywords) {
@@ -937,14 +760,20 @@
         const uniqueNews = Array.from(new Map(allResults.map(item => [item.url, item])).values());
         uniqueNews.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
 
-        allNews = uniqueNews.map(item => ({
-            title: item.title, 
-            url: item.url, 
-            published_at: item.published_at, 
-            description: item.description,
-            source: item.source || 'Ekonomi', 
-            image: item.image || item.thumbnail || item.urlToImage || item.cover_image || DEFAULT_NEWS_IMAGE
-        }));
+        allNews = uniqueNews.map(item => {
+            // Membersihkan teks dari karakter aneh API
+            let cleanDesc = item.description || '';
+            cleanDesc = cleanDesc.replace(/\[\]>|>>>|<[^>]*>?/gm, '').trim();
+            
+            return {
+                title: item.title, 
+                url: item.url, 
+                published_at: item.published_at, 
+                description: cleanDesc,
+                source: item.source || 'Ekonomi', 
+                image: item.image || item.thumbnail || item.urlToImage || item.cover_image || DEFAULT_NEWS_IMAGE
+            };
+        });
 
         document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
         applyNewsFilters();
@@ -970,7 +799,7 @@
               <div class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
             </div>
             <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3">${item.title}</h3>
-            <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow">${item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : ''}</p>
+            <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow">${item.description.substring(0, 100)}...</p>
             <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
               <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">Buka Berita <i class="fa-solid fa-arrow-right"></i></button>
             </div>
@@ -1005,7 +834,7 @@
     function openNewsModalByObject(news) {
       document.getElementById('modal-title').innerText = news.title;
       document.getElementById('modal-date').innerText = formatTanggalAman(news.published_at, true);
-      document.getElementById('modal-desc').innerText = news.description ? news.description.replace(/<[^>]*>?/gm, '') : 'Tidak ada deskripsi.';
+      document.getElementById('modal-desc').innerText = news.description || 'Tidak ada deskripsi.';
       document.getElementById('modal-link').href = news.url || '#';
       document.getElementById('modal-source').innerText = news.source || 'Economic Insight';
       document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
@@ -1018,30 +847,48 @@
       document.getElementById('news-modal').classList.add('hidden');
     }
 
-    function shareCurrentNews(event) {
+    // ==========================================
+    // FUNGSI SHARE (LINK PENDEK OTOMATIS)
+    // ==========================================
+    async function shareCurrentNews(event) {
       if (!currentModalNews) return;
       
+      const btn = event.currentTarget;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
+      
       const title = currentModalNews.title;
-      const cleanDesc = currentModalNews.description ? currentModalNews.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Baca berita ekonomi selengkapnya.';
+      const cleanDesc = currentModalNews.description ? currentModalNews.description.substring(0, 100) + '...' : 'Baca berita selengkapnya.';
       
       let img = currentModalNews.image;
-      if (!img || img.startsWith('data:')) {
-          img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
-      }
+      if (!img || img.startsWith('data:')) img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
       if (img.startsWith('http://')) img = img.replace('http://', 'https://');
       
       const originalUrl = currentModalNews.url;
       const baseUrl = window.location.origin;
       const timestamp = new Date().getTime(); 
       
-      const previewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}&t=${timestamp}`;
+      const longPreviewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}&t=${timestamp}`;
       
-      navigator.clipboard.writeText(previewUrl).then(() => {
-        const btn = event.currentTarget;
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
-        setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-      }).catch(err => alert('Gagal menyalin tautan.'));
+      try {
+        // Meminta link pendek ke is.gd
+        const shortRes = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(longPreviewUrl)}`);
+        const shortUrl = await shortRes.text();
+        
+        // Jika berhasil, copy link pendek. Jika gagal, copy link panjang.
+        const finalUrl = shortUrl.startsWith('https://is.gd') ? shortUrl : longPreviewUrl;
+        
+        navigator.clipboard.writeText(finalUrl).then(() => {
+          btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
+          setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+        });
+      } catch (err) {
+        // Fallback jika API shortlink error
+        navigator.clipboard.writeText(longPreviewUrl).then(() => {
+          btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
+          setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+        });
+      }
     }
 
     const searchInput = document.getElementById('search-news');
