@@ -90,11 +90,11 @@
         </div>
         
         <nav class="hidden md:flex space-x-1">
-          <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Pasar</button>
-          <button onclick="switchTab('global')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="global">Global</button>
-          <button onclick="switchTab('berita')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
-          <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
-          <button onclick="switchTab('ai-chat')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive text-blue-600" data-tab="ai-chat"><i class="fa-solid fa-robot mr-1"></i> AI Chat</button>
+          <button onclick="switchTab('kurs')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Pasar</button>
+          <button onclick="switchTab('global')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="global">Global</button>
+          <button onclick="switchTab('berita')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
+          <button onclick="switchTab('kebijakan')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
+          <button onclick="switchTab('ai-chat')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive text-blue-600" data-tab="ai-chat"><i class="fa-solid fa-robot mr-1"></i> AI Chat</button>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
@@ -133,7 +133,7 @@
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
           <div class="relative z-10 flex flex-col">
-            <div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate API</div>
+            <div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div>
             <div class="text-[9px] text-slate-400" id="update-usd">-</div>
           </div>
         </div>
@@ -215,22 +215,18 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Chart GDP -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-4">GDP Growth (%)</h3>
           <div class="relative h-64 w-full"><canvas id="gdpChart"></canvas></div>
         </div>
-        <!-- Chart Inflasi -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-4">Inflasi (%)</h3>
           <div class="relative h-64 w-full"><canvas id="globalInflationChart"></canvas></div>
         </div>
-        <!-- Chart Pengangguran -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-4">Pengangguran (%)</h3>
           <div class="relative h-64 w-full"><canvas id="unemploymentChart"></canvas></div>
         </div>
-        <!-- Chart Neraca Perdagangan -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-4">Neraca Perdagangan (% dari GDP)</h3>
           <div class="relative h-64 w-full"><canvas id="tradeChart"></canvas></div>
@@ -297,7 +293,7 @@
       
       <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
-          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini").
+          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari Yahoo Finance.
         </div>
       </div>
 
@@ -346,7 +342,6 @@
   </div>
 
   <script>
-    // KONFIGURASI SUPABASE
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     
@@ -368,7 +363,6 @@
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
-    // Global Chart Instances
     let gdpChart = null, globalInflationChart = null, unemploymentChart = null, tradeChart = null;
     const countryColors = { IDN: '#ef4444', CHN: '#eab308', USA: '#3b82f6', JPN: '#8b5cf6', KOR: '#14b8a6' };
     const countryNames = { IDN: 'Indonesia', CHN: 'China', USA: 'Amerika Serikat', JPN: 'Jepang', KOR: 'Korea Selatan' };
@@ -403,23 +397,31 @@
     }
 
     // ==========================================
-    // FUNGSI AMBIL HARGA SAHAM REAL-TIME
+    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
     // ==========================================
     async function fetchLiveStockPrice(ticker) {
       try {
+        // Ticker otomatis ditambah .JK untuk Bursa Efek Indonesia
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`;
+        // Menggunakan proxy agar tidak diblokir browser
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        
         const res = await fetch(proxyUrl, { cache: "no-store" });
         const data = await res.json();
+        
         if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          return data.chart.result[0].meta.regularMarketPrice;
+            const harga = data.chart.result[0].meta.regularMarketPrice;
+            console.log(`✅ Sukses ambil harga ${ticker} dari Yahoo: Rp ${harga}`);
+            return harga;
         }
-      } catch (error) {}
+      } catch (error) { 
+        console.error("❌ Gagal ambil harga dari Yahoo:", error); 
+      }
       return null;
     }
 
     // ==========================================
-    // LOGIKA AI CHAT (RESTRIKSI EKONOMI)
+    // LOGIKA AI CHAT (RESTRIKSI & REAL-TIME)
     // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
@@ -448,7 +450,12 @@
         if (matches && matches.length > 0) {
           const ticker = matches[0];
           const price = await fetchLiveStockPrice(ticker);
-          if (price) stockDataContext = `\nDATA REAL-TIME SAHAM ${ticker}: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
+          
+          if (price) {
+            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
+          } else {
+            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari Yahoo Finance saat ini.`;
+          }
         }
 
         const contextData = `
@@ -460,12 +467,11 @@
 
         const strictPrompt = `
           [INSTRUKSI SISTEM: Anda adalah analis ekonomi profesional.
-          ATURAN KETAT:
-          1. HANYA jawab pertanyaan seputar Ekonomi Indonesia dan Ekonomi Global.
-          2. Jika pertanyaan di luar topik ekonomi, tolak dengan sangat singkat: "Maaf, saya hanya menjawab pertanyaan seputar ekonomi dan pasar."
-          3. Jika pertanyaan ekonomi/saham, jawab SANGAT SINGKAT (maksimal 3 poin bullet).
-          4. WAJIB berikan angka target (Support/Resistance) atau arah tren jika ditanya saham.
-          5. DILARANG bertele-tele atau menjelaskan teori dasar yang tidak perlu.]
+          1. HANYA jawab pertanyaan seputar Ekonomi dan Saham.
+          2. Jika ada "[DATA REAL-TIME SAHAM]" di dalam konteks, Anda WAJIB menggunakan harga tersebut sebagai acuan utama analisis Anda.
+          3. Jawab SANGAT SINGKAT (maksimal 3 poin bullet).
+          4. DILARANG bertele-tele atau menggunakan data dari pengetahuan lama Anda jika data real-time sudah disediakan.
+          5. JIKA data harga real-time tidak ada, jawablah dengan: "Maaf, koneksi ke data bursa sedang terputus."]
 
           Pertanyaan: ${text}
         `;
@@ -496,7 +502,7 @@
     }
 
     // ==========================================
-    // LOGIKA DATA PASAR & GLOBAL
+    // LOGIKA DATA PASAR
     // ==========================================
     async function initOnlineCounter() {
       try {
@@ -611,13 +617,12 @@
       const fetchIndicator = async (indicatorCode) => {
         try {
           const countryStr = selectedCountries.join(';');
-          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2026`;
+          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2024`;
           const res = await fetch(url);
           const json = await res.json();
           
           if (!json || json.length < 2) return [];
           
-          // Format data for Chart.js
           const rawData = json[1].filter(d => d.value !== null);
           const years = [...new Set(rawData.map(d => d.date))].sort();
           
@@ -679,7 +684,6 @@
       });
     }
 
-    // Dengarkan perubahan pada checkbox
     document.querySelectorAll('.country-checkbox').forEach(cb => {
       cb.addEventListener('change', fetchGlobalData);
     });
@@ -846,7 +850,6 @@
       try { fetchNews(); } catch(e) {}
       try { fetchEconomicCalendar(); } catch(e) {} 
       
-      // Fetch data inflasi lokal & update text
       try { 
         fetch('/api/inflasi')
           .then(r => r.json())
@@ -861,7 +864,6 @@
           });
       } catch(e) {}
 
-      // Init Global Data
       try { fetchGlobalData(); } catch(e) {}
       
       setInterval(fetchCurrenciesForTicker, 3600000);
