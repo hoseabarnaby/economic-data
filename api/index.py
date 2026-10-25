@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from urllib.parse import unquote, urlencode
+from urllib.parse import unquote
 import requests
 import os
 
@@ -16,6 +16,8 @@ app.add_middleware(
 )
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'
+SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ'
 
 @app.get("/api/inflasi")
 def get_inflasi():
@@ -66,64 +68,64 @@ Panduan Anda:
         data = response.json()
         reply = data['choices'][0]['message']['content']
         return {"reply": reply}
-    except requests.exceptions.HTTPError as errh:
-        raise HTTPException(status_code=response.status_code, detail=f"DeepSeek Error: {response.text}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal memanggil DeepSeek: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gagal: {str(e)}")
 
 @app.get("/api/preview")
-def preview_link(title: str = "Economic Insight", desc: str = "Baca berita ekonomi terbaru.", img: str = "", url: str = ""):
-    title = unquote(title).replace('"', '&quot;')
-    desc = unquote(desc).replace('"', '&quot;')
-    img = unquote(img)
-    url = unquote(url)
+def preview_link(id: str = ""):
+    if not id:
+        return HTMLResponse(content="<h1>Link Tidak Valid</h1>", status_code=400)
 
-    if img.startswith('http://'):
-        img = img.replace('http://', 'https://')
-        
-    if not img or img.startswith('data:image'):
-        img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight'
-
-    my_website = "https://economic-data-lake.vercel.app/"
+    # Ambil data dari Supabase berdasarkan ID
+    headers = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+    }
     
-    # PERBAIKAN: Kirim semua data (title, desc, img) ke URL redirect
-    query_params = urlencode({
-        'news_url': url,
-        'title': title,
-        'desc': desc,
-        'img': img
-    })
-    
-    redirect_url = f"{my_website}?{query_params}"
+    try:
+        res = requests.get(f"{SUPABASE_URL}/rest/v1/share_links?id=eq.{id}", headers=headers)
+        data = res.json()
 
-    html_content = f"""<!DOCTYPE html>
+        if not data or len(data) == 0:
+            return HTMLResponse(content="<h1>Berita tidak ditemukan atau link kadaluarsa</h1>", status_code=404)
+
+        news = data[0]
+        title = news.get('title', 'Economic Insight')
+        desc = news.get('description', 'Baca berita ekonomi terbaru.')
+        img = news.get('image_url', '')
+        original_url = news.get('original_url', 'https://economic-data-lake.vercel.app/')
+
+        if img.startswith('http://'):
+            img = img.replace('http://', 'https://')
+
+        redirect_url = f"https://economic-data-lake.vercel.app/?news_url={original_url}"
+
+        html_content = f"""<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <title>{title}</title>
-    
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{desc}" />
     <meta property="og:image" content="{img}" />
     <meta property="og:url" content="{redirect_url}" />
     <meta property="og:type" content="article" />
-
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{title}">
     <meta name="twitter:description" content="{desc}">
     <meta name="twitter:image" content="{img}">
-    
     <meta http-equiv="refresh" content="0; url={redirect_url}" />
 </head>
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background-color: #f8fafc;">
     <div style="text-align:center;">
-        <h3 style="color: #1e293b;">Membuka berita di Economic Insight...</h3>
-        <p><a href="{redirect_url}" style="color: #2563eb; text-decoration: none; font-weight: bold;">Klik di sini jika tidak dialihkan secara otomatis</a></p>
+        <h3>Membuka berita di Economic Insight...</h3>
+        <p><a href="{redirect_url}">Klik di sini jika tidak dialihkan</a></p>
     </div>
 </body>
 </html>"""
-
-    return HTMLResponse(content=html_content, status_code=200)
+        return HTMLResponse(content=html_content, status_code=200)
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Error: {str(e)}</h1>", status_code=500)
 
 @app.get("/api")
 def read_root():
