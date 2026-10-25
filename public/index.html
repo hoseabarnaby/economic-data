@@ -611,7 +611,7 @@
       const fetchIndicator = async (indicatorCode) => {
         try {
           const countryStr = selectedCountries.join(';');
-          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2024`;
+          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2026`;
           const res = await fetch(url);
           const json = await res.json();
           
