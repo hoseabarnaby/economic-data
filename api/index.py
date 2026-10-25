@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from urllib.parse import unquote
+from urllib.parse import unquote, urlencode
 import requests
 import os
 
@@ -98,7 +98,16 @@ def preview_link(id: str = ""):
         if img.startswith('http://'):
             img = img.replace('http://', 'https://')
 
-        redirect_url = f"https://economic-data-lake.vercel.app/?news_url={original_url}"
+        # PERBAIKAN: Kirim semua data (title, desc, img) ke URL redirect
+        # Agar frontend bisa langsung membuka floating window
+        query_params = urlencode({
+            'news_url': original_url,
+            'title': title,
+            'desc': desc,
+            'img': img
+        })
+        
+        redirect_url = f"https://economic-data-lake.vercel.app/?{query_params}"
 
         html_content = f"""<!DOCTYPE html>
 <html lang="id">
