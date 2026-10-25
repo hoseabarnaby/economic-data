@@ -118,7 +118,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ringkasan Pasar</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi paling penting saat membuka website.</p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Data Realtime</p>
         </div>
       </div>
 
@@ -617,7 +617,7 @@
       const fetchIndicator = async (indicatorCode) => {
         try {
           const countryStr = selectedCountries.join(';');
-          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2024`;
+          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2028`;
           const res = await fetch(url);
           const json = await res.json();
           if (!json || json.length < 2) return [];
