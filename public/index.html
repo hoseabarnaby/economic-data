@@ -52,7 +52,6 @@
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* CSS KHUSUS UNTUK MARKDOWN CHAT */
     .markdown-chat { font-size: 0.95rem; line-height: 1.7; color: #334155; }
     .markdown-chat p { margin-bottom: 0.75rem; }
     .markdown-chat strong { font-weight: 700; color: #0f172a; }
@@ -339,14 +338,12 @@
     `;
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
-    // INIT CHART GLOBAL
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
     let inflationChart = null;
     let nakerChart = null;
 
-    // FUNGSI NAVIGASI
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -357,7 +354,6 @@
           if(tabId === 'inflasi' && inflationChart) inflationChart.resize();
           if(tabId === 'naker' && nakerChart) nakerChart.resize();
       }
-      
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => { activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active'); });
     }
@@ -401,9 +397,7 @@
 
       const chatBody = document.getElementById('chat-messages');
       
-      chatBody.innerHTML += `
-        <div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">${text}</div>
-      `;
+      chatBody.innerHTML += `<div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">${text}</div>`;
       
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
@@ -434,7 +428,6 @@
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : '-'}"
         `;
 
-        // PROMPT DIPERBARUI: Membatasi hanya ekonomi & anti-bertele-tele
         const strictPrompt = `
           [INSTRUKSI SISTEM: Anda adalah analis ekonomi profesional.
           ATURAN KETAT:
@@ -459,9 +452,7 @@
         if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
 
         let reply = marked.parse(data.reply);
-        chatBody.innerHTML += `
-          <div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">${reply}</div>
-        `;
+        chatBody.innerHTML += `<div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">${reply}</div>`;
 
       } catch (error) {
         console.error(error);
@@ -476,14 +467,11 @@
     }
 
     // ==========================================
-    // LOGIKA DATA PASAR & BERITA (YANG HILANG DIKEMBALIKAN)
+    // LOGIKA DATA PASAR & BERITA
     // ==========================================
-    
-    // 1. INFLASI
     async function fetchInflasi() {
       const sourceEl = document.getElementById('inflasi-source');
       
-      // Init Chart
       const ctxInflasi = document.getElementById('inflationChart')?.getContext('2d');
       if (ctxInflasi && !inflationChart) {
         let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
@@ -522,7 +510,6 @@
           const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
           if (validData.length > 0) {
             const latest = validData[validData.length - 1];
-            
             const sum = validData.reduce((a, b) => a + b.value, 0);
             document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
             
@@ -542,7 +529,6 @@
       } catch (err) {}
     }
 
-    // 2. NAKER
     async function fetchNaker() {
       const ctxNaker = document.getElementById('nakerChart')?.getContext('2d');
       if (ctxNaker && !nakerChart) {
@@ -577,7 +563,6 @@
       } catch (err) {}
     }
 
-    // 3. LAINNYA
     async function initOnlineCounter() {
       try {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -657,7 +642,9 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
-    // BERITA
+    // ==========================================
+    // LOGIKA BERITA (FIX: MULTI-KEYWORD FETCH)
+    // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     const categoryKeywords = {
@@ -693,18 +680,35 @@
 
       try {
         const timestamp = new Date().getTime();
-        const urls = [`https://freenewsapi.ai/v1/search?lang=id&q=ekonomi&size=30&t=${timestamp}`, `https://freenewsapi.ai/v1/search?lang=id&size=30&t=${timestamp}`];
-        let data = null;
-        for (const url of urls) {
+        
+        // Ambil dari berbagai kata kunci agar semua tab terisi
+        const queries = [
+          `https://freenewsapi.ai/v1/search?lang=id&q=ekonomi&size=20&t=${timestamp}`,
+          `https://freenewsapi.ai/v1/search?lang=id&q=kebijakan+ekonomi&size=10&t=${timestamp}`,
+          `https://freenewsapi.ai/v1/search?lang=id&q=pajak+OR+apbn&size=10&t=${timestamp}`
+        ];
+        
+        let allResults = [];
+        
+        for (const url of queries) {
           try {
             const res = await fetch(url, { cache: "no-store" });
             const json = await res.json();
-            if (json && json.results && json.results.length > 0) { data = json; break; }
+            if (json && json.results && json.results.length > 0) {
+              allResults = allResults.concat(json.results);
+            }
           } catch(e) {}
         }
-        if (!data) throw new Error("Gagal muat berita");
         
-        allNews = data.results.map(item => ({
+        if (allResults.length === 0) throw new Error("Gagal muat berita");
+        
+        // Hapus duplikat berdasarkan URL
+        const uniqueNews = Array.from(new Map(allResults.map(item => [item.url, item])).values());
+        
+        // Urutkan berdasarkan tanggal terbaru
+        uniqueNews.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+
+        allNews = uniqueNews.map(item => ({
             title: item.title, url: item.url, published_at: item.published_at, description: item.description,
             source: item.source || 'Ekonomi', image: DEFAULT_NEWS_IMAGE
         }));
@@ -745,7 +749,11 @@
     function renderKebijakan(newsArray) {
       const container = document.getElementById('kebijakan-list');
       const filtered = newsArray.filter(item => matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords['kebijakan'])).slice(0, 5);
-      if (filtered.length === 0) { container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada berita kebijakan.</div>`; return; }
+      
+      if (filtered.length === 0) { 
+        container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada berita kebijakan.</div>`; 
+        return; 
+      }
       
       container.innerHTML = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">` + filtered.map(item => `
         <div class="ml-4 relative group">
@@ -798,11 +806,8 @@
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchEconomicCalendar(); } catch(e) {} 
-      
-      // --- INI YANG TADI HILANG, SUDAH DIKEMBALIKAN ---
       try { fetchInflasi(); } catch(e) {}
       try { fetchNaker(); } catch(e) {}
-      // ------------------------------------------------
       
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
