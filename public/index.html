@@ -857,10 +857,14 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
       
       const title = currentModalNews.title;
-      const desc = currentModalNews.description ? currentModalNews.description.substring(0, 100) : 'Baca berita selengkapnya.';
-      const img = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
-      const originalUrl = currentModalNews.url;
+      // PERBAIKAN: Deskripsi tidak lagi dipotong 100 karakter
+      const desc = currentModalNews.description || 'Baca berita selengkapnya.';
       
+      let img = currentModalNews.image;
+      if (!img || img.startsWith('data:')) img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
+      if (img.startsWith('http://')) img = img.replace('http://', 'https://');
+      
+      const originalUrl = currentModalNews.url;
       const shortId = Math.random().toString(36).substring(2, 8);
       
       try {
