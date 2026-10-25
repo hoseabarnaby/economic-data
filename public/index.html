@@ -288,7 +288,8 @@
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kebijakan Ekonomi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru (Indonesia).</p>
       </div>
-      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden card-hover">
+      <!-- PERBAIKAN: MENGHAPUS CLASS card-hover DARI KONTAINER BESAR -->
+      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
            <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-blue-500"></i>Memuat kebijakan terbaru...</div>
         </div>
@@ -403,9 +404,8 @@
           targetTab.classList.remove('hidden');
           if(tabId === 'ai-chat') targetTab.classList.add('flex'); 
           
-          // Animasi ulang saat tab dibuka
           targetTab.classList.remove('animate-fade-in-up');
-          void targetTab.offsetWidth; // Trigger reflow
+          void targetTab.offsetWidth; 
           targetTab.classList.add('animate-fade-in-up');
       }
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
