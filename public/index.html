@@ -702,7 +702,7 @@
     }
 
     // ==========================================
-    // LOGIKA BERITA (DIPERBARUI - CLEANING TEKS)
+    // LOGIKA BERITA
     // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
@@ -761,7 +761,6 @@
         uniqueNews.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
 
         allNews = uniqueNews.map(item => {
-            // Membersihkan teks dari karakter aneh API
             let cleanDesc = item.description || '';
             cleanDesc = cleanDesc.replace(/\[\]>|>>>|<[^>]*>?/gm, '').trim();
             
@@ -848,7 +847,7 @@
     }
 
     // ==========================================
-    // FUNGSI SHARE (LINK PENDEK OTOMATIS)
+    // FUNGSI SHARE (LINK PENDEK VIA DATABASE SUPABASE)
     // ==========================================
     async function shareCurrentNews(event) {
       if (!currentModalNews) return;
@@ -858,36 +857,39 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
       
       const title = currentModalNews.title;
-      const cleanDesc = currentModalNews.description ? currentModalNews.description.substring(0, 100) + '...' : 'Baca berita selengkapnya.';
-      
-      let img = currentModalNews.image;
-      if (!img || img.startsWith('data:')) img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
-      if (img.startsWith('http://')) img = img.replace('http://', 'https://');
-      
+      const desc = currentModalNews.description ? currentModalNews.description.substring(0, 100) : 'Baca berita selengkapnya.';
+      const img = currentModalNews.image || 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
       const originalUrl = currentModalNews.url;
-      const baseUrl = window.location.origin;
-      const timestamp = new Date().getTime(); 
       
-      const longPreviewUrl = `${baseUrl}/api/preview?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(cleanDesc)}&img=${encodeURIComponent(img)}&url=${encodeURIComponent(originalUrl)}&t=${timestamp}`;
+      // 1. Buat ID unik pendek (6 karakter)
+      const shortId = Math.random().toString(36).substring(2, 8);
       
       try {
-        // Meminta link pendek ke is.gd
-        const shortRes = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(longPreviewUrl)}`);
-        const shortUrl = await shortRes.text();
+        // 2. Simpan ke database Supabase
+        const { error } = await supabaseClient
+          .from('share_links')
+          .insert([{ 
+            id: shortId,
+            title: title, 
+            description: desc, 
+            image_url: img, 
+            original_url: originalUrl 
+          }]);
+
+        if (error) throw error;
+
+        // 3. Buat link pendek & copy ke clipboard
+        const shortUrl = `${window.location.origin}/api/preview?id=${shortId}`;
         
-        // Jika berhasil, copy link pendek. Jika gagal, copy link panjang.
-        const finalUrl = shortUrl.startsWith('https://is.gd') ? shortUrl : longPreviewUrl;
-        
-        navigator.clipboard.writeText(finalUrl).then(() => {
+        navigator.clipboard.writeText(shortUrl).then(() => {
           btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
           setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
         });
+        
       } catch (err) {
-        // Fallback jika API shortlink error
-        navigator.clipboard.writeText(longPreviewUrl).then(() => {
-          btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
-          setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-        });
+        console.error("Gagal membuat link pendek:", err);
+        alert("Gagal membuat link share. Silakan coba lagi.");
+        btn.innerHTML = originalHtml;
       }
     }
 
