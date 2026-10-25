@@ -52,7 +52,7 @@
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* CSS KHUSUS UNTUK MARKDOWN CHAT (Latar Putih) */
+    /* CSS KHUSUS UNTUK MARKDOWN CHAT */
     .markdown-chat { font-size: 0.95rem; line-height: 1.7; color: #334155; }
     .markdown-chat p { margin-bottom: 0.75rem; }
     .markdown-chat strong { font-weight: 700; color: #0f172a; }
@@ -63,10 +63,7 @@
     .markdown-chat th, .markdown-chat td { border: 1px solid #e2e8f0; padding: 0.5rem; text-align: left; }
     .markdown-chat th { background-color: #f8fafc; font-weight: bold; }
 
-    .ticker-container {
-      width: 100%; overflow: hidden; background-color: #ffffff; border: 1px solid #e2e8f0;
-      border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 12px 0; position: relative;
-    }
+    .ticker-container { width: 100%; overflow: hidden; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); padding: 12px 0; position: relative; }
     .ticker-track { display: flex; width: max-content; animation: tickerScroll 30s linear infinite; }
     .ticker-container:hover .ticker-track { animation-play-state: paused; }
     .ticker-item { display: flex; align-items: center; gap: 0.5rem; padding: 0 1.5rem; border-right: 1px solid #f1f5f9; white-space: nowrap; }
@@ -277,9 +274,6 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
           Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini").
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
-          <strong>Fitur Baru:</strong> Sistem akan otomatis mendeteksi kode saham (seperti BMRI, BBCA, GOTO) dan mengambil harga real-time-nya sebelum memberikan prediksi.
-        </div>
       </div>
 
       <div class="p-4 border-t border-slate-200 bg-white flex gap-3 shrink-0">
@@ -345,6 +339,14 @@
     `;
     const DEFAULT_NEWS_IMAGE = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgPlaceholder)}`;
 
+    // INIT CHART GLOBAL
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    let inflationChart = null;
+    let nakerChart = null;
+
+    // FUNGSI NAVIGASI
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -352,7 +354,10 @@
       if (targetTab) {
           targetTab.classList.remove('hidden');
           if(tabId === 'ai-chat') targetTab.classList.add('flex'); 
+          if(tabId === 'inflasi' && inflationChart) inflationChart.resize();
+          if(tabId === 'naker' && nakerChart) nakerChart.resize();
       }
+      
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => { activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active'); });
     }
@@ -360,16 +365,18 @@
     function formatTanggalAman(dateString, withDay = false) {
       if (!dateString) return '-';
       try {
-        const dateObj = new Date(dateString.replace(' ', 'T'));
+        const cleanDateStr = dateString.replace(' ', 'T');
+        const dateObj = new Date(cleanDateStr);
         if (isNaN(dateObj.getTime())) return dateString;
         const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta', hour12: false };
         if (withDay) options.weekday = 'long';
-        return dateObj.toLocaleString('id-ID', options).replace('.', ':') + ' WIB';
+        let formatted = dateObj.toLocaleString('id-ID', options);
+        return formatted.replace('.', ':') + ' WIB';
       } catch (e) { return dateString; }
     }
 
     // ==========================================
-    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
+    // FUNGSI AMBIL HARGA SAHAM REAL-TIME
     // ==========================================
     async function fetchLiveStockPrice(ticker) {
       try {
@@ -377,19 +384,15 @@
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
         const res = await fetch(proxyUrl, { cache: "no-store" });
         const data = await res.json();
-        
         if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          const meta = data.chart.result[0].meta;
-          return meta.regularMarketPrice;
+          return data.chart.result[0].meta.regularMarketPrice;
         }
-      } catch (error) {
-        console.warn("Gagal ambil harga saham", ticker, error);
-      }
+      } catch (error) { console.warn("Gagal ambil harga saham", ticker, error); }
       return null;
     }
 
     // ==========================================
-    // LOGIKA AI CHAT (DENGAN DETEKSI SAHAM & PROMPT KETAT)
+    // LOGIKA AI CHAT (RESTRIKSI EKONOMI)
     // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
@@ -398,17 +401,13 @@
 
       const chatBody = document.getElementById('chat-messages');
       
-      // Tampilkan pesan user
       chatBody.innerHTML += `
-        <div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">
-          ${text}
-        </div>
+        <div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">${text}</div>
       `;
       
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
 
-      // Loading indicator
       const loadingId = 'loading-' + Date.now();
       chatBody.innerHTML += `
         <div id="${loadingId}" class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[80%] text-slate-700 flex items-center gap-2">
@@ -418,35 +417,32 @@
       chatBody.scrollTop = chatBody.scrollHeight;
 
       try {
-        // 1. Deteksi Kode Saham (4 Huruf Kapital, misal BMRI, BBCA, GOTO)
         let stockDataContext = "";
         const stockRegex = /\b[A-Z]{4}\b/g;
         const matches = text.match(stockRegex);
         
         if (matches && matches.length > 0) {
-          // Ambil saham pertama yang disebutkan
           const ticker = matches[0];
           const price = await fetchLiveStockPrice(ticker);
-          if (price) {
-            stockDataContext = `\nDATA REAL-TIME SAHAM ${ticker}: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
-          } else {
-            stockDataContext = `\n(Sistem gagal mengambil harga real-time ${ticker}, gunakan analisis teknikal umum).`;
-          }
+          if (price) stockDataContext = `\nDATA REAL-TIME SAHAM ${ticker}: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
         }
 
         const contextData = `
           Kurs USD/IDR: ${document.getElementById('usd-rate')?.innerText || '-'}
           BI Rate: ${document.getElementById('bi-rate')?.innerText || '-'}
-          IHSG: ${document.getElementById('tradingview_ihsg') ? 'Tersedia' : '-'}
           ${stockDataContext}
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : '-'}"
         `;
 
-        // 2. Prompt Super Ketat (Anti-Berte-tele)
+        // PROMPT DIPERBARUI: Membatasi hanya ekonomi & anti-bertele-tele
         const strictPrompt = `
-          [INSTRUKSI SISTEM: Anda adalah analis saham profesional. Jawab SANGAT SINGKAT (maks 4 poin).
-          WAJIB berikan angka prediksi target harga (Support/Resistance) atau arah tren (Naik/Turun) berdasarkan data real-time yang diberikan.
-          DILARANG KERAS menjelaskan teori dasar ekonomi atau bertele-tele. Langsung to-the-point.]
+          [INSTRUKSI SISTEM: Anda adalah analis ekonomi profesional.
+          ATURAN KETAT:
+          1. HANYA jawab pertanyaan seputar Ekonomi Indonesia dan Ekonomi Global.
+          2. Jika pertanyaan di luar topik ekonomi (contoh: resep kue, cuaca, politik praktis), tolak dengan sangat singkat: "Maaf, saya hanya menjawab pertanyaan seputar ekonomi dan pasar."
+          3. Jika pertanyaan ekonomi/saham, jawab SANGAT SINGKAT (maksimal 3 poin bullet).
+          4. WAJIB berikan angka target (Support/Resistance) atau arah tren jika ditanya saham.
+          5. DILARANG bertele-tele atau menjelaskan teori dasar yang tidak perlu.]
 
           Pertanyaan: ${text}
         `;
@@ -454,10 +450,7 @@
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: strictPrompt, // Kirim prompt ketat ini
-            context: contextData
-          })
+          body: JSON.stringify({ message: strictPrompt, context: contextData })
         });
 
         const data = await response.json();
@@ -466,11 +459,8 @@
         if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
 
         let reply = marked.parse(data.reply);
-        
         chatBody.innerHTML += `
-          <div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">
-            ${reply}
-          </div>
+          <div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">${reply}</div>
         `;
 
       } catch (error) {
@@ -482,13 +472,112 @@
           </div>
         `;
       }
-      
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
     // ==========================================
-    // LOGIKA DATA PASAR & BERITA
+    // LOGIKA DATA PASAR & BERITA (YANG HILANG DIKEMBALIKAN)
     // ==========================================
+    
+    // 1. INFLASI
+    async function fetchInflasi() {
+      const sourceEl = document.getElementById('inflasi-source');
+      
+      // Init Chart
+      const ctxInflasi = document.getElementById('inflationChart')?.getContext('2d');
+      if (ctxInflasi && !inflationChart) {
+        let gradientInflasi = ctxInflasi.createLinearGradient(0, 0, 0, 400);
+        gradientInflasi.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
+        gradientInflasi.addColorStop(1, 'rgba(37, 99, 235, 0)');
+        inflationChart = new Chart(ctxInflasi, {
+          type: 'line',
+          data: { labels: [], datasets: [{ label: 'Inflasi YoY (%)', data: [], borderColor: '#2563eb', backgroundColor: gradientInflasi, borderWidth: 2, pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.4 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
+        });
+      }
+
+      try {
+        const res = await fetch('/api/inflasi'); 
+        if (!res.ok) throw new Error("Backend Error");
+        const data = await res.json();
+        
+        document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
+        document.getElementById('inflasi-tahun').innerText = `Rilis: ${data.tahun}`;
+        document.getElementById('inflasi-terakhir-tab').innerText = data.nilai + '%';
+        document.getElementById('inflasi-tahun-tab').innerText = `Data Tahun ${data.tahun}`;
+        
+        if (sourceEl) { sourceEl.innerText = "Sumber: BPS (via Backend)"; sourceEl.className = "text-sm text-emerald-600 font-bold mt-1"; }
+        fetchWorldBankInflasi();
+      } catch (error) {
+        if (sourceEl) { sourceEl.innerText = "BPS gagal dimuat, beralih ke World Bank Open Data."; sourceEl.className = "text-sm text-amber-500 font-bold mt-1"; }
+        fetchWorldBankInflasi();
+      }
+    }
+
+    async function fetchWorldBankInflasi() {
+      try {
+        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/FP.CPI.TOTL.ZG?format=json&per_page=60');
+        const json = await res.json();
+        if (json && json.length > 1 && Array.isArray(json[1])) {
+          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
+          if (validData.length > 0) {
+            const latest = validData[validData.length - 1];
+            
+            const sum = validData.reduce((a, b) => a + b.value, 0);
+            document.getElementById('inflasi-avg').innerText = (sum / validData.length).toFixed(2) + '%';
+            
+            if (validData.length > 1) {
+              const prev = validData[validData.length - 2];
+              const diff = latest.value - prev.value;
+              document.getElementById('inflasi-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
+            }
+            
+            if (inflationChart) {
+              inflationChart.data.labels = validData.map(d => d.date);
+              inflationChart.data.datasets[0].data = validData.map(d => d.value);
+              inflationChart.update();
+            }
+          }
+        }
+      } catch (err) {}
+    }
+
+    // 2. NAKER
+    async function fetchNaker() {
+      const ctxNaker = document.getElementById('nakerChart')?.getContext('2d');
+      if (ctxNaker && !nakerChart) {
+        nakerChart = new Chart(ctxNaker, {
+          type: 'bar',
+          data: { labels: [], datasets: [{ label: 'TPT (%)', data: [], backgroundColor: '#2563eb', borderRadius: 4 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } } }
+        });
+      }
+
+      try {
+        const res = await fetch('https://api.worldbank.org/v2/country/IDN/indicator/SL.UEM.TOTL.ZS?format=json&per_page=60');
+        const json = await res.json();
+        if (json && json.length > 1 && Array.isArray(json[1])) {
+          const validData = json[1].filter(d => d.value !== null).sort((a, b) => parseInt(a.date) - parseInt(b.date)).slice(-10);
+          if (validData.length > 0) {
+            const latest = validData[validData.length - 1];
+            document.getElementById('naker-terakhir').innerText = latest.value.toFixed(2) + '%';
+            document.getElementById('naker-tahun').innerText = `Data Tahun ${latest.date}`;
+            if (validData.length > 1) {
+              const prev = validData[validData.length - 2];
+              const diff = latest.value - prev.value;
+              document.getElementById('naker-tren').innerHTML = diff > 0 ? `<span class="text-rose-600">+${diff.toFixed(2)}%</span>` : `<span class="text-emerald-600">${diff.toFixed(2)}%</span>`;
+            }
+            if (nakerChart) {
+              nakerChart.data.labels = validData.map(d => d.date);
+              nakerChart.data.datasets[0].data = validData.map(d => d.value);
+              nakerChart.update();
+            }
+          }
+        }
+      } catch (err) {}
+    }
+
+    // 3. LAINNYA
     async function initOnlineCounter() {
       try {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -568,6 +657,7 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
+    // BERITA
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     const categoryKeywords = {
@@ -708,6 +798,11 @@
       try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchEconomicCalendar(); } catch(e) {} 
+      
+      // --- INI YANG TADI HILANG, SUDAH DIKEMBALIKAN ---
+      try { fetchInflasi(); } catch(e) {}
+      try { fetchNaker(); } catch(e) {}
+      // ------------------------------------------------
       
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
