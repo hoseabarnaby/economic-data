@@ -215,15 +215,16 @@
       <!-- FEAR AND GREED INDEX SECTION -->
       <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
         <h3 class="font-bold text-slate-900 text-base mb-2">Market Sentiment (Fear & Greed)</h3>
-        <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar (Crypto & Global Macro) yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
+        <p class="text-slate-500 text-xs text-center mb-4 max-w-lg">Indeks sentimen pasar (Crypto & Global Macro) yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
         
-        <div class="relative w-full max-w-sm h-48 flex justify-center">
+        <!-- DIPERKECIL: max-w-[280px] dan h-[140px] -->
+        <div class="relative w-full max-w-[280px] h-[140px] flex justify-center overflow-hidden">
           <canvas id="fearGreedChart"></canvas>
           <!-- Overlay Text -->
-          <div class="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-4">
-            <span class="text-4xl font-extrabold" id="fng-value">-</span>
-            <span class="text-sm font-bold uppercase tracking-widest mt-1" id="fng-label">Loading...</span>
-            <span class="text-[10px] text-slate-400 mt-2">Sumber: Alternative.me</span>
+          <div class="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-0">
+            <span class="text-3xl font-extrabold leading-none" id="fng-value">-</span>
+            <span class="text-xs font-bold uppercase tracking-widest mt-1 mb-2" id="fng-label">Loading...</span>
+            <span class="text-[9px] text-slate-400">Sumber: Alternative.me</span>
           </div>
         </div>
       </div>
@@ -612,7 +613,7 @@
     }
 
     // ==========================================
-    // GLOBAL ECONOMY COMPARISON (WORLD BANK) - UPGRADED VISUALS
+    // GLOBAL ECONOMY COMPARISON (WORLD BANK)
     // ==========================================
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
@@ -652,13 +653,13 @@
               data: countryData,
               borderColor: countryColors[country],
               backgroundColor: countryColors[country] + '33',
-              borderWidth: 3, // Lebih tebal
+              borderWidth: 3,
               pointBackgroundColor: countryColors[country],
               pointBorderColor: '#ffffff',
               pointBorderWidth: 1.5,
               pointRadius: 3,
               pointHoverRadius: 6,
-              tension: 0.4 // Lebih melengkung dan smooth
+              tension: 0.4
             };
           });
 
@@ -676,7 +677,6 @@
         fetchIndicator(indicators.trade)
       ]);
 
-      // Opsi UI Chart yang jauh lebih cantik dan mudah dibaca
       const commonOptions = {
         responsive: true, 
         maintainAspectRatio: false,
@@ -736,7 +736,7 @@
     });
 
     // ==========================================
-    // FUNGSI FEAR AND GREED INDEX (CRYPTO/GLOBAL)
+    // FUNGSI FEAR AND GREED INDEX (FIXED LOGIC & SIZE)
     // ==========================================
     async function fetchFearGreedIndex() {
       const valueEl = document.getElementById('fng-value');
@@ -800,42 +800,42 @@
           circumference: 180,
           plugins: {
             legend: { display: false },
-            tooltip: { enabled: false } // Matikan tooltip bawaan agar tidak ganggu
+            tooltip: { enabled: false } 
           },
           animation: {
             animateScale: true,
             animateRotate: true
           }
         },
-        // Plugin kustom untuk menggambar jarum penunjuk
         plugins: [{
           id: 'needle',
           afterDatasetDraw: function(chart) {
             const { ctx, data, chartArea: { width, height } } = chart;
             ctx.save();
             
-            // Hitung sudut berdasarkan nilai (0-100)
-            const angle = Math.PI * (value / 100) - Math.PI; 
+            // PERBAIKAN RUMUS: Titik tengah (50) = 0 radian. 
+            // Kiri (0) = -PI/2, Kanan (100) = +PI/2
+            const angle = (value / 100 * Math.PI) - (Math.PI / 2);
             
             const centerX = width / 2;
-            const centerY = height; // Setengah lingkaran ada di bawah
-            const needleLength = height * 0.8; 
+            const centerY = height; 
+            const needleLength = height * 0.75; // Sedikit lebih pendek
 
             ctx.translate(centerX, centerY);
             ctx.rotate(angle);
             
             // Gambar Jarum
             ctx.beginPath();
-            ctx.moveTo(-10, 0);
+            ctx.moveTo(-6, 0); // Lebar pangkal jarum
             ctx.lineTo(0, -needleLength);
-            ctx.lineTo(10, 0);
+            ctx.lineTo(6, 0);
             ctx.fillStyle = color;
             ctx.fill();
             
             // Gambar Bulatan di tengah jarum
             ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
-            ctx.fillStyle = '#1e293b'; // Warna gelap
+            ctx.arc(0, 0, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b'; 
             ctx.fill();
 
             ctx.restore();
@@ -1040,7 +1040,7 @@
       } catch(e) {}
 
       try { fetchGlobalData(); } catch(e) {}
-      try { fetchFearGreedIndex(); } catch(e) {} // Panggil Fear & Greed Index
+      try { fetchFearGreedIndex(); } catch(e) {} 
       
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
