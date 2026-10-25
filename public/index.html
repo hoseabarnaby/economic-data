@@ -212,19 +212,20 @@
         </div>
       </div>
 
-      <!-- FEAR AND GREED INDEX SECTION (UKURAN DIPERBAIKI) -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
-        <h3 class="font-bold text-slate-900 text-base mb-2">Market Sentiment (Fear & Greed)</h3>
-        <p class="text-slate-500 text-xs text-center mb-4 max-w-lg">Indeks sentimen pasar (Crypto & Global Macro) yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
+      <!-- FEAR AND GREED INDEX SECTION (UI DIPERBAIKI) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
+        <h3 class="font-bold text-slate-900 text-base mb-1">Market Sentiment (Fear & Greed)</h3>
+        <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
         
-        <div class="relative w-full max-w-[280px] h-[160px] flex justify-center overflow-hidden">
+        <div class="relative w-full max-w-[300px] h-[150px]">
           <canvas id="fearGreedChart"></canvas>
-          <!-- Overlay Text -->
-          <div class="absolute bottom-2 left-0 right-0 flex flex-col items-center justify-end pb-0">
-            <span class="text-3xl font-extrabold leading-none" id="fng-value">-</span>
-            <span class="text-xs font-bold uppercase tracking-widest mt-1 mb-1" id="fng-label">Loading...</span>
-            <span class="text-[9px] text-slate-400">Sumber: Alternative.me</span>
-          </div>
+        </div>
+        
+        <!-- Teks dipindah ke bawah grafik -->
+        <div class="flex flex-col items-center mt-4">
+          <span class="text-4xl font-extrabold leading-none" id="fng-value">-</span>
+          <span class="text-sm font-bold uppercase tracking-widest mt-2 mb-1" id="fng-label">Loading...</span>
+          <span class="text-[10px] text-slate-400">Sumber: Alternative.me</span>
         </div>
       </div>
     </div>
@@ -362,9 +363,8 @@
     const countryColors = { IDN: '#ef4444', CHN: '#eab308', USA: '#3b82f6', JPN: '#8b5cf6', KOR: '#14b8a6' };
     const countryNames = { IDN: 'Indonesia', CHN: 'China', USA: 'Amerika Serikat', JPN: 'Jepang', KOR: 'Korea Selatan' };
 
-    // === FITUR TUTUP TOOLTIP DI HP ===
+    // Fungsi untuk menutup tooltip di HP
     document.addEventListener('click', function(e) {
-      // Jika yang diklik bukan canvas (grafik)
       if (!e.target.closest('canvas')) {
         [gdpChart, globalInflationChart, unemploymentChart, tradeChart, fearGreedChart].forEach(chart => {
           if (chart && chart.tooltip) {
@@ -692,7 +692,6 @@
       const commonOptions = {
         responsive: true, 
         maintainAspectRatio: false,
-        // PERBAIKAN: Hanya muncul jika pas di titiknya
         interaction: { mode: 'nearest', intersect: true }, 
         plugins: { 
           legend: { 
@@ -823,7 +822,7 @@
             
             const centerX = width / 2;
             const centerY = height; 
-            const needleLength = height * 0.75; 
+            const needleLength = height * 0.65; // Jarum diperpendek agar tidak menembus teks
 
             ctx.translate(centerX, centerY);
             ctx.rotate(angle);
