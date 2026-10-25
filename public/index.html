@@ -212,7 +212,7 @@
         </div>
       </div>
 
-      <!-- FEAR AND GREED INDEX SECTION (UI DIPERBAIKI) -->
+      <!-- FEAR AND GREED INDEX SECTION -->
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
         <h3 class="font-bold text-slate-900 text-base mb-1">Market Sentiment (Fear & Greed)</h3>
         <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
@@ -221,7 +221,6 @@
           <canvas id="fearGreedChart"></canvas>
         </div>
         
-        <!-- Teks dipindah ke bawah grafik -->
         <div class="flex flex-col items-center mt-4">
           <span class="text-4xl font-extrabold leading-none" id="fng-value">-</span>
           <span class="text-sm font-bold uppercase tracking-widest mt-2 mb-1" id="fng-label">Loading...</span>
@@ -402,6 +401,48 @@
 
     function getCurrentTimeStr() {
       return new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':') + ' WIB';
+    }
+
+    // ==========================================
+    // FUNGSI LOG PENGUNJUNG (TAMBAHAN BARU)
+    // ==========================================
+    async function logVisitor() {
+      if (!supabaseClient) return;
+      
+      try {
+        const ua = navigator.userAgent;
+        let device = "Desktop";
+        let os = "Unknown";
+        let browser = "Unknown";
+
+        if (/android/i.test(ua)) device = "Mobile (Android)";
+        if (/iPad|iPhone|iPod/.test(ua)) device = "Mobile (iOS)";
+        
+        if (/windows/i.test(ua)) os = "Windows";
+        else if (/mac/i.test(ua)) os = "MacOS";
+        else if (/linux/i.test(ua)) os = "Linux";
+        else if (/android/i.test(ua)) os = "Android";
+        else if (/ios|iphone|ipad/i.test(ua)) os = "iOS";
+
+        if (/chrome|crios/i.test(ua)) browser = "Chrome";
+        else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
+        else if (/safari/i.test(ua)) browser = "Safari";
+        else if (/edg/i.test(ua)) browser = "Edge";
+
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        const ip = ipData.ip;
+
+        await supabaseClient.from('visitor_logs').insert([{ 
+            device_type: device, 
+            os: os, 
+            browser: browser, 
+            ip_address: ip 
+        }]);
+        console.log("✅ Kunjungan berhasil dicatat");
+      } catch (e) {
+        console.warn("Gagal mencatat kunjungan", e);
+      }
     }
 
     // ==========================================
@@ -822,7 +863,7 @@
             
             const centerX = width / 2;
             const centerY = height; 
-            const needleLength = height * 0.65; // Jarum diperpendek agar tidak menembus teks
+            const needleLength = height * 0.65; 
 
             ctx.translate(centerX, centerY);
             ctx.rotate(angle);
@@ -1020,6 +1061,8 @@
 
     window.onload = () => {
       try { initOnlineCounter(); } catch(e) {}
+      try { logVisitor(); } catch(e) {} // Mencatat Log Pengunjung
+      
       try { fetchCurrenciesForTicker(); } catch(e) {}
       try { initTradingViewChart(); } catch(e) {} 
       try { fetchUS10Y(); } catch(e) {}
