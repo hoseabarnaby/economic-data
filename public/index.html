@@ -145,7 +145,7 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: CalcFi (FRED)</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: CalcFi</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
@@ -209,6 +209,22 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <h3 class="font-bold text-slate-900 text-base mb-4">Neraca Perdagangan (% dari GDP)</h3>
           <div class="relative h-64 w-full"><canvas id="tradeChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- FEAR AND GREED INDEX SECTION -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
+        <h3 class="font-bold text-slate-900 text-base mb-2">Market Sentiment (Fear & Greed)</h3>
+        <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar (Crypto & Global Macro) yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
+        
+        <div class="relative w-full max-w-sm h-48 flex justify-center">
+          <canvas id="fearGreedChart"></canvas>
+          <!-- Overlay Text -->
+          <div class="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-4">
+            <span class="text-4xl font-extrabold" id="fng-value">-</span>
+            <span class="text-sm font-bold uppercase tracking-widest mt-1" id="fng-label">Loading...</span>
+            <span class="text-[10px] text-slate-400 mt-2">Sumber: Alternative.me</span>
+          </div>
         </div>
       </div>
     </div>
@@ -342,7 +358,7 @@
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.color = '#64748b';
 
-    let gdpChart = null, globalInflationChart = null, unemploymentChart = null, tradeChart = null;
+    let gdpChart = null, globalInflationChart = null, unemploymentChart = null, tradeChart = null, fearGreedChart = null;
     const countryColors = { IDN: '#ef4444', CHN: '#eab308', USA: '#3b82f6', JPN: '#8b5cf6', KOR: '#14b8a6' };
     const countryNames = { IDN: 'Indonesia', CHN: 'China', USA: 'Amerika Serikat', JPN: 'Jepang', KOR: 'Korea Selatan' };
 
@@ -519,29 +535,22 @@
       });
     }
 
-    // ==========================================
-    // FUNGSI US TREASURY 10Y (DIPERBARUI KE CALCFI)
-    // ==========================================
     async function fetchUS10Y() {
       try {
-        // CalcFi menyediakan JSON gratis tanpa API Key dari data FRED
         const res = await fetch('https://calcfi.app/api/rates/10-year-treasury', { cache: "no-store" });
         const data = await res.json();
         
         const el = document.getElementById('us-10y');
-        // Parse dengan aman, karena format response bisa berupa objek { value: 4.25 } atau angka langsung
         const rate = data.value || data.rate || (Array.isArray(data) ? data[0] : null) || data;
         
         if (typeof rate === 'number' && el) {
             el.innerText = rate.toFixed(3) + '%';
             document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
         } else {
-            // Fallback statis jika API gagal
             if(el) el.innerText = '4.25%';
             document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
         }
       } catch (err) { 
-        console.warn("Gagal ambil data US10Y dari CalcFi, pakai fallback:", err);
         const el = document.getElementById('us-10y');
         if(el) el.innerText = '4.25%'; 
         document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
@@ -586,7 +595,6 @@
         }
       } catch (err) {}
       
-      // Static BI Rate update time
       document.getElementById('update-bi').innerText = `Update: 24 Okt 2026`;
     }
 
@@ -604,7 +612,7 @@
     }
 
     // ==========================================
-    // GLOBAL ECONOMY COMPARISON (WORLD BANK)
+    // GLOBAL ECONOMY COMPARISON (WORLD BANK) - UPGRADED VISUALS
     // ==========================================
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
@@ -644,9 +652,13 @@
               data: countryData,
               borderColor: countryColors[country],
               backgroundColor: countryColors[country] + '33',
-              borderWidth: 2,
-              tension: 0.3,
-              pointRadius: 3
+              borderWidth: 3, // Lebih tebal
+              pointBackgroundColor: countryColors[country],
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 1.5,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              tension: 0.4 // Lebih melengkung dan smooth
             };
           });
 
@@ -664,10 +676,38 @@
         fetchIndicator(indicators.trade)
       ]);
 
+      // Opsi UI Chart yang jauh lebih cantik dan mudah dibaca
       const commonOptions = {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 10} } } },
-        scales: { y: { grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        responsive: true, 
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { 
+          legend: { 
+            position: 'bottom', 
+            labels: { boxWidth: 12, usePointStyle: true, padding: 20, font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } } 
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleFont: { size: 13, family: "'Plus Jakarta Sans', sans-serif" },
+            bodyFont: { size: 12, family: "'Plus Jakarta Sans', sans-serif", weight: 'bold' },
+            padding: 12, cornerRadius: 8, displayColors: true,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.parsed.y !== null) label += context.parsed.y + '%';
+                return label;
+              }
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            grid: { color: '#f1f5f9', drawBorder: false, borderDash: [5, 5] }, 
+            ticks: { font: { size: 11 }, callback: function(value) { return value + '%'; } } 
+          }, 
+          x: { grid: { display: false, drawBorder: false }, ticks: { font: { size: 11 } } } 
+        }
       };
 
       if (gdpChart) gdpChart.destroy();
@@ -696,7 +736,116 @@
     });
 
     // ==========================================
-    // LOGIKA BERITA (MULTI-KEYWORD FETCH)
+    // FUNGSI FEAR AND GREED INDEX (CRYPTO/GLOBAL)
+    // ==========================================
+    async function fetchFearGreedIndex() {
+      const valueEl = document.getElementById('fng-value');
+      const labelEl = document.getElementById('fng-label');
+      const ctx = document.getElementById('fearGreedChart').getContext('2d');
+
+      let value = 50; // Default Netral
+      let label = "Neutral";
+      let color = "#eab308"; // Kuning
+
+      try {
+        const res = await fetch('https://api.alternative.me/fng/');
+        const json = await res.json();
+        
+        if (json.data && json.data.length > 0) {
+          value = parseInt(json.data[0].value);
+          label = json.data[0].value_classification;
+          
+          // Tentukan warna berdasarkan value
+          if (value <= 25) color = "#ef4444";      // Extreme Fear (Merah)
+          else if (value <= 45) color = "#f97316"; // Fear (Oranye)
+          else if (value <= 55) color = "#eab308"; // Neutral (Kuning)
+          else if (value <= 75) color = "#84cc16"; // Greed (Hijau Muda)
+          else color = "#22c55e";                  // Extreme Greed (Hijau)
+        }
+      } catch (e) {
+        console.warn("Gagal ambil data Fear & Greed, pakai default.");
+      }
+
+      // Set Text di HTML
+      valueEl.innerText = value;
+      valueEl.style.color = color;
+      labelEl.innerText = label;
+      labelEl.style.color = color;
+
+      // Gambar Gauge Chart
+      if (fearGreedChart) fearGreedChart.destroy();
+      
+      fearGreedChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"],
+          datasets: [{
+            data: [25, 20, 10, 20, 25], // Pembagian rentang
+            backgroundColor: [
+              '#ef4444', // Extreme Fear
+              '#f97316', // Fear
+              '#eab308', // Neutral
+              '#84cc16', // Greed
+              '#22c55e'  // Extreme Greed
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%',
+          rotation: -90,
+          circumference: 180,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false } // Matikan tooltip bawaan agar tidak ganggu
+          },
+          animation: {
+            animateScale: true,
+            animateRotate: true
+          }
+        },
+        // Plugin kustom untuk menggambar jarum penunjuk
+        plugins: [{
+          id: 'needle',
+          afterDatasetDraw: function(chart) {
+            const { ctx, data, chartArea: { width, height } } = chart;
+            ctx.save();
+            
+            // Hitung sudut berdasarkan nilai (0-100)
+            const angle = Math.PI * (value / 100) - Math.PI; 
+            
+            const centerX = width / 2;
+            const centerY = height; // Setengah lingkaran ada di bawah
+            const needleLength = height * 0.8; 
+
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle);
+            
+            // Gambar Jarum
+            ctx.beginPath();
+            ctx.moveTo(-10, 0);
+            ctx.lineTo(0, -needleLength);
+            ctx.lineTo(10, 0);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // Gambar Bulatan di tengah jarum
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b'; // Warna gelap
+            ctx.fill();
+
+            ctx.restore();
+          }
+        }]
+      });
+    }
+
+    // ==========================================
+    // LOGIKA BERITA
     // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
@@ -839,9 +988,6 @@
       document.getElementById('news-modal').classList.add('hidden');
     }
 
-    // ==========================================
-    // FUNGSI SHARE (LINK PREVIEW VIA API)
-    // ==========================================
     function shareCurrentNews(event) {
       if (!currentModalNews) return;
       
@@ -894,22 +1040,18 @@
       } catch(e) {}
 
       try { fetchGlobalData(); } catch(e) {}
+      try { fetchFearGreedIndex(); } catch(e) {} // Panggil Fear & Greed Index
       
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
     };
 
-    // ==========================================
-    // FUNGSI CEK URL SHARE (LANGSUNG EKSEKUSI)
-    // ==========================================
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedUrl = urlParams.get('news_url');
       const sharedTitle = urlParams.get('title');
       const sharedDesc = urlParams.get('desc');
       const sharedImg = urlParams.get('img');
-
-      console.log("Cek URL:", sharedTitle, sharedUrl);
 
       if (!sharedUrl) return;
 
