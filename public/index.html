@@ -145,7 +145,7 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Yahoo Finance</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: CalcFi (FRED)</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
@@ -519,16 +519,33 @@
       });
     }
 
+    // ==========================================
+    // FUNGSI US TREASURY 10Y (DIPERBARUI KE CALCFI)
+    // ==========================================
     async function fetchUS10Y() {
       try {
-        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d')}`, { cache: "no-store" });
+        // CalcFi menyediakan JSON gratis tanpa API Key dari data FRED
+        const res = await fetch('https://calcfi.app/api/rates/10-year-treasury', { cache: "no-store" });
         const data = await res.json();
+        
         const el = document.getElementById('us-10y');
-        if (data?.chart?.result?.length > 0 && el) {
-            el.innerText = data.chart.result[0].meta.regularMarketPrice.toFixed(3) + '%';
+        // Parse dengan aman, karena format response bisa berupa objek { value: 4.25 } atau angka langsung
+        const rate = data.value || data.rate || (Array.isArray(data) ? data[0] : null) || data;
+        
+        if (typeof rate === 'number' && el) {
+            el.innerText = rate.toFixed(3) + '%';
+            document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
+        } else {
+            // Fallback statis jika API gagal
+            if(el) el.innerText = '4.25%';
             document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
         }
-      } catch (err) {}
+      } catch (err) { 
+        console.warn("Gagal ambil data US10Y dari CalcFi, pakai fallback:", err);
+        const el = document.getElementById('us-10y');
+        if(el) el.innerText = '4.25%'; 
+        document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
+      }
     }
 
     async function fetchGoldPrice(usdToIdr) {
@@ -883,7 +900,7 @@
     };
 
     // ==========================================
-    // FUNGSI CEK URL SHARE (DIPERBARUI)
+    // FUNGSI CEK URL SHARE (LANGSUNG EKSEKUSI)
     // ==========================================
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -892,11 +909,12 @@
       const sharedDesc = urlParams.get('desc');
       const sharedImg = urlParams.get('img');
 
+      console.log("Cek URL:", sharedTitle, sharedUrl);
+
       if (!sharedUrl) return;
 
       switchTab('berita');
       
-      // JIKA DATA TITLE ADA DI URL (Dari API Python), LANGSUNG BUKA MODAL
       if (sharedTitle) {
           const fallbackNews = {
               title: sharedTitle,
@@ -911,7 +929,6 @@
           return;
       }
 
-      // JIKA TIDAK ADA DATA LENGKAP, COBA CARI DI DAFTAR BERITA
       const sharedNews = allNews.find(n => n.url === sharedUrl);
       if (sharedNews) {
           openNewsModalByObject(sharedNews);
@@ -919,8 +936,7 @@
       }
     }
 
-    // Panggil pengecekan URL saat halaman dimuat (tidak peduli fetchNews berhasil atau tidak)
-    setTimeout(() => { try { checkSharedUrl(); } catch(e) {} }, 1000);
+    try { checkSharedUrl(); } catch(e) { console.error(e); }
   </script>
 </body>
 </html>
