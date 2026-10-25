@@ -53,6 +53,31 @@
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
+    /* ANIMASI TAMBAHAN */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-float { animation: float 4s ease-in-out infinite; }
+
+    /* Smooth Hover Card */
+    .card-hover {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
     .markdown-chat { font-size: 0.95rem; line-height: 1.7; color: #334155; }
     .markdown-chat p { margin-bottom: 0.75rem; }
     .markdown-chat strong { font-weight: 700; color: #0f172a; }
@@ -71,16 +96,16 @@
     @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   </style>
 </head>
-<body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900">
+<body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
 
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-20">
         
-        <!-- LOGO HEADER -->
+        <!-- LOGO HEADER DENGAN ANIMASI FLOAT -->
         <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('kurs')">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <img src="logo.png" alt="Economic Insight Logo" class="w-full h-full object-contain drop-shadow-sm">
+          <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center animate-float">
+            <img src="logo.png" alt="Economic Insight Logo" class="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300">
           </div>
           <div>
             <span class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight block leading-none">Economic<span class="text-blue-600">Insight</span></span>
@@ -89,11 +114,11 @@
         </div>
         
         <nav class="hidden md:flex space-x-1">
-          <button onclick="switchTab('kurs')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-active" data-tab="kurs">Pasar</button>
-          <button onclick="switchTab('global')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="global">Global</button>
-          <button onclick="switchTab('berita')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="berita">Berita</button>
-          <button onclick="switchTab('kebijakan')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive" data-tab="kebijakan">Kebijakan</button>
-          <button onclick="switchTab('ai-chat')" class="tab-btn px-3 py-2 text-sm font-semibold rounded-lg border tab-inactive text-blue-600" data-tab="ai-chat"><i class="fa-solid fa-robot mr-1"></i> AI Chat</button>
+          <button onclick="switchTab('kurs')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-active transition-all hover:-translate-y-0.5" data-tab="kurs">Pasar</button>
+          <button onclick="switchTab('global')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive transition-all hover:-translate-y-0.5" data-tab="global">Global</button>
+          <button onclick="switchTab('berita')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive transition-all hover:-translate-y-0.5" data-tab="berita">Berita</button>
+          <button onclick="switchTab('kebijakan')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive transition-all hover:-translate-y-0.5" data-tab="kebijakan">Kebijakan</button>
+          <button onclick="switchTab('ai-chat')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg border tab-inactive text-blue-600 transition-all hover:-translate-y-0.5" data-tab="ai-chat"><i class="fa-solid fa-robot mr-1"></i> AI Chat</button>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
@@ -101,7 +126,7 @@
         </div>
       </div>
 
-      <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl">
+      <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-200 shadow-xl z-50 px-4 py-4 space-y-2 rounded-b-2xl animate-fade-in-up">
         <button onclick="switchTab('kurs'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-active flex justify-between items-center" data-tab="kurs">Pasar <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('global'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="global">Global <i class="fa-solid fa-chevron-right text-xs"></i></button>
         <button onclick="switchTab('berita'); toggleMobileMenu();" class="tab-btn w-full text-left px-4 py-3 text-sm font-semibold rounded-xl border tab-inactive flex justify-between items-center" data-tab="berita">Berita <i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -114,7 +139,7 @@
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
     <!-- TAB 1: KURS & PASAR -->
-    <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in">
+    <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in-up">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ringkasan Pasar</h1>
@@ -123,27 +148,27 @@
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
-        <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 border border-blue-100 shadow-sm flex flex-col justify-between h-32">
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 border border-blue-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
           <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm flex flex-col justify-between h-32">
+        <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-amber-600 font-bold mb-1">Inflasi Indonesia</div><div class="text-2xl font-extrabold text-slate-900" id="inflasi-terakhir">-</div></div>
           <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold" id="source-inflasi">Sumber: -</div><div class="text-[9px] text-slate-400" id="update-inflasi">-</div></div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 border border-indigo-100 shadow-sm flex flex-col justify-between h-32">
+        <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-4 border border-indigo-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-building-columns absolute -right-2 -bottom-3 text-7xl text-indigo-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-indigo-600 font-bold mb-1">BI Rate</div><div class="text-2xl font-extrabold text-slate-900" id="bi-rate">6.25%</div></div>
           <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Bank Indonesia</div><div class="text-[9px] text-slate-400" id="update-bi">-</div></div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-between h-32">
+        <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
           <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: CalcFi</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
-        <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm flex flex-col justify-between h-32">
+        <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div><div class="text-2xl font-extrabold text-slate-900" id="gold-rate">-</div></div>
           <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: GoldAPI</div><div class="text-[9px] text-slate-400" id="update-gold">-</div></div>
@@ -156,7 +181,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col card-hover">
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-slate-900 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Indeks Harga Saham Gabungan (IHSG)</h3>
@@ -165,7 +190,7 @@
           </div>
           <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100 pointer-events-none" id="tradingview_ihsg"></div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2"><i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi</h3>
           <p class="text-slate-500 text-xs leading-relaxed mb-4">Jadwal rilis data dan kebijakan global terdekat (Waktu Indonesia Barat).</p>
           <div id="calendar-list" class="space-y-3 flex-grow"><div class="text-center text-slate-400 py-4 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div></div>
@@ -174,7 +199,7 @@
     </div>
 
     <!-- TAB 2: GLOBAL COMPARISON -->
-    <div id="content-global" class="tab-content hidden space-y-6">
+    <div id="content-global" class="tab-content hidden space-y-6 animate-fade-in-up">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Global Economy Comparison</h1>
@@ -190,26 +215,26 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-4">GDP Growth (%)</h3>
           <div class="relative h-64 w-full"><canvas id="gdpChart"></canvas></div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-4">Inflasi (%)</h3>
           <div class="relative h-64 w-full"><canvas id="globalInflationChart"></canvas></div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-4">Pengangguran (%)</h3>
           <div class="relative h-64 w-full"><canvas id="unemploymentChart"></canvas></div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-4">Neraca Perdagangan (% dari GDP)</h3>
           <div class="relative h-64 w-full"><canvas id="tradeChart"></canvas></div>
         </div>
       </div>
 
       <!-- FEAR AND GREED INDEX SECTION -->
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative card-hover">
         <h3 class="font-bold text-slate-900 text-base mb-1">Market Sentiment (Fear & Greed)</h3>
         <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
         
@@ -226,7 +251,7 @@
     </div>
 
     <!-- TAB 3: BERITA -->
-    <div id="content-berita" class="tab-content hidden space-y-6">
+    <div id="content-berita" class="tab-content hidden space-y-6 animate-fade-in-up">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
@@ -258,12 +283,12 @@
     </div>
 
     <!-- TAB 4: KEBIJAKAN -->
-    <div id="content-kebijakan" class="tab-content hidden space-y-6">
+    <div id="content-kebijakan" class="tab-content hidden space-y-6 animate-fade-in-up">
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kebijakan Ekonomi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru (Indonesia).</p>
       </div>
-      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
+      <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden card-hover">
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
            <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-blue-500"></i>Memuat kebijakan terbaru...</div>
         </div>
@@ -271,7 +296,7 @@
     </div>
 
     <!-- TAB 5: AI CHAT -->
-    <div id="content-ai-chat" class="tab-content hidden h-[75vh] flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in">
+    <div id="content-ai-chat" class="tab-content hidden h-[75vh] flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fade-in-up">
       <div class="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><i class="fa-solid fa-robot text-xl"></i></div>
@@ -283,14 +308,14 @@
       </div>
       
       <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl animate-fade-in-up">
           Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari Yahoo Finance.
         </div>
       </div>
 
       <div class="p-4 border-t border-slate-200 bg-white flex gap-3 shrink-0">
         <input type="text" id="chat-input" placeholder="Tanya AI (contoh: Prediksi BMRI)..." class="flex-grow px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors" onkeypress="if(event.key === 'Enter') sendAIMessage()">
-        <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl flex items-center justify-center transition-colors shadow-sm font-bold"><i class="fa-solid fa-paper-plane mr-2"></i> Kirim</button>
+        <button onclick="sendAIMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl flex items-center justify-center transition-all hover:scale-105 shadow-md font-bold"><i class="fa-solid fa-paper-plane mr-2"></i> Kirim</button>
       </div>
     </div>
 
@@ -298,18 +323,19 @@
 
   <footer class="bg-white py-8 mt-20 border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-sm text-slate-500 font-medium">&copy; 2026 Hosea Barnaby. All rights reserved.</p>
+      <p class="text-sm text-slate-500 font-medium">&copy; 2026 Economic Insight. All rights reserved.</p>
       <div class="flex space-x-6 text-slate-400">
-        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-twitter text-lg"></i></a>
-        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-linkedin text-lg"></i></a>
-        <a href="#" class="hover:text-blue-600 transition-colors duration-300"><i class="fa-brands fa-github text-lg"></i></a>
+        <!-- GANTI TANDA '#' DENGAN LINK INSTAGRAM ANDA -->
+        <a href="#" target="_blank" class="hover:text-pink-600 transition-all duration-300 transform hover:scale-125 hover:-rotate-6" title="Instagram">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </a>
       </div>
     </div>
   </footer>
 
   <!-- MODAL BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in overflow-hidden" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in-up overflow-hidden" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
@@ -376,6 +402,11 @@
       if (targetTab) {
           targetTab.classList.remove('hidden');
           if(tabId === 'ai-chat') targetTab.classList.add('flex'); 
+          
+          // Animasi ulang saat tab dibuka
+          targetTab.classList.remove('animate-fade-in-up');
+          void targetTab.offsetWidth; // Trigger reflow
+          targetTab.classList.add('animate-fade-in-up');
       }
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => { activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active'); });
@@ -424,7 +455,7 @@
     }
 
     // ==========================================
-    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (KEMBALI KE YAHOO FINANCE)
+    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
     // ==========================================
     async function fetchLiveStockPrice(ticker) {
       try {
@@ -446,7 +477,7 @@
     }
 
     // ==========================================
-    // LOGIKA AI CHAT (DIPERBARUI: LEBIH NATURAL)
+    // LOGIKA AI CHAT (NATURAL PROMPT)
     // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
@@ -454,14 +485,14 @@
       if (!text) return;
 
       const chatBody = document.getElementById('chat-messages');
-      chatBody.innerHTML += `<div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed">${text}</div>`;
+      chatBody.innerHTML += `<div class="bg-blue-600 text-white p-4 rounded-xl rounded-tr-sm shadow-sm mb-4 ml-auto max-w-[80%] text-sm leading-relaxed animate-fade-in-up">${text}</div>`;
       
       input.value = '';
       chatBody.scrollTop = chatBody.scrollHeight;
 
       const loadingId = 'loading-' + Date.now();
       chatBody.innerHTML += `
-        <div id="${loadingId}" class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[80%] text-slate-700 flex items-center gap-2">
+        <div id="${loadingId}" class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[80%] text-slate-700 flex items-center gap-2 animate-fade-in-up">
            <span class="dot"></span><span class="dot"></span><span class="dot"></span> <span class="text-xs text-slate-400 ml-2">Menganalisis data...</span>
         </div>
       `;
@@ -490,7 +521,6 @@
           Berita Terbaru: "${allNews.length > 0 ? allNews[0].title : '-'}"
         `;
 
-        // PROMPT DILONGGARKAN: Tidak ada batasan ketat jumlah kalimat atau bullet
         const naturalPrompt = `
           Anda adalah AI Economic Insight, asisten analis keuangan yang cerdas dan membantu.
           Berikut adalah data pasar real-time yang bisa Anda gunakan:
@@ -516,12 +546,12 @@
         if (!response.ok) throw new Error(data.detail || 'Gagal dari server');
 
         let reply = marked.parse(data.reply);
-        chatBody.innerHTML += `<div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat">${reply}</div>`;
+        chatBody.innerHTML += `<div class="bg-white p-4 rounded-xl rounded-tl-sm border border-slate-200 shadow-sm mb-4 mr-auto max-w-[90%] markdown-chat animate-fade-in-up">${reply}</div>`;
 
       } catch (error) {
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
         chatBody.innerHTML += `
-          <div class="bg-rose-50 p-4 rounded-xl rounded-tl-sm border border-rose-200 shadow-sm mb-4 mr-auto max-w-[80%] text-rose-700 text-sm">
+          <div class="bg-rose-50 p-4 rounded-xl rounded-tl-sm border border-rose-200 shadow-sm mb-4 mr-auto max-w-[80%] text-rose-700 text-sm animate-fade-in-up">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i> Error: ${error.message}
           </div>
         `;
@@ -803,14 +833,16 @@
       if (newsArray.length === 0) { container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Tidak ada berita.</div>`; return; }
       
       container.innerHTML = newsArray.map((item, index) => `
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full group relative overflow-hidden">
-          <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-48 object-cover rounded-t-2xl" alt="Berita">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm card-hover flex flex-col h-full group relative overflow-hidden">
+          <div class="overflow-hidden h-48 rounded-t-2xl">
+            <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Berita">
+          </div>
           <div class="p-5 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-3">
               <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">BERITA EKONOMI</span>
               <div class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
             </div>
-            <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3">${item.title}</h3>
+            <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
             <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow">${item.description.substring(0, 100)}...</p>
             <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
               <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">Buka Berita <i class="fa-solid fa-arrow-right"></i></button>
@@ -832,11 +864,11 @@
       container.innerHTML = `<div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pb-4">` + filtered.map(item => `
         <div class="ml-4 relative group">
           <span class="absolute -left-[23px] top-4 w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></span>
-          <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 p-4 rounded-xl cursor-pointer flex gap-4 items-center">
+          <div onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 hover:bg-white border border-slate-100 p-4 rounded-xl cursor-pointer flex gap-4 items-center card-hover">
             <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200">
             <div>
               <span class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-calendar"></i> ${formatTanggalAman(item.published_at)}</span>
-              <h3 class="text-sm text-slate-900 mt-1 line-clamp-2">${item.title}</h3>
+              <h3 class="text-sm text-slate-900 mt-1 line-clamp-2 group-hover:text-blue-600 transition-colors">${item.title}</h3>
             </div>
           </div>
         </div>
@@ -851,7 +883,14 @@
       document.getElementById('modal-source').innerText = news.source || 'Economic Insight';
       document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
       currentModalNews = news;
-      document.getElementById('news-modal').classList.remove('hidden');
+      
+      const modal = document.getElementById('news-modal');
+      modal.classList.remove('hidden');
+      // Re-trigger animasi
+      const modalBox = modal.querySelector('.bg-white');
+      modalBox.classList.remove('animate-fade-in-up');
+      void modalBox.offsetWidth; 
+      modalBox.classList.add('animate-fade-in-up');
     }
 
     function closeNewsModal(event) {
