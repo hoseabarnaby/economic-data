@@ -10,7 +10,6 @@
   <meta property="og:image" id="og-image" content="https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat">
   <meta property="og:type" content="website">
 
-  <!-- FAVICON -->
   <link rel="icon" href="logo.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -53,14 +52,11 @@
     .dot:nth-child(2) { animation-delay: -0.16s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-    /* ANIMASI TAMBAHAN */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .animate-fade-in-up {
-      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
+    .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
     @keyframes float {
       0% { transform: translateY(0px); }
@@ -69,14 +65,8 @@
     }
     .animate-float { animation: float 4s ease-in-out infinite; }
 
-    /* Smooth Hover Card */
-    .card-hover {
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-    }
-    .card-hover:hover {
-      transform: translateY(-5px) scale(1.01);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    }
+    .card-hover { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; }
+    .card-hover:hover { transform: translateY(-5px) scale(1.01); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
 
     .markdown-chat { font-size: 0.95rem; line-height: 1.7; color: #334155; }
     .markdown-chat p { margin-bottom: 0.75rem; }
@@ -101,8 +91,6 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-20">
-        
-        <!-- LOGO HEADER DENGAN ANIMASI FLOAT -->
         <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('kurs')">
           <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center animate-float">
             <img src="logo.png" alt="Economic Insight Logo" class="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300">
@@ -151,7 +139,7 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 border border-blue-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold" id="source-usd">Sumber: -</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10"></i>
@@ -188,7 +176,6 @@
               <p class="text-slate-500 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
             </div>
           </div>
-          <!-- PERBAIKAN: menghapus pointer-events-none, tinggi dinaikkan -->
           <div class="relative w-full h-80 rounded-xl overflow-hidden border border-slate-100" id="tradingview_ihsg"></div>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col card-hover">
@@ -234,7 +221,6 @@
         </div>
       </div>
 
-      <!-- FEAR AND GREED INDEX SECTION -->
       <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mt-6 flex flex-col items-center justify-center relative card-hover">
         <h3 class="font-bold text-slate-900 text-base mb-1">Market Sentiment (Fear & Greed)</h3>
         <p class="text-slate-500 text-xs text-center mb-6 max-w-lg">Indeks sentimen pasar yang mengukur apakah pasar sedang didominasi rasa takut (Fear) atau keserakahan (Greed).</p>
@@ -333,7 +319,6 @@
     </div>
   </footer>
 
-  <!-- MODAL BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in-up overflow-hidden" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
@@ -361,6 +346,9 @@
   <script>
     const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
+
+    // 🔑 API Key FxFeed yang sudah dimasukkan
+    const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
     let currentModalNews = null;
@@ -428,9 +416,6 @@
       return new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':') + ' WIB';
     }
 
-    // ==========================================
-    // FUNGSI LOG PENGUNJUNG
-    // ==========================================
     async function logVisitor() {
       if (!supabaseClient) return;
       try {
@@ -453,9 +438,6 @@
       } catch (e) {}
     }
 
-    // ==========================================
-    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
-    // ==========================================
     async function fetchLiveStockPrice(ticker) {
       try {
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`;
@@ -475,9 +457,6 @@
       return null;
     }
 
-    // ==========================================
-    // LOGIKA AI CHAT (NATURAL PROMPT)
-    // ==========================================
     async function sendAIMessage() {
       const input = document.getElementById('chat-input');
       const text = input.value.trim();
@@ -558,16 +537,10 @@
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // ==========================================
-    // LOGIKA DATA PASAR
-    // ==========================================
     async function initOnlineCounter() {
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
-    // ==========================================
-    // PERBAIKAN: initTradingViewChart dengan retry + fallback
-    // ==========================================
     function initTradingViewChart() {
       const container = document.getElementById('tradingview_ihsg');
       if (!container) return;
@@ -579,40 +552,22 @@
         try {
           container.innerHTML = '';
           new TradingView.widget({
-            "width": "100%",
-            "height": "100%",
-            "symbol": "IDX:COMPOSITE",
-            "interval": "D",
-            "timezone": "Asia/Jakarta",
-            "theme": "light",
-            "style": "3",
-            "locale": "id",
-            "hide_side_toolbar": true,
-            "hide_top_toolbar": true,
-            "hide_legend": true,
-            "hide_volume": true,
-            "enableScrolling": false,
-            "enableScaleZ": false,
-            "disable_mouse_wheel": true,
-            "allow_symbol_change": false,
-            "container_id": "tradingview_ihsg"
+            "width": "100%", "height": "100%", "symbol": "IDX:COMPOSITE", "interval": "D", "timezone": "Asia/Jakarta",
+            "theme": "light", "style": "3", "locale": "id", "hide_side_toolbar": true, "hide_top_toolbar": true, 
+            "hide_legend": true, "hide_volume": true, "enableScrolling": false, "enableScaleZ": false, 
+            "disable_mouse_wheel": true, "allow_symbol_change": false, "container_id": "tradingview_ihsg"
           });
           return true;
-        } catch (e) {
-          console.error("TradingView error:", e);
-          return false;
-        }
+        } catch (e) { console.error("TradingView error:", e); return false; }
       };
 
       if (renderWidget()) return;
 
       let attempts = 0;
-      const maxAttempts = 20;
       const interval = setInterval(() => {
         attempts++;
-        if (renderWidget()) {
-          clearInterval(interval);
-        } else if (attempts >= maxAttempts) {
+        if (renderWidget()) { clearInterval(interval); }
+        else if (attempts >= 20) {
           clearInterval(interval);
           container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-400 text-sm p-4 text-center"><i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>Gagal memuat grafik IHSG.<br><span class="text-xs mt-1">Periksa koneksi internet atau nonaktifkan ad-blocker.</span></div>';
         }
@@ -652,44 +607,77 @@
     }
 
     // ==========================================
-    // PERBAIKAN: fetchCurrenciesForTicker dengan 3 API fallback
+    // ✅ fetchCurrenciesForTicker dengan FxFeed (key sudah diisi)
     // ==========================================
     async function fetchCurrenciesForTicker() {
       let rates = null;
-      let usdToIdr = 15800; // fallback default
+      let usdToIdr = 17900;
+      let sourceLabel = 'Estimasi';
+      let updateLabel = getCurrentTimeStr();
 
-      const apis = [
-        { url: 'https://open.er-api.com/v6/latest/USD',           key: 'er-api' },
-        { url: 'https://api.exchangerate-api.com/v4/latest/USD',  key: 'exchangerate' },
-        { url: 'https://api.frankfurter.app/latest?from=USD',     key: 'frankfurter' }
-      ];
-
-      for (const api of apis) {
+      // 1) FxFeed — endpoint diperbaiki (currencies, bukan ¤cies)
+      if (FXFEED_API_KEY && FXFEED_API_KEY !== 'YOUR_FXFEED_API_KEY') {
         try {
-          const res = await fetch(api.url, { cache: "no-store" });
-          const data = await res.json();
+          const fxRes = await fetch(
+            `https://api.fxfeed.io/v1/latest?api_key=${FXFEED_API_KEY}&base=USD&currencies=IDR`,
+            { cache: 'no-store' }
+          );
+          const fxText = await fxRes.text();
+          console.log('🔍 FxFeed HTTP status:', fxRes.status);
+          console.log('🔍 FxFeed raw response:', fxText.substring(0, 300));
 
-          if (api.key === 'er-api' && data.result === 'success' && data.rates?.IDR) {
-            rates = data.rates;
-            usdToIdr = data.rates.IDR;
-            break;
-          }
-          if (api.key !== 'er-api' && data.rates?.IDR) {
-            rates = data.rates;
-            usdToIdr = data.rates.IDR;
-            break;
+          let fxData = null;
+          try { fxData = JSON.parse(fxText); } catch(e) {}
+
+          const idrRate = fxData?.rates?.IDR ?? fxData?.data?.rates?.IDR ?? fxData?.conversion_rates?.IDR;
+          
+          if (idrRate && typeof idrRate === 'number') {
+            usdToIdr = idrRate;
+            rates = { USD: 1 };
+            sourceLabel = 'Live (FxFeed)';
+            if (fxData.date) {
+              updateLabel = new Date(fxData.date).toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short',
+                hour: '2-digit', minute: '2-digit'
+              }).replace('.', ':') + ' WIB';
+            }
+            console.log('✅ FxFeed real-time USD/IDR:', usdToIdr);
+          } else {
+            console.warn('⚠️ FxFeed response tidak mengandung rate IDR. Cek struktur:', fxData);
           }
         } catch (e) {
-          console.warn(`API ${api.key} gagal:`, e.message);
+          console.error('❌ FxFeed fetch error:', e.message, '(kemungkinan CORS/network)');
+        }
+      }
+
+      // 2) Fallback: open.er-api.com
+      if (!rates) {
+        try {
+          const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' });
+          const data = await res.json();
+          if (data.result === 'success' && data.rates?.IDR) {
+            rates = data.rates;
+            usdToIdr = data.rates.IDR;
+            sourceLabel = 'Harian (ER-API)';
+            if (data.time_last_update_utc) {
+              updateLabel = new Date(data.time_last_update_utc).toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short',
+                hour: '2-digit', minute: '2-digit'
+              }).replace('.', ':') + ' WIB';
+            }
+            console.log('⚠️ Fallback ER-API (daily):', usdToIdr);
+          }
+        } catch (e) {
+          console.warn('ER-API gagal:', e.message);
         }
       }
 
       const usdRateEl = document.getElementById('usd-rate');
-      if (usdRateEl) {
-        usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        const upd = document.getElementById('update-usd');
-        if (upd) upd.innerText = `Update: ${getCurrentTimeStr()}${rates ? '' : ' (estimasi)'}`;
-      }
+      if (usdRateEl) usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+      const srcEl = document.getElementById('source-usd');
+      if (srcEl) srcEl.innerText = `Sumber: ${sourceLabel}`;
+      const updEl = document.getElementById('update-usd');
+      if (updEl) updEl.innerText = `Update: ${updateLabel}`;
 
       const majorCodes = ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'];
       const fallbackRates = { EUR: 0.92, GBP: 0.79, JPY: 150, SGD: 1.34, AUD: 1.52, CNY: 7.24, KRW: 1330 };
@@ -724,9 +712,6 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
-    // ==========================================
-    // GLOBAL ECONOMY COMPARISON (WORLD BANK)
-    // ==========================================
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
       if (selectedCountries.length === 0) { alert("Pilih minimal satu negara."); return; }
@@ -771,9 +756,6 @@
 
     document.querySelectorAll('.country-checkbox').forEach(cb => { cb.addEventListener('change', fetchGlobalData); });
 
-    // ==========================================
-    // FUNGSI FEAR AND GREED INDEX
-    // ==========================================
     async function fetchFearGreedIndex() {
       const valueEl = document.getElementById('fng-value');
       const labelEl = document.getElementById('fng-label');
@@ -819,9 +801,6 @@
       });
     }
 
-    // ==========================================
-    // LOGIKA BERITA
-    // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     
@@ -972,9 +951,6 @@
       document.getElementById('news-modal').classList.add('hidden');
     }
 
-    // ==========================================
-    // FUNGSI SHARE (LINK PENDEK VIA DATABASE SUPABASE)
-    // ==========================================
     async function shareCurrentNews(event) {
       if (!currentModalNews) return;
       
@@ -1053,9 +1029,6 @@
       setInterval(fetchNews, 300000);
     };
 
-    // ==========================================
-    // FUNGSI CEK URL SHARE (LANGSUNG EKSEKUSI MODAL)
-    // ==========================================
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedUrl = urlParams.get('news_url');
