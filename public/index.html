@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Economic Insight</title>
+  <title>Economic Insight - Global Economic Intelligence</title>
   
   <meta property="og:title" id="og-title" content="Economic Insight - Global Economic Intelligence">
   <meta property="og:description" id="og-description" content="Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.">
@@ -11,7 +11,6 @@
   <meta property="og:type" content="website">
 
   <link rel="icon" href="logo.png">
-
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -84,6 +83,9 @@
     .ticker-item { display: flex; align-items: center; gap: 0.5rem; padding: 0 1.5rem; border-right: 1px solid #f1f5f9; white-space: nowrap; }
     .ticker-item:last-child { border-right: none; }
     @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    
+    /* CSS untuk Modal Ringkasan */
+    .summary-content p { margin-bottom: 1rem; line-height: 1.7; }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
@@ -91,6 +93,7 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-20">
+        
         <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('kurs')">
           <div class="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center animate-float">
             <img src="logo.png" alt="Economic Insight Logo" class="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300">
@@ -242,14 +245,14 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Berita Ekonomi</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dari berbagai portal berita terpercaya. <span id="news-timestamp" class="text-xs text-blue-500 ml-2 block sm:inline"></span></p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi terkini dan ringkasan eksklusif dari AI. <span id="news-timestamp" class="text-xs text-blue-500 ml-2 block sm:inline"></span></p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input type="text" id="search-news" placeholder="Cari berita..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800 shadow-sm transition-all">
           </div>
-          <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm"><i class="fa-solid fa-rotate-right" id="icon-refresh"></i></button>
+          <button onclick="fetchNews(true)" id="btn-refresh-news" class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors border border-blue-100 shadow-sm" title="Tarik berita terbaru dari internet"><i class="fa-solid fa-rotate-right" id="icon-refresh"></i></button>
         </div>
       </div>
 
@@ -319,10 +322,11 @@
     </div>
   </footer>
 
+  <!-- MODAL BERITA -->
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in-up overflow-hidden" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
-        <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Detail Berita</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-600">Ringkasan Eksklusif AI</span>
         <button onclick="closeNewsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div class="overflow-y-auto">
@@ -333,7 +337,8 @@
             <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
             <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="modal-source">Sumber</span></div>
           </div>
-          <div class="text-slate-600 leading-relaxed text-sm" id="modal-desc">Deskripsi...</div>
+          <!-- Div ini sekarang menampung HTML paragraf dari ringkasan AI -->
+          <div class="text-slate-700 leading-relaxed text-sm summary-content" id="modal-desc">Deskripsi...</div>
         </div>
       </div>
       <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
@@ -344,10 +349,8 @@
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://gwkqmhsmlmmzcmqcqpft.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI';
-
-    // 🔑 API Key FxFeed yang sudah dimasukkan
+    const SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ';
     const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
@@ -606,51 +609,28 @@
       } catch (err) {}
     }
 
-    // ==========================================
-    // ✅ fetchCurrenciesForTicker dengan FxFeed (key sudah diisi)
-    // ==========================================
     async function fetchCurrenciesForTicker() {
       let rates = null;
       let usdToIdr = 17900;
       let sourceLabel = 'Estimasi';
       let updateLabel = getCurrentTimeStr();
 
-      // 1) FxFeed — endpoint diperbaiki (currencies, bukan ¤cies)
       if (FXFEED_API_KEY && FXFEED_API_KEY !== 'YOUR_FXFEED_API_KEY') {
         try {
-          const fxRes = await fetch(
-            `https://api.fxfeed.io/v1/latest?api_key=${FXFEED_API_KEY}&base=USD&currencies=IDR`,
-            { cache: 'no-store' }
-          );
-          const fxText = await fxRes.text();
-          console.log('🔍 FxFeed HTTP status:', fxRes.status);
-          console.log('🔍 FxFeed raw response:', fxText.substring(0, 300));
-
-          let fxData = null;
-          try { fxData = JSON.parse(fxText); } catch(e) {}
-
+          const fxRes = await fetch(`https://api.fxfeed.io/v1/latest?api_key=${FXFEED_API_KEY}&base=USD&currencies=IDR`, { cache: 'no-store' });
+          const fxData = await fxRes.json();
           const idrRate = fxData?.rates?.IDR ?? fxData?.data?.rates?.IDR ?? fxData?.conversion_rates?.IDR;
-          
           if (idrRate && typeof idrRate === 'number') {
             usdToIdr = idrRate;
             rates = { USD: 1 };
             sourceLabel = 'Live (FxFeed)';
             if (fxData.date) {
-              updateLabel = new Date(fxData.date).toLocaleString('id-ID', {
-                timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short',
-                hour: '2-digit', minute: '2-digit'
-              }).replace('.', ':') + ' WIB';
+              updateLabel = new Date(fxData.date).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', ':') + ' WIB';
             }
-            console.log('✅ FxFeed real-time USD/IDR:', usdToIdr);
-          } else {
-            console.warn('⚠️ FxFeed response tidak mengandung rate IDR. Cek struktur:', fxData);
           }
-        } catch (e) {
-          console.error('❌ FxFeed fetch error:', e.message, '(kemungkinan CORS/network)');
-        }
+        } catch (e) { console.warn('FxFeed gagal:', e.message); }
       }
 
-      // 2) Fallback: open.er-api.com
       if (!rates) {
         try {
           const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' });
@@ -660,16 +640,10 @@
             usdToIdr = data.rates.IDR;
             sourceLabel = 'Harian (ER-API)';
             if (data.time_last_update_utc) {
-              updateLabel = new Date(data.time_last_update_utc).toLocaleString('id-ID', {
-                timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short',
-                hour: '2-digit', minute: '2-digit'
-              }).replace('.', ':') + ' WIB';
+              updateLabel = new Date(data.time_last_update_utc).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', ':') + ' WIB';
             }
-            console.log('⚠️ Fallback ER-API (daily):', usdToIdr);
           }
-        } catch (e) {
-          console.warn('ER-API gagal:', e.message);
-        }
+        } catch (e) { console.warn('ER-API gagal:', e.message); }
       }
 
       const usdRateEl = document.getElementById('usd-rate');
@@ -684,9 +658,7 @@
 
       let tickerHTML = '';
       majorCodes.forEach(code => {
-        const rate = rates && rates[code]
-          ? usdToIdr / rates[code]
-          : usdToIdr / fallbackRates[code];
+        const rate = rates && rates[code] ? usdToIdr / rates[code] : usdToIdr / fallbackRates[code];
         tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
       });
 
@@ -694,7 +666,6 @@
       if (track) track.innerHTML = tickerHTML + tickerHTML;
 
       fetchGoldPrice(usdToIdr);
-
       const biUpd = document.getElementById('update-bi');
       if (biUpd) biUpd.innerText = `Update: 24 Okt 2026`;
     }
@@ -801,6 +772,9 @@
       });
     }
 
+    // ==========================================
+    // LOGIKA BERITA BARU (DARI SUPABASE)
+    // ==========================================
     let currentCategory = 'semua';
     let currentSearchQuery = '';
     
@@ -824,7 +798,12 @@
 
     function applyNewsFilters() {
       let filtered = allNews;
-      if (currentCategory !== 'semua') filtered = filtered.filter(item => matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords[currentCategory] || []));
+      if (currentCategory !== 'semua') {
+        filtered = filtered.filter(item => 
+          item.category === currentCategory || 
+          matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords[currentCategory] || [])
+        );
+      }
       if (currentSearchQuery) filtered = filtered.filter(item => item.title.toLowerCase().includes(currentSearchQuery));
       renderNews(filtered);
     }
@@ -833,73 +812,85 @@
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
       const iconRefresh = document.getElementById('icon-refresh');
-      if (manualRefresh && btnRefresh && iconRefresh) { btnRefresh.classList.add('opacity-50'); iconRefresh.classList.add('fa-spin'); }
+      
+      if (manualRefresh && btnRefresh && iconRefresh) {
+        btnRefresh.classList.add('opacity-50');
+        iconRefresh.classList.add('fa-spin');
+      }
 
       try {
-        const timestamp = new Date().getTime();
-        const queries = [
-          `https://freenewsapi.ai/v1/search?lang=id&q=ekonomi+indonesia&size=15&t=${timestamp}`,
-          `https://freenewsapi.ai/v1/search?lang=id&q=kebijakan+indonesia&size=10&t=${timestamp}`,
-          `https://freenewsapi.ai/v1/search?lang=id&q=pajak+indonesia&size=10&t=${timestamp}`
-        ];
-        
-        let allResults = [];
-        for (const url of queries) {
-          try {
-            const res = await fetch(url, { cache: "no-store" });
-            const json = await res.json();
-            if (json && json.results && json.results.length > 0) allResults = allResults.concat(json.results);
-          } catch(e) {}
+        // Jika manual refresh, panggil backend Python untuk sync berita baru
+        if (manualRefresh) {
+          await fetch('/api/news/sync').catch(e => console.log('Sync pending...'));
         }
-        
-        if (allResults.length === 0) throw new Error("Gagal muat berita");
-        
-        const uniqueNews = Array.from(new Map(allResults.map(item => [item.url, item])).values());
-        uniqueNews.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
 
-        allNews = uniqueNews.map(item => {
-            let cleanDesc = item.description || '';
-            cleanDesc = cleanDesc.replace(/\[\]>|>>>|<[^>]*>?/gm, '').trim();
-            
-            return {
-                title: item.title, 
-                url: item.url, 
-                published_at: item.published_at, 
-                description: cleanDesc,
-                source: item.source || 'Ekonomi', 
-                image: item.image || item.thumbnail || item.urlToImage || item.cover_image || DEFAULT_NEWS_IMAGE
-            };
-        });
+        // Baca data dari Supabase
+        const { data, error } = await supabaseClient
+          .from('news_archive')
+          .select('*')
+          .order('published_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+          gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">
+            <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 block"></i>
+            Belum ada berita. Klik tombol refresh untuk mengambil berita terbaru.
+          </div>`;
+          return;
+        }
+
+        allNews = data.map(item => ({
+          title: item.title,
+          url: item.original_url,
+          published_at: item.published_at,
+          description: item.description || '',
+          summary: item.summary || item.description || '',
+          source: item.source_name || 'Ekonomi',
+          image: item.image_url || DEFAULT_NEWS_IMAGE,
+          category: item.category || 'umum'
+        }));
 
         document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
         applyNewsFilters();
         renderKebijakan(allNews);
+
       } catch (err) {
-        if (gridContainer && gridContainer.innerHTML.includes('skeleton')) gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Gagal memuat berita. Silakan refresh.</div>`;
+        console.error(err);
+        gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Gagal memuat berita.</div>`;
       } finally {
-        if (btnRefresh && iconRefresh) { btnRefresh.classList.remove('opacity-50'); iconRefresh.classList.remove('fa-spin'); }
+        if (btnRefresh && iconRefresh) {
+          btnRefresh.classList.remove('opacity-50');
+          iconRefresh.classList.remove('fa-spin');
+        }
       }
     }
 
     function renderNews(newsArray) {
       const container = document.getElementById('news-grid');
-      if (!container) return;
-      if (newsArray.length === 0) { container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Tidak ada berita.</div>`; return; }
+      if (newsArray.length === 0) { container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">Tidak ada berita untuk filter ini.</div>`; return; }
       
-      container.innerHTML = newsArray.map((item, index) => `
+      container.innerHTML = newsArray.map((item) => `
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm card-hover flex flex-col h-full group relative overflow-hidden">
           <div class="overflow-hidden h-48 rounded-t-2xl">
-            <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Berita">
+            <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="${item.title.replace(/"/g, '&quot;')}">
           </div>
           <div class="p-5 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-3">
-              <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">BERITA EKONOMI</span>
+              <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">${(item.category || 'umum').toUpperCase()}</span>
               <div class="text-[10px] text-slate-400 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
             </div>
             <h3 class="text-base font-extrabold text-slate-900 leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 transition-colors">${item.title}</h3>
             <p class="text-xs text-slate-500 line-clamp-2 mb-4 flex-grow">${item.description.substring(0, 100)}...</p>
-            <div class="mt-auto pt-4 border-t border-slate-100 flex justify-end">
-              <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">Buka Berita <i class="fa-solid fa-arrow-right"></i></button>
+            
+            <div class="mt-auto pt-4 border-t border-slate-100 flex justify-between gap-2">
+              <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">
+                Ringkasan
+              </button>
+              <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">
+                Sumber <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
             </div>
           </div>
         </div>
@@ -908,7 +899,10 @@
 
     function renderKebijakan(newsArray) {
       const container = document.getElementById('kebijakan-list');
-      const filtered = newsArray.filter(item => matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords['kebijakan'])).slice(0, 5);
+      const filtered = newsArray.filter(item => 
+        item.category === 'kebijakan' || 
+        matchesKeywords((item.title + ' ' + (item.description || '')).toLowerCase(), categoryKeywords['kebijakan'])
+      ).slice(0, 5);
       
       if (filtered.length === 0) { 
         container.innerHTML = `<div class="text-center text-slate-500 py-4 text-sm">Belum ada berita kebijakan.</div>`; 
@@ -929,15 +923,23 @@
       `).join('') + `</div>`;
     }
 
+    // Mengubah isi modal untuk menampilkan ringkasan AI yang panjang
     function openNewsModalByObject(news) {
       document.getElementById('modal-title').innerText = news.title;
       document.getElementById('modal-date').innerText = formatTanggalAman(news.published_at, true);
-      document.getElementById('modal-desc').innerText = news.description || 'Tidak ada deskripsi.';
-      document.getElementById('modal-link').href = news.url || '#';
       document.getElementById('modal-source').innerText = news.source || 'Economic Insight';
-      document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
-      currentModalNews = news;
+      document.getElementById('modal-link').href = news.url || '#';
       
+      // Parse ringkasan AI menjadi paragraf HTML
+      const content = news.summary || news.description || 'Tidak ada ringkasan.';
+      const paragraphs = content.split('\n\n').filter(p => p.trim()).map(p => 
+        `<p class="mb-3">${p.replace(/\n/g, '<br>')}</p>`
+      ).join('');
+      
+      document.getElementById('modal-desc').innerHTML = paragraphs;
+      document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
+      
+      currentModalNews = news;
       const modal = document.getElementById('news-modal');
       modal.classList.remove('hidden');
       const modalBox = modal.querySelector('.bg-white');
@@ -1025,8 +1027,9 @@
       try { fetchGlobalData(); } catch(e) {}
       try { fetchFearGreedIndex(); } catch(e) {} 
       
+      // Auto-fetch currency tiap 1 jam, berita tiap 5 menit
       setInterval(fetchCurrenciesForTicker, 3600000);
-      setInterval(fetchNews, 300000);
+      setInterval(() => fetchNews(false), 300000);
     };
 
     function checkSharedUrl() {
