@@ -3,3 +3,7 @@ requests==2.32.3
 fastapi
 requests
 uvicorn
+fastapi
+uvicorn
+requests
+pydantic
