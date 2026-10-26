@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from urllib.parse import unquote, urlencode
 import requests
 import os
+import base64
+import datetime
+import time
 
 app = FastAPI()
 
@@ -71,12 +74,119 @@ Panduan Anda:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal: {str(e)}")
 
+# ==========================================
+# ENDPOINT BARU: SYNC NEWS & RINGKASAN AI
+# ==========================================
+@app.get("/api/news/sync")
+def sync_news():
+    if not DEEPSEEK_API_KEY:
+        return {"status": "error", "message": "DEEPSEEK_API_KEY belum diset."}
+
+    headers_supabase = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=ignore-duplicates" # Abaikan jika URL sudah ada
+    }
+
+    try:
+        # 1. Ambil berita dari Freenewsapi
+        queries = ['ekonomi indonesia', 'kebijakan ekonomi', 'pasar saham indonesia']
+        raw_results = []
+        
+        for q in queries:
+            try:
+                r = requests.get(f"https://freenewsapi.ai/v1/search?lang=id&q={q}&size=5", timeout=5)
+                if r.status_code == 200:
+                    raw_results.extend(r.json().get('results', []))
+            except:
+                pass
+
+        # Hapus duplikat berdasarkan URL
+        unique_articles = list({v['url']: v for v in raw_results}.values())
+        if not unique_articles:
+            return {"status": "success", "message": "Tidak ada berita baru."}
+
+        processed_count = 0
+        
+        # 2. Loop dan proses (Maksimal 3 agar tidak timeout Vercel)
+        for article in unique_articles:
+            if processed_count >= 3:
+                break
+                
+            url = article.get('url')
+            title = article.get('title', '')
+            content = article.get('content') or article.get('description') or ''
+            image = article.get('image') or article.get('thumbnail') or ''
+            source = article.get('source', 'Media')
+            published_at = article.get('published_at', datetime.datetime.now().isoformat())
+            
+            # Cek dulu apakah sudah ada di DB
+            check_res = requests.get(f"{SUPABASE_URL}/rest/v1/news_archive?original_url=eq.{url}&select=id", headers=headers_supabase)
+            if check_res.status_code == 200 and len(check_res.json()) > 0:
+                continue # Skip jika sudah ada
+
+            # 3. Minta ringkasan ke DeepSeek
+            prompt = f"Ringkas berita ekonomi berikut dalam 2-3 paragraf (250-300 kata) Bahasa Indonesia. Fokus pada fakta utama, dampak ekonomi, dan konteks. Tanpa bullet point.\n\nJudul: {title}\nKonten: {content}"
+            
+            ai_payload = {
+                "model": "deepseek-chat",
+                "messages": [
+                    {"role": "system", "content": "Anda jurnalis ekonomi senior."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 800
+            }
+            
+            try:
+                ai_res = requests.post("https://api.deepseek.com/chat/completions", json=ai_payload, headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}"}, timeout=20)
+                summary = ai_res.json()['choices'][0]['message']['content']
+            except:
+                summary = content # Fallback ke konten asli jika AI gagal
+
+            # 4. Deteksi Kategori
+            text_lower = (title + " " + content).lower()
+            category = 'umum'
+            if any(k in text_lower for k in ['pangan', 'beras', 'cabai', 'daging', 'telur', 'gula']): category = 'pangan'
+            elif any(k in text_lower for k in ['saham', 'ihsg', 'rupiah', 'kurs', 'bank', 'investasi']): category = 'keuangan'
+            elif any(k in text_lower for k in ['bbm', 'minyak', 'gas', 'listrik', 'energi']): category = 'energi'
+            elif any(k in text_lower for k in ['pajak', 'apbn', 'fiskal', 'bi rate', 'inflasi']): category = 'kebijakan'
+
+            slug = base64.urlsafe_b64encode(url.encode()).decode()[:40]
+
+            # 5. Simpan ke Supabase
+            data = {
+                "slug": slug,
+                "title": title,
+                "description": content[:300],
+                "summary": summary,
+                "image_url": image,
+                "source_name": source,
+                "original_url": url,
+                "published_at": published_at,
+                "category": category
+            }
+            
+            insert_res = requests.post(f"{SUPABASE_URL}/rest/v1/news_archive", json=data, headers=headers_supabase)
+            if insert_res.status_code in [201, 200]:
+                processed_count += 1
+
+            time.sleep(1) # Jeda antar request DeepSeek
+
+        return {"status": "success", "inserted": processed_count}
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# ==========================================
+# PREVIEW LINK (TETAP SEPERTI SEBELUMNYA)
+# ==========================================
 @app.get("/api/preview")
 def preview_link(id: str = ""):
     if not id:
         return HTMLResponse(content="<h1>Link Tidak Valid</h1>", status_code=400)
 
-    # Ambil data dari Supabase berdasarkan ID
     headers = {
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
@@ -95,11 +205,9 @@ def preview_link(id: str = ""):
         img = news.get('image_url', '')
         original_url = news.get('original_url', 'https://economic-data-lake.vercel.app/')
 
-        if img.startswith('http://'):
+        if img and img.startswith('http://'):
             img = img.replace('http://', 'https://')
 
-        # PERBAIKAN: Kirim semua data (title, desc, img) ke URL redirect
-        # Agar frontend bisa langsung membuka floating window
         query_params = urlencode({
             'news_url': original_url,
             'title': title,
