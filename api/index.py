@@ -1,13 +1,12 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from urllib.parse import unquote, urlencode
+from urllib.parse import urlencode
 import requests
 import os
 import base64
 import datetime
-import time
 
 app = FastAPI()
 
@@ -19,9 +18,9 @@ app.add_middleware(
 )
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-# Pastikan URL dan KEY ini sesuai dengan project Supabase Anda
-SUPABASE_URL = 'https://nqoohtklfqhcpfcllsok.supabase.co'
-SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xb29odGtsZnFoY3BmY2xsc29rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDYwODksImV4cCI6MjEwODM4MjA4OX0.xV7YhW2GS1KBwgAio-NRQxFfyIJ_aG8wVRuhPY5efrQ'
+# DATABASE BARU KAMU
+SUPABASE_URL = 'https://gwkqmhsmlmmzcmqcqpft.supabase.co'
+SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI'
 
 @app.get("/api/inflasi")
 def get_inflasi():
@@ -35,7 +34,6 @@ class ChatRequest(BaseModel):
 def chat_with_deepseek(req: ChatRequest):
     if not DEEPSEEK_API_KEY:
         raise HTTPException(status_code=500, detail="API Key DeepSeek belum diatur di Vercel.")
-    # (Kode Chat AI tetap sama seperti sebelumnya)
     headers = {"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"}
     system_prompt = f"Anda adalah AI Economic Insight...\nData konteks: {req.context}"
     payload = {"model": "deepseek-chat", "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": req.message}], "stream": False}
@@ -46,9 +44,6 @@ def chat_with_deepseek(req: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal: {str(e)}")
 
-# ==========================================
-# ENDPOINT SYNC (DIPERBAIKI AGAR ANTI-TIMEOUT)
-# ==========================================
 @app.get("/api/news/sync")
 def sync_news():
     if not DEEPSEEK_API_KEY:
@@ -58,44 +53,39 @@ def sync_news():
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
         "Content-Type": "application/json",
-        "Prefer": "return=representation" # Minta balasan dari Supabase
+        "Prefer": "return=representation"
     }
 
     try:
-        # 1. Ambil 1 berita terbaru saja per request agar tidak timeout
+        # Ambil 1 berita terbaru
         r = requests.get("https://freenewsapi.ai/v1/search?lang=id&q=ekonomi+indonesia&size=3", timeout=5)
         articles = r.json().get('results', [])
         
         if not articles:
             return {"status": "success", "message": "Tidak ada berita baru dari API."}
 
-        article = articles[0] # Ambil yang pertama
+        article = articles[0]
         url = article.get('url')
         
-        # 2. Cek apakah berita sudah ada di DB
+        # Cek duplikat
         check_url = f"{SUPABASE_URL}/rest/v1/news_archive?original_url=eq.{url}"
         check_res = requests.get(check_url, headers=headers_supabase)
         
         if check_res.status_code == 200 and len(check_res.json()) > 0:
             return {"status": "success", "message": "Berita sudah ada di database (skip)."}
 
-        # 3. Minta ringkasan ke DeepSeek (Batas 3000 karakter agar aman)
+        # Ringkas AI
         content = (article.get('content') or article.get('description') or '')[:3000]
         prompt = f"Ringkas berita ini dalam 2 paragraf singkat (maks 150 kata).\nJudul: {article.get('title')}\nKonten: {content}"
-        
-        ai_payload = {
-            "model": "deepseek-chat",
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 300
-        }
+        ai_payload = {"model": "deepseek-chat", "messages": [{"role": "user", "content": prompt}], "max_tokens": 300}
         
         try:
-            ai_res = requests.post("https://api.deepseek.com/chat/completions", json=ai_payload, headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}"}, timeout=8) # Timeout 8 detik
+            ai_res = requests.post("https://api.deepseek.com/chat/completions", json=ai_payload, headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}"}, timeout=8)
             summary = ai_res.json()['choices'][0]['message']['content']
-        except Exception as e:
-            summary = content # Jika AI timeout, pakai konten asli
+        except Exception:
+            summary = content
 
-        # 4. Tentukan Kategori
+        # Kategori
         text_lower = (article.get('title', '') + " " + content).lower()
         category = 'umum'
         if any(k in text_lower for k in ['pangan', 'beras', 'cabai', 'daging', 'telur', 'gula']): category = 'pangan'
@@ -105,7 +95,6 @@ def sync_news():
 
         slug = base64.urlsafe_b64encode(url.encode()).decode()[:40]
 
-        # 5. Simpan ke Supabase
         data = {
             "slug": slug,
             "title": article.get('title', 'Tanpa Judul'),
@@ -120,7 +109,6 @@ def sync_news():
         
         insert_res = requests.post(f"{SUPABASE_URL}/rest/v1/news_archive", json=data, headers=headers_supabase)
         
-        # Tampilkan error Supabase jika ada (misal RLS memblokir)
         if insert_res.status_code not in [200, 201]:
             return {"status": "error", "message": "Supabase menolak data", "detail": insert_res.text}
 
@@ -131,7 +119,6 @@ def sync_news():
 
 @app.get("/api/preview")
 def preview_link(id: str = ""):
-    # (Kode Preview Link tetap sama seperti sebelumnya)
     if not id: return HTMLResponse(content="<h1>Link Tidak Valid</h1>", status_code=400)
     headers = {"apikey": SUPABASE_ANON_KEY, "Authorization": f"Bearer {SUPABASE_ANON_KEY}"}
     try:
