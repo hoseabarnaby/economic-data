@@ -19,5 +19,11 @@
       "src": "/(.*)",
       "dest": "public/$1"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/news/sync",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }
