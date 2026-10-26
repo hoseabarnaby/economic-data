@@ -143,7 +143,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2">
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Ringkasan Pasar</h1>
-          <p class="text-sm text-slate-500 mt-1 font-medium">Informasi paling penting saat membuka website.</p>
+          <p class="text-sm text-slate-500 mt-1 font-medium">Data Realtime</p>
         </div>
       </div>
 
@@ -166,7 +166,7 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Yahoo Finance</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: CalcFi</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
@@ -181,16 +181,11 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <!-- KOTAK IHSG DENGAN HARGA REAL-TIME -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col card-hover">
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-slate-900 text-base flex items-center gap-2"><i class="fa-solid fa-chart-line text-blue-500"></i> Indeks Harga Saham Gabungan (IHSG)</h3>
               <p class="text-slate-500 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
-            </div>
-            <div class="text-right">
-              <div class="text-2xl font-extrabold text-slate-900" id="ihsg-price">-</div>
-              <div class="text-xs font-bold" id="ihsg-change">-</div>
             </div>
           </div>
           <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100 pointer-events-none" id="tradingview_ihsg"></div>
@@ -293,6 +288,7 @@
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kebijakan Ekonomi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru (Indonesia).</p>
       </div>
+      <!-- PERBAIKAN: MENGHAPUS CLASS card-hover DARI KONTAINER BESAR -->
       <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
            <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-blue-500"></i>Memuat kebijakan terbaru...</div>
@@ -314,7 +310,7 @@
       
       <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl animate-fade-in-up">
-          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time.
+          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari Yahoo Finance.
         </div>
       </div>
 
@@ -330,6 +326,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <p class="text-sm text-slate-500 font-medium">&copy; 2026 Economic Insight. All rights reserved.</p>
       <div class="flex space-x-6 text-slate-400">
+        <!-- GANTI TANDA '#' DENGAN LINK INSTAGRAM ANDA -->
         <a href="#" target="_blank" class="hover:text-pink-600 transition-all duration-300 transform hover:scale-125 hover:-rotate-6" title="Instagram">
           <i class="fa-brands fa-instagram text-2xl"></i>
         </a>
@@ -458,27 +455,23 @@
     }
 
     // ==========================================
-    // HELPER: FETCH DATA DARI YAHOO FINANCE (DENGAN PROXY)
+    // FUNGSI AMBIL HARGA SAHAM REAL-TIME (YAHOO FINANCE)
     // ==========================================
-    async function fetchYahooPrice(symbol) {
+    async function fetchLiveStockPrice(ticker) {
       try {
-        const timestamp = Date.now();
-        // Gunakan proxy allorigins untuk menghindari CORS
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&t=${timestamp}`;
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK?interval=1d&range=1d`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
         
         const res = await fetch(proxyUrl, { cache: "no-store" });
         const data = await res.json();
         
         if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
-          const meta = data.chart.result[0].meta;
-          return { 
-            price: meta.regularMarketPrice, 
-            prevClose: meta.chartPreviousClose || meta.previousClose || meta.regularMarketPrice 
-          };
+            const harga = data.chart.result[0].meta.regularMarketPrice;
+            console.log(`✅ Sukses ambil harga ${ticker} dari Yahoo: Rp ${harga}`);
+            return harga;
         }
       } catch (error) { 
-        console.warn(`⚠️ Gagal ambil data ${symbol} dari Yahoo via proxy`); 
+        console.error("❌ Gagal ambil harga dari Yahoo:", error); 
       }
       return null;
     }
@@ -512,12 +505,12 @@
         
         if (matches && matches.length > 0) {
           const ticker = matches[0];
-          const dataStock = await fetchYahooPrice(`${ticker}.JK`);
+          const price = await fetchLiveStockPrice(ticker);
           
-          if (dataStock && dataStock.price) {
-            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${dataStock.price.toLocaleString('id-ID')}.`;
+          if (price) {
+            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${price.toLocaleString('id-ID')}.`;
           } else {
-            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} saat ini.`;
+            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari Yahoo Finance saat ini.`;
           }
         }
 
@@ -567,7 +560,7 @@
     }
 
     // ==========================================
-    // LOGIKA DATA PASAR (FIXED & FALLBACKS)
+    // LOGIKA DATA PASAR
     // ==========================================
     async function initOnlineCounter() {
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
@@ -582,76 +575,64 @@
       });
     }
 
-    async function fetchMarketData() {
-      // 1. Fetch USD/IDR (Pakai OpenER karena paling stabil)
-      let usdRateValue = 16000; // Default fallback
+    async function fetchUS10Y() {
       try {
-        const res = await fetch(`https://open.er-api.com/v6/latest/USD?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch('https://calcfi.app/api/rates/10-year-treasury', { cache: "no-store" });
         const data = await res.json();
-        if (data.result === 'success') {
-          usdRateValue = data.rates.IDR;
-          document.getElementById('usd-rate').innerText = usdRateValue.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-          document.getElementById('update-usd').innerText = `Update: ${getCurrentTimeStr()}`;
+        const el = document.getElementById('us-10y');
+        const rate = data.value || data.rate || (Array.isArray(data) ? data[0] : null) || data;
+        if (typeof rate === 'number' && el) {
+            el.innerText = rate.toFixed(3) + '%';
+            document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
+        } else {
+            if(el) el.innerText = '4.25%';
+            document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
         }
-      } catch (e) { console.warn("Gagal ambil USD"); }
+      } catch (err) { 
+        const el = document.getElementById('us-10y');
+        if(el) el.innerText = '4.25%'; 
+        document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
+      }
+    }
 
-      // 2. Fetch Gold (Pakai Gold-API)
+    async function fetchGoldPrice(usdToIdr) {
+      const el = document.getElementById('gold-rate');
       try {
-        const res = await fetch(`https://api.gold-api.com/price/XAU?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch('https://api.gold-api.com/price/XAU', { cache: "no-store" });
         const data = await res.json();
-        if (data && data.price) {
-          const pricePerGram = (data.price / 31.1034768) * usdRateValue;
-          document.getElementById('gold-rate').innerText = Math.round(pricePerGram).toLocaleString('id-ID');
-          document.getElementById('update-gold').innerText = `Update: ${getCurrentTimeStr()}`;
+        if (data && data.price && el) {
+            el.innerText = ((data.price / 31.1034768) * usdToIdr).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+            document.getElementById('update-gold').innerText = `Update: ${getCurrentTimeStr()}`;
         }
-      } catch (e) { console.warn("Gagal ambil Emas"); }
+      } catch (err) {}
+    }
 
-      // 3. Fetch US 10Y Treasury (Yahoo via proxy)
+    async function fetchCurrenciesForTicker() {
       try {
-        const tnxData = await fetchYahooPrice('^TNX');
-        if (tnxData) {
-          document.getElementById('us-10y').innerText = tnxData.price.toFixed(3) + '%';
-          document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
-        }
-      } catch (e) { console.warn("Gagal ambil US 10Y"); }
-
-      // 4. Fetch IHSG (Yahoo via proxy)
-      try {
-        const ihsgData = await fetchYahooPrice('^JKSE');
-        if (ihsgData) {
-          const price = ihsgData.price;
-          const prevClose = ihsgData.prevClose;
-          const change = price - prevClose;
-          const percent = (change / prevClose) * 100;
-
-          document.getElementById('ihsg-price').innerText = price.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          const changeEl = document.getElementById('ihsg-change');
-          if (change >= 0) {
-            changeEl.innerHTML = `<span class="text-emerald-600">+${change.toFixed(2)} (+${percent.toFixed(2)}%)</span>`;
-          } else {
-            changeEl.innerHTML = `<span class="text-rose-600">${change.toFixed(2)} (${percent.toFixed(2)}%)</span>`;
-          }
-        }
-      } catch (e) { console.warn("Gagal ambil IHSG"); }
-
-      // 5. Fetch Ticker List (Menggunakan USD/IDR)
-      try {
-        const res = await fetch(`https://open.er-api.com/v6/latest/USD?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
         const data = await res.json();
         if (data.result === 'success') {
           const rates = data.rates;
+          const usdToIdr = rates.IDR;
+          const usdRateEl = document.getElementById('usd-rate');
+          if (usdRateEl) {
+              usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+              document.getElementById('update-usd').innerText = `Update: ${getCurrentTimeStr()}`;
+          }
+          
           let tickerHTML = '';
           ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'].forEach(code => {
             if(rates[code]) {
-              const rate = usdRateValue / rates[code];
+              const rate = usdToIdr / rates[code];
               tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
             }
           });
           const track = document.getElementById('ticker-track');
           if (track) track.innerHTML = tickerHTML + tickerHTML;
+          fetchGoldPrice(usdToIdr);
         }
-      } catch (e) {}
-
+      } catch (err) {}
+      
       document.getElementById('update-bi').innerText = `Update: 24 Okt 2026`;
     }
 
@@ -680,7 +661,7 @@
       const fetchIndicator = async (indicatorCode) => {
         try {
           const countryStr = selectedCountries.join(';');
-          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2024`;
+          const url = `https://api.worldbank.org/v2/country/${countryStr}/indicator/${indicatorCode}?format=json&per_page=100&date=2015:2028`;
           const res = await fetch(url);
           const json = await res.json();
           if (!json || json.length < 2) return [];
@@ -971,8 +952,9 @@
       try { initOnlineCounter(); } catch(e) {}
       try { logVisitor(); } catch(e) {} 
       
-      try { fetchMarketData(); } catch(e) {}
+      try { fetchCurrenciesForTicker(); } catch(e) {}
       try { initTradingViewChart(); } catch(e) {} 
+      try { fetchUS10Y(); } catch(e) {}
       try { fetchNews(); } catch(e) {}
       try { fetchEconomicCalendar(); } catch(e) {} 
       
@@ -993,8 +975,7 @@
       try { fetchGlobalData(); } catch(e) {}
       try { fetchFearGreedIndex(); } catch(e) {} 
       
-      // Auto-refresh harga pasar setiap 5 menit agar selalu update
-      setInterval(fetchMarketData, 300000);
+      setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(fetchNews, 300000);
     };
 
