@@ -188,7 +188,8 @@
               <p class="text-slate-500 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
             </div>
           </div>
-          <div class="relative w-full h-64 rounded-xl overflow-hidden border border-slate-100 pointer-events-none" id="tradingview_ihsg"></div>
+          <!-- PERBAIKAN: menghapus pointer-events-none, tinggi dinaikkan -->
+          <div class="relative w-full h-80 rounded-xl overflow-hidden border border-slate-100" id="tradingview_ihsg"></div>
         </div>
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col card-hover">
           <h3 class="font-bold text-slate-900 text-base mb-2 flex items-center gap-2"><i class="fa-regular fa-calendar-days text-indigo-500"></i> Jadwal Rilis Ekonomi</h3>
@@ -288,7 +289,6 @@
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Kebijakan Ekonomi</h1>
         <p class="text-sm text-slate-500 mt-1 font-medium">Kumpulan berita regulasi dan kebijakan fiskal/moneter terbaru (Indonesia).</p>
       </div>
-      <!-- PERBAIKAN: MENGHAPUS CLASS card-hover DARI KONTAINER BESAR -->
       <div id="kebijakan-list" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
         <div class="relative border-l-2 border-slate-100 ml-3 space-y-8 pb-4 mt-2">
            <div class="text-center text-slate-500 py-4 text-sm font-medium"><i class="fa-solid fa-spinner fa-spin mr-2 text-blue-500"></i>Memuat kebijakan terbaru...</div>
@@ -326,7 +326,6 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <p class="text-sm text-slate-500 font-medium">&copy; 2026 Economic Insight. All rights reserved.</p>
       <div class="flex space-x-6 text-slate-400">
-        <!-- GANTI TANDA '#' DENGAN LINK INSTAGRAM ANDA -->
         <a href="#" target="_blank" class="hover:text-pink-600 transition-all duration-300 transform hover:scale-125 hover:-rotate-6" title="Instagram">
           <i class="fa-brands fa-instagram text-2xl"></i>
         </a>
@@ -566,13 +565,58 @@
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
+    // ==========================================
+    // PERBAIKAN: initTradingViewChart dengan retry + fallback
+    // ==========================================
     function initTradingViewChart() {
-      new TradingView.widget({
-        "width": "100%", "height": "100%", "symbol": "IDX:COMPOSITE", "interval": "D", "timezone": "Asia/Jakarta",
-        "theme": "light", "style": "3", "locale": "id", "hide_side_toolbar": true, "hide_top_toolbar": true, 
-        "hide_legend": true, "hide_volume": true, "enableScrolling": false, "enableScaleZ": false, 
-        "disable_mouse_wheel": true, "allow_symbol_change": false, "container_id": "tradingview_ihsg"
-      });
+      const container = document.getElementById('tradingview_ihsg');
+      if (!container) return;
+
+      container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat grafik IHSG...</div>';
+
+      const renderWidget = () => {
+        if (typeof TradingView === 'undefined' || !TradingView.widget) return false;
+        try {
+          container.innerHTML = '';
+          new TradingView.widget({
+            "width": "100%",
+            "height": "100%",
+            "symbol": "IDX:COMPOSITE",
+            "interval": "D",
+            "timezone": "Asia/Jakarta",
+            "theme": "light",
+            "style": "3",
+            "locale": "id",
+            "hide_side_toolbar": true,
+            "hide_top_toolbar": true,
+            "hide_legend": true,
+            "hide_volume": true,
+            "enableScrolling": false,
+            "enableScaleZ": false,
+            "disable_mouse_wheel": true,
+            "allow_symbol_change": false,
+            "container_id": "tradingview_ihsg"
+          });
+          return true;
+        } catch (e) {
+          console.error("TradingView error:", e);
+          return false;
+        }
+      };
+
+      if (renderWidget()) return;
+
+      let attempts = 0;
+      const maxAttempts = 20;
+      const interval = setInterval(() => {
+        attempts++;
+        if (renderWidget()) {
+          clearInterval(interval);
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-400 text-sm p-4 text-center"><i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>Gagal memuat grafik IHSG.<br><span class="text-xs mt-1">Periksa koneksi internet atau nonaktifkan ad-blocker.</span></div>';
+        }
+      }, 500);
     }
 
     async function fetchUS10Y() {
@@ -607,33 +651,64 @@
       } catch (err) {}
     }
 
+    // ==========================================
+    // PERBAIKAN: fetchCurrenciesForTicker dengan 3 API fallback
+    // ==========================================
     async function fetchCurrenciesForTicker() {
-      try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: "no-store" });
-        const data = await res.json();
-        if (data.result === 'success') {
-          const rates = data.rates;
-          const usdToIdr = rates.IDR;
-          const usdRateEl = document.getElementById('usd-rate');
-          if (usdRateEl) {
-              usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-              document.getElementById('update-usd').innerText = `Update: ${getCurrentTimeStr()}`;
+      let rates = null;
+      let usdToIdr = 15800; // fallback default
+
+      const apis = [
+        { url: 'https://open.er-api.com/v6/latest/USD',           key: 'er-api' },
+        { url: 'https://api.exchangerate-api.com/v4/latest/USD',  key: 'exchangerate' },
+        { url: 'https://api.frankfurter.app/latest?from=USD',     key: 'frankfurter' }
+      ];
+
+      for (const api of apis) {
+        try {
+          const res = await fetch(api.url, { cache: "no-store" });
+          const data = await res.json();
+
+          if (api.key === 'er-api' && data.result === 'success' && data.rates?.IDR) {
+            rates = data.rates;
+            usdToIdr = data.rates.IDR;
+            break;
           }
-          
-          let tickerHTML = '';
-          ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'].forEach(code => {
-            if(rates[code]) {
-              const rate = usdToIdr / rates[code];
-              tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
-            }
-          });
-          const track = document.getElementById('ticker-track');
-          if (track) track.innerHTML = tickerHTML + tickerHTML;
-          fetchGoldPrice(usdToIdr);
+          if (api.key !== 'er-api' && data.rates?.IDR) {
+            rates = data.rates;
+            usdToIdr = data.rates.IDR;
+            break;
+          }
+        } catch (e) {
+          console.warn(`API ${api.key} gagal:`, e.message);
         }
-      } catch (err) {}
-      
-      document.getElementById('update-bi').innerText = `Update: 24 Okt 2026`;
+      }
+
+      const usdRateEl = document.getElementById('usd-rate');
+      if (usdRateEl) {
+        usdRateEl.innerText = usdToIdr.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        const upd = document.getElementById('update-usd');
+        if (upd) upd.innerText = `Update: ${getCurrentTimeStr()}${rates ? '' : ' (estimasi)'}`;
+      }
+
+      const majorCodes = ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'];
+      const fallbackRates = { EUR: 0.92, GBP: 0.79, JPY: 150, SGD: 1.34, AUD: 1.52, CNY: 7.24, KRW: 1330 };
+
+      let tickerHTML = '';
+      majorCodes.forEach(code => {
+        const rate = rates && rates[code]
+          ? usdToIdr / rates[code]
+          : usdToIdr / fallbackRates[code];
+        tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
+      });
+
+      const track = document.getElementById('ticker-track');
+      if (track) track.innerHTML = tickerHTML + tickerHTML;
+
+      fetchGoldPrice(usdToIdr);
+
+      const biUpd = document.getElementById('update-bi');
+      if (biUpd) biUpd.innerText = `Update: 24 Okt 2026`;
     }
 
     async function fetchEconomicCalendar() {
@@ -886,7 +961,6 @@
       
       const modal = document.getElementById('news-modal');
       modal.classList.remove('hidden');
-      // Re-trigger animasi
       const modalBox = modal.querySelector('.bg-white');
       modalBox.classList.remove('animate-fade-in-up');
       void modalBox.offsetWidth; 
