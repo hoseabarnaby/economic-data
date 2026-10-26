@@ -151,7 +151,7 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white rounded-2xl p-4 border border-blue-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-dollar-sign absolute -right-2 -bottom-3 text-7xl text-blue-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-blue-600 font-bold mb-1">USD / IDR</div><div class="text-2xl font-extrabold text-slate-900" id="usd-rate">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Biquote (MT5)</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: ExchangeRate</div><div class="text-[9px] text-slate-400" id="update-usd">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-arrow-trend-up absolute -right-2 -bottom-3 text-7xl text-amber-500/10"></i>
@@ -166,12 +166,12 @@
         <div class="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-4 border border-emerald-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-landmark absolute -right-2 -bottom-3 text-7xl text-emerald-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-emerald-600 font-bold mb-1">US Treasury 10Y</div><div class="text-2xl font-extrabold text-slate-900" id="us-10y">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Biquote (MT5)</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Yahoo Finance</div><div class="text-[9px] text-slate-400" id="update-us10y">-</div></div>
         </div>
         <div class="relative overflow-hidden bg-gradient-to-br from-yellow-50 to-white rounded-2xl p-4 border border-yellow-100 shadow-sm card-hover flex flex-col justify-between h-32">
           <i class="fa-solid fa-coins absolute -right-2 -bottom-3 text-7xl text-yellow-500/10"></i>
           <div class="relative z-10"><div class="text-xs text-yellow-600 font-bold mb-1">Harga Emas / gram</div><div class="text-2xl font-extrabold text-slate-900" id="gold-rate">-</div></div>
-          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: Biquote (MT5)</div><div class="text-[9px] text-slate-400" id="update-gold">-</div></div>
+          <div class="relative z-10 flex flex-col"><div class="text-[10px] text-slate-500 font-semibold">Sumber: GoldAPI</div><div class="text-[9px] text-slate-400" id="update-gold">-</div></div>
         </div>
       </div>
 
@@ -314,7 +314,7 @@
       
       <div class="p-4 sm:p-6 flex-grow overflow-y-auto bg-slate-50 text-sm" id="chat-messages">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4 text-slate-700 leading-relaxed max-w-3xl animate-fade-in-up">
-          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time dari Biquote.
+          Halo! Saya asisten AI Anda. Tanyakan analisis atau <strong>prediksi harga saham</strong> (contoh: "Prediksi BMRI minggu ini"). Saya akan otomatis mengambil harga real-time.
         </div>
       </div>
 
@@ -458,18 +458,29 @@
     }
 
     // ==========================================
-    // HELPER: FETCH DATA DARI BIQUOTE
+    // HELPER: FETCH DATA DARI YAHOO FINANCE (DENGAN PROXY)
     // ==========================================
-    async function fetchBiquoteTick(symbol) {
+    async function fetchYahooPrice(symbol) {
       try {
-        const res = await fetch(`https://api.biquote.io/v1/tick/${symbol}`, { cache: "no-store" });
-        if (!res.ok) return null;
+        const timestamp = Date.now();
+        // Gunakan proxy allorigins untuk menghindari CORS
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&t=${timestamp}`;
+        
+        const res = await fetch(proxyUrl, { cache: "no-store" });
         const data = await res.json();
-        return data; 
+        
+        if (data && data.chart && data.chart.result && data.chart.result.length > 0) {
+          const meta = data.chart.result[0].meta;
+          return { 
+            price: meta.regularMarketPrice, 
+            prevClose: meta.chartPreviousClose || meta.previousClose || meta.regularMarketPrice 
+          };
+        }
       } catch (error) { 
-        console.error(`❌ Gagal ambil data ${symbol} dari Biquote:`, error); 
-        return null;
+        console.warn(`⚠️ Gagal ambil data ${symbol} dari Yahoo via proxy`); 
       }
+      return null;
     }
 
     // ==========================================
@@ -501,13 +512,12 @@
         
         if (matches && matches.length > 0) {
           const ticker = matches[0];
-          // Coba ambil dari Biquote (format simbol mungkin perlu disesuaikan, misal BBCA.JK)
-          const dataStock = await fetchBiquoteTick(`${ticker}.JK`); 
+          const dataStock = await fetchYahooPrice(`${ticker}.JK`);
           
-          if (dataStock && dataStock.mid) {
-            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${dataStock.mid.toLocaleString('id-ID')}.`;
+          if (dataStock && dataStock.price) {
+            stockDataContext = `\n[DATA REAL-TIME SAHAM ${ticker}]: Harga saat ini adalah Rp ${dataStock.price.toLocaleString('id-ID')}.`;
           } else {
-            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} dari Biquote saat ini.`;
+            stockDataContext = `\n[INFO]: Sistem gagal mengambil harga ${ticker} saat ini.`;
           }
         }
 
@@ -557,7 +567,7 @@
     }
 
     // ==========================================
-    // LOGIKA DATA PASAR (REAL-TIME VIA BIQUOTE)
+    // LOGIKA DATA PASAR (FIXED & FALLBACKS)
     // ==========================================
     async function initOnlineCounter() {
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
@@ -573,65 +583,75 @@
     }
 
     async function fetchMarketData() {
-      // 1. Fetch USD/IDR
-      const usdData = await fetchBiquoteTick('USDIDR');
-      const usdRateEl = document.getElementById('usd-rate');
-      if (usdData && usdData.mid && usdRateEl) {
-        usdRateEl.innerText = usdData.mid.toLocaleString('id-ID', { maximumFractionDigits: 0 });
-        document.getElementById('update-usd').innerText = `Update: ${getCurrentTimeStr()}`;
-      }
-
-      // 2. Fetch Gold (XAUUSD -> konversi ke IDR/gram)
-      const goldData = await fetchBiquoteTick('XAUUSD');
-      const goldRateEl = document.getElementById('gold-rate');
-      if (goldData && goldData.mid && usdData && usdData.mid && goldRateEl) {
-        const pricePerGram = (goldData.mid / 31.1034768) * usdData.mid;
-        goldRateEl.innerText = Math.round(pricePerGram).toLocaleString('id-ID');
-        document.getElementById('update-gold').innerText = `Update: ${getCurrentTimeStr()}`;
-      }
-
-      // 3. Fetch US 10Y Treasury (Coba US10Y, mungkin perlu penyesuaian simbol)
-      const tnxData = await fetchBiquoteTick('US10Y');
-      const us10yEl = document.getElementById('us-10y');
-      if (tnxData && tnxData.mid && us10yEl) {
-        us10yEl.innerText = tnxData.mid.toFixed(3) + '%';
-        document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
-      }
-
-      // 4. Fetch IHSG (Coba IDX:COMPOSITE atau IDX)
-      const ihsgData = await fetchBiquoteTick('IDX:COMPOSITE');
-      const ihsgPriceEl = document.getElementById('ihsg-price');
-      const ihsgChangeEl = document.getElementById('ihsg-change');
-      if (ihsgData && ihsgData.mid && ihsgPriceEl && ihsgChangeEl) {
-        // Biquote mungkin menyediakan dayDiffPercent
-        const percent = ihsgData.dayDiffPercent || 0; 
-        
-        ihsgPriceEl.innerText = ihsgData.mid.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        
-        if (percent >= 0) {
-          ihsgChangeEl.innerHTML = `<span class="text-emerald-600">+${percent.toFixed(2)}%</span>`;
-        } else {
-          ihsgChangeEl.innerHTML = `<span class="text-rose-600">${percent.toFixed(2)}%</span>`;
+      // 1. Fetch USD/IDR (Pakai OpenER karena paling stabil)
+      let usdRateValue = 16000; // Default fallback
+      try {
+        const res = await fetch(`https://open.er-api.com/v6/latest/USD?t=${Date.now()}`, { cache: "no-store" });
+        const data = await res.json();
+        if (data.result === 'success') {
+          usdRateValue = data.rates.IDR;
+          document.getElementById('usd-rate').innerText = usdRateValue.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+          document.getElementById('update-usd').innerText = `Update: ${getCurrentTimeStr()}`;
         }
-      }
+      } catch (e) { console.warn("Gagal ambil USD"); }
 
-      // 5. Fetch Ticker List (Menggunakan USD/IDR dari Biquote)
-      if (usdData && usdData.mid) {
-        const usdToIdr = usdData.mid; 
-        // Fallback rates (hanya untuk cross-rate ticker, bukan harga utama)
-        const fallbackRates = { EUR: 0.92, GBP: 0.79, JPY: 150, SGD: 1.34, AUD: 1.52, CNY: 7.24, KRW: 1330 }; 
-        
-        let tickerHTML = '';
-        ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'].forEach(code => {
-          if(fallbackRates[code]) {
-            const rate = usdToIdr / fallbackRates[code];
-            tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
+      // 2. Fetch Gold (Pakai Gold-API)
+      try {
+        const res = await fetch(`https://api.gold-api.com/price/XAU?t=${Date.now()}`, { cache: "no-store" });
+        const data = await res.json();
+        if (data && data.price) {
+          const pricePerGram = (data.price / 31.1034768) * usdRateValue;
+          document.getElementById('gold-rate').innerText = Math.round(pricePerGram).toLocaleString('id-ID');
+          document.getElementById('update-gold').innerText = `Update: ${getCurrentTimeStr()}`;
+        }
+      } catch (e) { console.warn("Gagal ambil Emas"); }
+
+      // 3. Fetch US 10Y Treasury (Yahoo via proxy)
+      try {
+        const tnxData = await fetchYahooPrice('^TNX');
+        if (tnxData) {
+          document.getElementById('us-10y').innerText = tnxData.price.toFixed(3) + '%';
+          document.getElementById('update-us10y').innerText = `Update: ${getCurrentTimeStr()}`;
+        }
+      } catch (e) { console.warn("Gagal ambil US 10Y"); }
+
+      // 4. Fetch IHSG (Yahoo via proxy)
+      try {
+        const ihsgData = await fetchYahooPrice('^JKSE');
+        if (ihsgData) {
+          const price = ihsgData.price;
+          const prevClose = ihsgData.prevClose;
+          const change = price - prevClose;
+          const percent = (change / prevClose) * 100;
+
+          document.getElementById('ihsg-price').innerText = price.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const changeEl = document.getElementById('ihsg-change');
+          if (change >= 0) {
+            changeEl.innerHTML = `<span class="text-emerald-600">+${change.toFixed(2)} (+${percent.toFixed(2)}%)</span>`;
+          } else {
+            changeEl.innerHTML = `<span class="text-rose-600">${change.toFixed(2)} (${percent.toFixed(2)}%)</span>`;
           }
-        });
-        const track = document.getElementById('ticker-track');
-        if (track) track.innerHTML = tickerHTML + tickerHTML;
-      }
-      
+        }
+      } catch (e) { console.warn("Gagal ambil IHSG"); }
+
+      // 5. Fetch Ticker List (Menggunakan USD/IDR)
+      try {
+        const res = await fetch(`https://open.er-api.com/v6/latest/USD?t=${Date.now()}`, { cache: "no-store" });
+        const data = await res.json();
+        if (data.result === 'success') {
+          const rates = data.rates;
+          let tickerHTML = '';
+          ['EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CNY', 'KRW'].forEach(code => {
+            if(rates[code]) {
+              const rate = usdRateValue / rates[code];
+              tickerHTML += `<div class="ticker-item"><span class="font-bold text-slate-700 text-sm">${code} / IDR</span><span class="font-extrabold text-slate-900 text-sm">${rate.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</span></div>`;
+            }
+          });
+          const track = document.getElementById('ticker-track');
+          if (track) track.innerHTML = tickerHTML + tickerHTML;
+        }
+      } catch (e) {}
+
       document.getElementById('update-bi').innerText = `Update: 24 Okt 2026`;
     }
 
