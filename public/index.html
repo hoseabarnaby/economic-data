@@ -419,26 +419,64 @@
       return new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':') + ' WIB';
     }
 
+    // ==========================================
+    // UPDATE: LOG VISITOR (PERBAIKAN WINDOWS & KOTA)
+    // ==========================================
     async function logVisitor() {
       if (!supabaseClient) return;
       try {
         const ua = navigator.userAgent;
         let device = "Desktop", os = "Unknown", browser = "Unknown";
+
+        // 1. Deteksi Device
         if (/android/i.test(ua)) device = "Mobile (Android)";
-        if (/iPad|iPhone|iPod/.test(ua)) device = "Mobile (iOS)";
-        if (/windows/i.test(ua)) os = "Windows";
-        else if (/mac/i.test(ua)) os = "MacOS";
-        else if (/linux/i.test(ua)) os = "Linux";
+        else if (/iPad|iPhone|iPod/.test(ua)) device = "Mobile (iOS)";
+        else if (/mobile/i.test(ua)) device = "Mobile";
+
+        // 2. Deteksi OS (Windows dan MacOS wajib dicek duluan sebelum Linux)
+        if (/windows|win32/i.test(ua)) os = "Windows";
+        else if (/macintosh|mac os x/i.test(ua)) os = "MacOS";
         else if (/android/i.test(ua)) os = "Android";
-        else if (/ios|iphone|ipad/i.test(ua)) os = "iOS";
-        if (/chrome|crios/i.test(ua)) browser = "Chrome";
+        else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
+        else if (/linux/i.test(ua)) os = "Linux";
+
+        // 3. Deteksi Browser (Edge harus dicek sebelum Chrome)
+        if (/edg/i.test(ua)) browser = "Edge";
+        else if (/chrome|crios/i.test(ua)) browser = "Chrome";
         else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
         else if (/safari/i.test(ua)) browser = "Safari";
-        else if (/edg/i.test(ua)) browser = "Edge";
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        await supabaseClient.from('visitor_logs').insert([{ device_type: device, os: os, browser: browser, ip_address: ipData.ip }]);
-      } catch (e) {}
+
+        // 4. Ambil IP dan Kota (Pakai ipapi.co)
+        let ip = "Unknown";
+        let city = "Unknown";
+        
+        try {
+          const ipRes = await fetch('https://ipapi.co/json/');
+          const ipData = await ipRes.json();
+          ip = ipData.ip || "Unknown";
+          if (ipData.city && ipData.city !== "null") {
+            city = ipData.region_code ? `${ipData.city}, ${ipData.region_code}` : ipData.city; 
+          }
+        } catch (err) {
+          // Fallback jika ipapi.co diblokir/gagal
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          ip = ipData.ip;
+        }
+
+        // 5. Simpan ke Supabase
+        await supabaseClient.from('visitor_logs').insert([{ 
+          device_type: device, 
+          os: os, 
+          browser: browser, 
+          ip_address: ip,
+          city: city
+        }]);
+        
+        console.log(`✅ Visitor logged: ${city} | ${os} | ${browser}`);
+      } catch (e) {
+        console.warn("Gagal mencatat visitor:", e);
+      }
     }
 
     async function fetchLiveStockPrice(ticker) {
