@@ -381,7 +381,7 @@
     </div>
   </div>
 
-  <!-- ✅ FITUR BARU: FLOATING POPUP (IKLAN/PENGUMUMAN) -->
+  <!-- ✅ FLOATING POPUP (IKLAN/PENGUMUMAN) -->
   <div id="floating-popup" class="fixed bottom-6 right-6 z-[100] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transform translate-y-10 opacity-0 pointer-events-none transition-all duration-500 ease-out">
     <div class="relative">
       <!-- Tombol Close -->
@@ -675,7 +675,6 @@
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
-    // ✅ FUNGSI TRADINGVIEW YANG SUDAH DIPERBAIKI (HAPUS IFRAME LAMA)
     function initTradingViewChart() {
       const oldContainer = document.getElementById('tradingview_ihsg');
       if (!oldContainer || !oldContainer.parentNode) return;
@@ -821,7 +820,6 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
-    // ✅ FUNGSI CHART GLOBAL YANG SUDAH DIPERBAIKI (SESUAI STANDAR CHART.JS V4)
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
       if (selectedCountries.length === 0) { alert("Pilih minimal satu negara."); return; }
@@ -1154,15 +1152,22 @@
     const searchInput = document.getElementById('search-news');
     if (searchInput) searchInput.addEventListener('input', (e) => { currentSearchQuery = e.target.value.toLowerCase(); applyNewsFilters(); });
 
-    // ✅ FUNGSI BARU: LOGIKA FLOATING POPUP
-    async function checkFloatingPopup() {
-      // Cek apakah user sudah menutup popup ini di sesi ini
-      if (sessionStorage.getItem('popup_closed') === 'true') return;
+    // ✅ FUNGSI BARU: LOGIKA FLOATING POPUP (VERSI PINTAR)
+    let currentPopupVersion = null;
 
+    async function checkFloatingPopup() {
       try {
         const { data, error } = await supabaseClient.from('popup_settings').select('*').limit(1).single();
         
         if (!error && data && data.is_active) {
+          // Gunakan waktu update sebagai "ID Versi" unik
+          currentPopupVersion = data.updated_at || data.id;
+          
+          // Cek apakah pengunjung sudah menutup VERSI INI sebelumnya
+          if (localStorage.getItem('dismissed_popup_version') === String(currentPopupVersion)) {
+            return; // Jika sudah ditutup, jangan tampilkan
+          }
+
           document.getElementById('popup-title').innerText = data.title || 'Pengumuman';
           document.getElementById('popup-content').innerText = data.content || '';
           
@@ -1180,6 +1185,7 @@
           }
           btn.innerText = data.button_text || 'Lihat Selengkapnya';
 
+          // Tampilkan Popup dengan animasi
           setTimeout(() => {
             const popup = document.getElementById('floating-popup');
             popup.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
@@ -1195,7 +1201,11 @@
       const popup = document.getElementById('floating-popup');
       popup.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
       popup.classList.remove('translate-y-0', 'opacity-100');
-      sessionStorage.setItem('popup_closed', 'true');
+      
+      // Simpan versi popup yang ditutup ke localStorage (bukan sessionStorage)
+      if (currentPopupVersion) {
+        localStorage.setItem('dismissed_popup_version', String(currentPopupVersion));
+      }
     }
 
     window.onload = () => {
