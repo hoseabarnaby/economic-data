@@ -12,12 +12,10 @@
 
   <link rel="icon" href="logo.png">
   
-  <!-- Anti-flash: set dark class sebelum render -->
+  <!-- Anti-flash: default LIGHT mode, dark hanya jika user pilih -->
   <script>
     (function() {
-      const stored = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (stored === 'dark' || (!stored && prefersDark)) {
+      if (localStorage.getItem('theme') === 'dark') {
         document.documentElement.classList.add('dark');
       }
     })();
@@ -449,6 +447,14 @@
         try { fetchGlobalData(); } catch(e) {}
         try { fetchFearGreedIndex(); } catch(e) {}
       }
+    }
+    
+    // Reset ke default (light mode) — panggil via console kalau perlu
+    function resetTheme() {
+      localStorage.removeItem('theme');
+      document.documentElement.classList.remove('dark');
+      updateThemeIcon();
+      updateChartDefaults();
     }
     
     function updateThemeIcon() {
