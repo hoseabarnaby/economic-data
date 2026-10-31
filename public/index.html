@@ -404,7 +404,7 @@
   </div>
 
   <script>
-    // ✅ KONFIGURASI TIDAK LAGI HARDCODE (Mengambil dari API Python Vercel)
+    // ✅ KONFIGURASI (URL & KEY DIAMBIL DARI VERCEL /api/config)
     const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
@@ -549,6 +549,7 @@
       return new Date().toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace('.', ':') + ' WIB';
     }
 
+    // ✅ FUNGSI BARU: logVisitor menggunakan geojs.io (Lebih stabil)
     async function logVisitor() {
       if (!supabaseClient) return;
       try {
@@ -557,34 +558,41 @@
         if (/android/i.test(ua)) device = "Mobile (Android)";
         else if (/iPad|iPhone|iPod/.test(ua)) device = "Mobile (iOS)";
         else if (/mobile/i.test(ua)) device = "Mobile";
+        
         if (/windows|win32/i.test(ua)) os = "Windows";
         else if (/macintosh|mac os x/i.test(ua)) os = "MacOS";
         else if (/android/i.test(ua)) os = "Android";
         else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
         else if (/linux/i.test(ua)) os = "Linux";
+        
         if (/edg/i.test(ua)) browser = "Edge";
         else if (/chrome|crios/i.test(ua)) browser = "Chrome";
         else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
         else if (/safari/i.test(ua)) browser = "Safari";
+
         let ip = "Unknown";
         let city = "Unknown";
+
+        // 1. API Utama: geojs.io (Sangat jarang diblokir AdBlock)
         try {
-          const ipRes = await fetch('https://ipapi.co/json/');
-          if (!ipRes.ok) throw new Error("Limit");
-          const ipData = await ipRes.json();
-          ip = ipData.ip || "Unknown";
-          if (ipData.city && ipData.city !== "null") {
-            city = ipData.region_code ? `${ipData.city}, ${ipData.region_code}` : ipData.city; 
+          const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+          const geoData = await geoRes.json();
+          ip = geoData.ip || "Unknown";
+          if (geoData.city && geoData.city !== "null" && geoData.city !== "") {
+            city = geoData.city;
+            if (geoData.region) city += `, ${geoData.region}`;
           }
         } catch (err) {
+          // 2. Fallback: ipapi.co
           try {
-            const fallbackRes = await fetch('https://ipwho.is/');
-            const fallbackData = await fallbackRes.json();
-            if (fallbackData.success) {
-              ip = fallbackData.ip || "Unknown";
-              city = fallbackData.city ? `${fallbackData.city}, ${fallbackData.region}` : "Unknown";
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ipData = await ipRes.json();
+            ip = ipData.ip || "Unknown";
+            if (ipData.city && ipData.city !== "null") {
+              city = ipData.region_code ? `${ipData.city}, ${ipData.region_code}` : ipData.city; 
             }
           } catch (err2) {
+            // 3. Fallback terakhir: ipify (Hanya IP)
             try {
               const ipifyRes = await fetch('https://api.ipify.org?format=json');
               const ipifyData = await ipifyRes.json();
@@ -592,10 +600,11 @@
             } catch (err3) { }
           }
         }
+
         await supabaseClient.from('visitor_logs').insert([{ 
           device_type: device, os: os, browser: browser, ip_address: ip, city: city
         }]);
-      } catch (e) { }
+      } catch (e) { console.warn("Gagal mencatat visitor:", e); }
     }
 
     async function fetchLiveStockPrice(ticker) {
