@@ -391,6 +391,9 @@
     let currentModalNews = null;
     let allNews = [];
     
+    // ✅ Daftar tab valid untuk URL hash
+    const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
+    
     const svgPlaceholder = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
         <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2563eb" /><stop offset="100%" stop-color="#4f46e5" /></linearGradient><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle fill="#ffffff" opacity="0.1" cx="2" cy="2" r="1.5"></circle></pattern></defs>
@@ -436,12 +439,10 @@
       updateThemeIcon();
       updateChartDefaults();
       
-      // Re-init TradingView jika tab pasar aktif
       const kursTab = document.getElementById('content-kurs');
       if (kursTab && !kursTab.classList.contains('hidden')) {
         initTradingViewChart();
       }
-      // Re-render charts jika tab global aktif
       const globalTab = document.getElementById('content-global');
       if (globalTab && !globalTab.classList.contains('hidden')) {
         try { fetchGlobalData(); } catch(e) {}
@@ -449,7 +450,6 @@
       }
     }
     
-    // Reset ke default (light mode) — panggil via console kalau perlu
     function resetTheme() {
       localStorage.removeItem('theme');
       document.documentElement.classList.remove('dark');
@@ -481,6 +481,8 @@
     });
 
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+    
+    // ✅ FUNGSI switchTab — DIPERBARUI: Simpan tab di URL hash
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const targetTab = document.getElementById(`content-${tabId}`);
@@ -494,6 +496,11 @@
       }
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => { activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active'); });
+      
+      // ✅ Simpan tab aktif di URL hash (supaya refresh tetap di tab ini)
+      if (window.location.hash !== '#' + tabId) {
+        history.replaceState(null, '', '#' + tabId);
+      }
     }
 
     function formatTanggalAman(dateString, withDay = false) {
@@ -1101,6 +1108,12 @@
     window.onload = () => {
       updateThemeIcon();
       
+      // ✅ Restore tab aktif dari URL hash (supaya refresh tetap di halaman yang sama)
+      const hashTab = window.location.hash.replace('#', '');
+      if (hashTab && VALID_TABS.includes(hashTab)) {
+        switchTab(hashTab);
+      }
+      
       try { initOnlineCounter(); } catch(e) {}
       try { logVisitor(); } catch(e) {} 
       
@@ -1130,6 +1143,24 @@
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(() => fetchNews(false), 300000);
     };
+
+    // ✅ Tangani kalau user klik back/forward browser (hash berubah)
+    window.addEventListener('hashchange', () => {
+      const hashTab = window.location.hash.replace('#', '');
+      if (hashTab && VALID_TABS.includes(hashTab)) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        const targetTab = document.getElementById(`content-${hashTab}`);
+        if (targetTab) {
+          targetTab.classList.remove('hidden');
+          if (hashTab === 'ai-chat') targetTab.classList.add('flex');
+          targetTab.classList.remove('animate-fade-in-up');
+          void targetTab.offsetWidth; 
+          targetTab.classList.add('animate-fade-in-up');
+        }
+        document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
+        document.querySelectorAll(`.tab-btn[data-tab="${hashTab}"]`).forEach(b => { b.classList.remove('tab-inactive'); b.classList.add('tab-active'); });
+      }
+    });
 
     function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
