@@ -213,6 +213,7 @@
               <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
             </div>
           </div>
+          <!-- ID Pembungkus TradingView -->
           <div class="relative w-full h-80 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800" id="tradingview_ihsg"></div>
         </div>
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col card-hover transition-colors duration-300">
@@ -413,8 +414,8 @@
       const dark = isDarkMode();
       return {
         text: dark ? '#94a3b8' : '#64748b',
-        grid: dark ? '#1e293b' : '#f1f5f9',
-        border: dark ? '#334155' : '#e2e8f0'
+        grid: dark ? '#1e293b' : '#e2e8f0',
+        border: dark ? '#334155' : '#cbd5e1'
       };
     }
     
@@ -440,7 +441,7 @@
       
       const kursTab = document.getElementById('content-kurs');
       if (kursTab && !kursTab.classList.contains('hidden')) {
-        initTradingViewChart();
+        initTradingViewChart(); // Re-render TradingView saat di tab Pasar
       }
       const globalTab = document.getElementById('content-global');
       if (globalTab && !globalTab.classList.contains('hidden')) {
@@ -652,17 +653,24 @@
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
+    // ✅ PERBAIKAN TRADINGVIEW: Hapus total div lama, buat div baru agar iframe tema berubah total
     function initTradingViewChart() {
-      const container = document.getElementById('tradingview_ihsg');
-      if (!container) return;
+      const oldContainer = document.getElementById('tradingview_ihsg');
+      if (!oldContainer || !oldContainer.parentNode) return;
+
+      // 1. Hapus elemen lama secara total
+      const newContainer = document.createElement('div');
+      newContainer.id = 'tradingview_ihsg';
+      newContainer.className = oldContainer.className;
+      oldContainer.parentNode.replaceChild(newContainer, oldContainer);
 
       const dark = isDarkMode();
-      container.innerHTML = `<div class="flex items-center justify-center h-full text-slate-400 dark:text-slate-500 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat grafik IHSG...</div>`;
+      newContainer.innerHTML = `<div class="flex items-center justify-center h-full text-slate-400 dark:text-slate-500 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat grafik IHSG...</div>`;
 
       const renderWidget = () => {
         if (typeof TradingView === 'undefined' || !TradingView.widget) return false;
         try {
-          container.innerHTML = '';
+          newContainer.innerHTML = '';
           new TradingView.widget({
             "width": "100%", "height": "100%", "symbol": "IDX:COMPOSITE", "interval": "D", "timezone": "Asia/Jakarta",
             "theme": dark ? "dark" : "light", "style": "3", "locale": "id", "hide_side_toolbar": true, "hide_top_toolbar": true, 
@@ -681,7 +689,7 @@
         if (renderWidget()) { clearInterval(interval); }
         else if (attempts >= 20) {
           clearInterval(interval);
-          container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 text-sm p-4 text-center"><i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>Gagal memuat grafik IHSG.<br><span class="text-xs mt-1">Periksa koneksi internet atau nonaktifkan ad-blocker.</span></div>';
+          newContainer.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 text-sm p-4 text-center"><i class="fa-solid fa-triangle-exclamation text-amber-500 text-2xl mb-2"></i>Gagal memuat grafik IHSG.<br><span class="text-xs mt-1">Periksa koneksi internet atau nonaktifkan ad-blocker.</span></div>';
         }
       }, 500);
     }
@@ -792,7 +800,6 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
-    // ✅ PERBAIKAN CHART.JS V4 (Garis Solid Hitam dihilangkan)
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
       if (selectedCountries.length === 0) { alert("Pilih minimal satu negara."); return; }
@@ -839,7 +846,7 @@
         scales: { 
           y: { 
             border: { display: false }, 
-            grid: { color: colors.grid, borderDash: [5, 5] }, 
+            grid: { color: colors.grid }, 
             ticks: { color: colors.text, font: { size: 11 }, callback: function(value) { return value + '%'; } } 
           }, 
           x: { 
