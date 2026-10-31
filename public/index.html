@@ -381,7 +381,7 @@
     </div>
   </div>
 
-  <!-- ✅ FLOATING POPUP (IKLAN/PENGUMUMAN) -->
+  <!-- FLOATING POPUP (IKLAN/PENGUMUMAN) -->
   <div id="floating-popup" class="fixed bottom-6 right-6 z-[100] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transform translate-y-10 opacity-0 pointer-events-none transition-all duration-500 ease-out">
     <div class="relative">
       <!-- Tombol Close -->
@@ -404,9 +404,7 @@
   </div>
 
   <script>
-    // URL & KEY DATABASE BARU KAMU
-    const SUPABASE_URL = 'https://gwkqmhsmlmmzcmqcqpft.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI';
+    // ✅ KONFIGURASI TIDAK LAGI HARDCODE (Mengambil dari API Python Vercel)
     const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
@@ -428,6 +426,25 @@
 
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     
+    // ✅ FUNGSI BARU: AMBIL KONFIGURASI DARI VERCEL BACKEND
+    async function initConfig() {
+      try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        if (config.supabaseUrl && config.supabaseAnonKey) {
+          supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+          return true;
+        } else {
+          console.error("Konfigurasi Supabase tidak ditemukan di server.");
+          return false;
+        }
+      } catch (error) {
+        console.error("Gagal terhubung ke API Config:", error);
+        return false;
+      }
+    }
+
     // ===== DARK MODE HELPERS =====
     function isDarkMode() { return document.documentElement.classList.contains('dark'); }
     
@@ -496,7 +513,6 @@
 
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     
-    // ✅ FUNGSI switchTab
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const targetTab = document.getElementById(`content-${tabId}`);
@@ -669,10 +685,6 @@
         `;
       }
       chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    async function initOnlineCounter() {
-      try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
     function initTradingViewChart() {
@@ -1152,20 +1164,18 @@
     const searchInput = document.getElementById('search-news');
     if (searchInput) searchInput.addEventListener('input', (e) => { currentSearchQuery = e.target.value.toLowerCase(); applyNewsFilters(); });
 
-    // ✅ FUNGSI BARU: LOGIKA FLOATING POPUP (VERSI PINTAR)
     let currentPopupVersion = null;
 
     async function checkFloatingPopup() {
+      if (!supabaseClient) return;
       try {
         const { data, error } = await supabaseClient.from('popup_settings').select('*').limit(1).single();
         
         if (!error && data && data.is_active) {
-          // Gunakan waktu update sebagai "ID Versi" unik
           currentPopupVersion = data.updated_at || data.id;
           
-          // Cek apakah pengunjung sudah menutup VERSI INI sebelumnya
           if (localStorage.getItem('dismissed_popup_version') === String(currentPopupVersion)) {
-            return; // Jika sudah ditutup, jangan tampilkan
+            return;
           }
 
           document.getElementById('popup-title').innerText = data.title || 'Pengumuman';
@@ -1185,12 +1195,11 @@
           }
           btn.innerText = data.button_text || 'Lihat Selengkapnya';
 
-          // Tampilkan Popup dengan animasi
           setTimeout(() => {
             const popup = document.getElementById('floating-popup');
             popup.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
             popup.classList.add('translate-y-0', 'opacity-100');
-          }, 1500); // Muncul setelah 1.5 detik
+          }, 1500);
         }
       } catch (err) {
         console.log("Popup tidak aktif atau gagal dimuat.");
@@ -1202,13 +1211,13 @@
       popup.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
       popup.classList.remove('translate-y-0', 'opacity-100');
       
-      // Simpan versi popup yang ditutup ke localStorage (bukan sessionStorage)
       if (currentPopupVersion) {
         localStorage.setItem('dismissed_popup_version', String(currentPopupVersion));
       }
     }
 
-    window.onload = () => {
+    // ✅ ONLOAD SEKARANG ASYNC: Menunggu Supabase siap sebelum menarik data
+    window.onload = async () => {
       updateThemeIcon();
       
       const hashTab = window.location.hash.replace('#', '');
@@ -1216,13 +1225,13 @@
         switchTab(hashTab);
       }
       
-      try { initOnlineCounter(); } catch(e) {}
-      try { logVisitor(); } catch(e) {} 
-      
+      // 1. Ambil config dari Vercel
+      const isConfigLoaded = await initConfig();
+
+      // 2. Jalankan fungsi yang butuh internet
       try { fetchCurrenciesForTicker(); } catch(e) {}
       try { initTradingViewChart(); } catch(e) {} 
       try { fetchUS10Y(); } catch(e) {}
-      try { fetchNews(); } catch(e) {}
       try { fetchEconomicCalendar(); } catch(e) {} 
       
       try { 
@@ -1241,12 +1250,20 @@
 
       try { fetchGlobalData(); } catch(e) {}
       try { fetchFearGreedIndex(); } catch(e) {} 
-      
-      // ✅ Panggil fungsi Popup di sini
-      try { checkFloatingPopup(); } catch(e) {}
+
+      // 3. Jalankan fungsi yang butuh Supabase (HANYA jika config berhasil dimuat)
+      if (isConfigLoaded) {
+        try { logVisitor(); } catch(e) {} 
+        try { fetchNews(); } catch(e) {}
+        try { checkFloatingPopup(); } catch(e) {}
+      } else {
+        document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Gagal memuat konfigurasi database. Coba refresh halaman.</div>`;
+      }
 
       setInterval(fetchCurrenciesForTicker, 3600000);
-      setInterval(() => fetchNews(false), 300000);
+      if (isConfigLoaded) {
+        setInterval(() => fetchNews(false), 300000);
+      }
     };
 
     window.addEventListener('hashchange', () => {
