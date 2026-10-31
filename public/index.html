@@ -213,7 +213,6 @@
               <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mt-1">Pergerakan indeks saham utama Indonesia.</p>
             </div>
           </div>
-          <!-- ID Pembungkus TradingView -->
           <div class="relative w-full h-80 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800" id="tradingview_ihsg"></div>
         </div>
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col card-hover transition-colors duration-300">
@@ -382,6 +381,28 @@
     </div>
   </div>
 
+  <!-- ✅ FITUR BARU: FLOATING POPUP (IKLAN/PENGUMUMAN) -->
+  <div id="floating-popup" class="fixed bottom-6 right-6 z-[100] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transform translate-y-10 opacity-0 pointer-events-none transition-all duration-500 ease-out">
+    <div class="relative">
+      <!-- Tombol Close -->
+      <button onclick="closePopup()" class="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      
+      <!-- Gambar (Jika ada) -->
+      <div id="popup-img-container" class="w-full h-40 bg-slate-100 dark:bg-slate-800 hidden">
+        <img id="popup-img" src="" class="w-full h-full object-cover">
+      </div>
+
+      <!-- Konten -->
+      <div class="p-5">
+        <h3 id="popup-title" class="font-extrabold text-slate-900 dark:text-white text-lg mb-2 leading-tight">Judul Pengumuman</h3>
+        <p id="popup-content" class="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-4">Deskripsi pengumuman akan muncul di sini.</p>
+        <a id="popup-btn" href="#" target="_blank" class="w-full block text-center px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors text-sm">Lihat Selengkapnya</a>
+      </div>
+    </div>
+  </div>
+
   <script>
     // URL & KEY DATABASE BARU KAMU
     const SUPABASE_URL = 'https://gwkqmhsmlmmzcmqcqpft.supabase.co'; 
@@ -441,20 +462,13 @@
       
       const kursTab = document.getElementById('content-kurs');
       if (kursTab && !kursTab.classList.contains('hidden')) {
-        initTradingViewChart(); // Re-render TradingView saat di tab Pasar
+        initTradingViewChart(); 
       }
       const globalTab = document.getElementById('content-global');
       if (globalTab && !globalTab.classList.contains('hidden')) {
         try { fetchGlobalData(); } catch(e) {}
         try { fetchFearGreedIndex(); } catch(e) {}
       }
-    }
-    
-    function resetTheme() {
-      localStorage.removeItem('theme');
-      document.documentElement.classList.remove('dark');
-      updateThemeIcon();
-      updateChartDefaults();
     }
     
     function updateThemeIcon() {
@@ -497,7 +511,6 @@
       document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
       document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(activeBtn => { activeBtn.classList.remove('tab-inactive'); activeBtn.classList.add('tab-active'); });
       
-      // ✅ Simpan tab aktif di URL hash
       if (window.location.hash !== '#' + tabId) {
         history.replaceState(null, '', '#' + tabId);
       }
@@ -541,23 +554,32 @@
         let city = "Unknown";
         try {
           const ipRes = await fetch('https://ipapi.co/json/');
+          if (!ipRes.ok) throw new Error("Limit");
           const ipData = await ipRes.json();
           ip = ipData.ip || "Unknown";
           if (ipData.city && ipData.city !== "null") {
             city = ipData.region_code ? `${ipData.city}, ${ipData.region_code}` : ipData.city; 
           }
         } catch (err) {
-          const ipRes = await fetch('https://api.ipify.org?format=json');
-          const ipData = await ipRes.json();
-          ip = ipData.ip;
+          try {
+            const fallbackRes = await fetch('https://ipwho.is/');
+            const fallbackData = await fallbackRes.json();
+            if (fallbackData.success) {
+              ip = fallbackData.ip || "Unknown";
+              city = fallbackData.city ? `${fallbackData.city}, ${fallbackData.region}` : "Unknown";
+            }
+          } catch (err2) {
+            try {
+              const ipifyRes = await fetch('https://api.ipify.org?format=json');
+              const ipifyData = await ipifyRes.json();
+              ip = ipifyData.ip;
+            } catch (err3) { }
+          }
         }
         await supabaseClient.from('visitor_logs').insert([{ 
           device_type: device, os: os, browser: browser, ip_address: ip, city: city
         }]);
-        console.log(`✅ Visitor logged: ${city} | ${os} | ${browser}`);
-      } catch (e) {
-        console.warn("Gagal mencatat visitor:", e);
-      }
+      } catch (e) { }
     }
 
     async function fetchLiveStockPrice(ticker) {
@@ -653,12 +675,11 @@
       try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (error) {}
     }
 
-    // ✅ PERBAIKAN TRADINGVIEW: Hapus total div lama, buat div baru agar iframe tema berubah total
+    // ✅ FUNGSI TRADINGVIEW YANG SUDAH DIPERBAIKI (HAPUS IFRAME LAMA)
     function initTradingViewChart() {
       const oldContainer = document.getElementById('tradingview_ihsg');
       if (!oldContainer || !oldContainer.parentNode) return;
 
-      // 1. Hapus elemen lama secara total
       const newContainer = document.createElement('div');
       newContainer.id = 'tradingview_ihsg';
       newContainer.className = oldContainer.className;
@@ -800,6 +821,7 @@
       } catch (error) { container.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-4 text-sm">Jadwal belum tersedia.</div>`; }
     }
 
+    // ✅ FUNGSI CHART GLOBAL YANG SUDAH DIPERBAIKI (SESUAI STANDAR CHART.JS V4)
     async function fetchGlobalData() {
       const selectedCountries = Array.from(document.querySelectorAll('.country-checkbox:checked')).map(cb => cb.value);
       if (selectedCountries.length === 0) { alert("Pilih minimal satu negara."); return; }
@@ -1132,10 +1154,53 @@
     const searchInput = document.getElementById('search-news');
     if (searchInput) searchInput.addEventListener('input', (e) => { currentSearchQuery = e.target.value.toLowerCase(); applyNewsFilters(); });
 
+    // ✅ FUNGSI BARU: LOGIKA FLOATING POPUP
+    async function checkFloatingPopup() {
+      // Cek apakah user sudah menutup popup ini di sesi ini
+      if (sessionStorage.getItem('popup_closed') === 'true') return;
+
+      try {
+        const { data, error } = await supabaseClient.from('popup_settings').select('*').limit(1).single();
+        
+        if (!error && data && data.is_active) {
+          document.getElementById('popup-title').innerText = data.title || 'Pengumuman';
+          document.getElementById('popup-content').innerText = data.content || '';
+          
+          if (data.image_url) {
+            document.getElementById('popup-img').src = data.image_url;
+            document.getElementById('popup-img-container').classList.remove('hidden');
+          }
+          
+          const btn = document.getElementById('popup-btn');
+          if (data.link_url) {
+            btn.href = data.link_url;
+            btn.style.display = 'block';
+          } else {
+            btn.style.display = 'none'; 
+          }
+          btn.innerText = data.button_text || 'Lihat Selengkapnya';
+
+          setTimeout(() => {
+            const popup = document.getElementById('floating-popup');
+            popup.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            popup.classList.add('translate-y-0', 'opacity-100');
+          }, 1500); // Muncul setelah 1.5 detik
+        }
+      } catch (err) {
+        console.log("Popup tidak aktif atau gagal dimuat.");
+      }
+    }
+
+    function closePopup() {
+      const popup = document.getElementById('floating-popup');
+      popup.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+      popup.classList.remove('translate-y-0', 'opacity-100');
+      sessionStorage.setItem('popup_closed', 'true');
+    }
+
     window.onload = () => {
       updateThemeIcon();
       
-      // ✅ Restore tab aktif dari URL hash
       const hashTab = window.location.hash.replace('#', '');
       if (hashTab && VALID_TABS.includes(hashTab)) {
         switchTab(hashTab);
@@ -1167,11 +1232,13 @@
       try { fetchGlobalData(); } catch(e) {}
       try { fetchFearGreedIndex(); } catch(e) {} 
       
+      // ✅ Panggil fungsi Popup di sini
+      try { checkFloatingPopup(); } catch(e) {}
+
       setInterval(fetchCurrenciesForTicker, 3600000);
       setInterval(() => fetchNews(false), 300000);
     };
 
-    // ✅ Tangani kalau user klik back/forward browser
     window.addEventListener('hashchange', () => {
       const hashTab = window.location.hash.replace('#', '');
       if (hashTab && VALID_TABS.includes(hashTab)) {
