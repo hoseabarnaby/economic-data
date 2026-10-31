@@ -19,9 +19,24 @@ app.add_middleware(
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# DATABASE BARU KAMU
-SUPABASE_URL = 'https://gwkqmhsmlmmzcmqcqpft.supabase.co'
-SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI'
+# ==========================================
+# KONFIGURASI SUPABASE (DARI VERCEL ENV VARS)
+# ==========================================
+# Mengambil dari Environment Variables Vercel. 
+# (Angka panjang di bawah adalah fallback jika kamu belum setting di Vercel)
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gwkqmhsmlmmzcmqcqpft.supabase.co")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI")
+
+@app.get("/api/config")
+def get_config():
+    """
+    Endpoint ini dipanggil oleh index.html dan admin.html
+    untuk mendapatkan URL dan Anon Key Supabase secara aman.
+    """
+    return {
+        "supabaseUrl": SUPABASE_URL,
+        "supabaseAnonKey": SUPABASE_ANON_KEY
+    }
 
 @app.get("/api/inflasi")
 def get_inflasi():
