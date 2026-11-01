@@ -556,7 +556,6 @@
 
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     
-    // ✅ FUNGSI switchTab DENGAN OPTIMASI SEO DINAMIS
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const targetTab = document.getElementById(`content-${tabId}`);
@@ -581,7 +580,6 @@
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.setAttribute('content', SEO_DATA[tabId].desc);
         
-        // Update OG Tags
         const ogTitle = document.getElementById('og-title');
         const ogDesc = document.getElementById('og-description');
         if(ogTitle) ogTitle.setAttribute('content', SEO_DATA[tabId].title);
@@ -1037,6 +1035,19 @@
       renderNews(filtered);
     }
 
+    // ✅ FUNGSI BARU: Membersihkan URL Gambar
+    function sanitizeImageUrl(url) {
+      if (!url || url === 'null' || url.trim() === '') return DEFAULT_NEWS_IMAGE;
+      let cleanUrl = url.trim();
+      
+      // Paksa ubah http:// menjadi https:// agar tidak diblokir browser Vercel
+      if (cleanUrl.startsWith('http://')) {
+        cleanUrl = cleanUrl.replace('http://', 'https://');
+      }
+      
+      return cleanUrl;
+    }
+
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -1075,7 +1086,7 @@
           description: item.description || '',
           summary: item.summary || item.description || '',
           source: item.source_name || 'Ekonomi',
-          image: item.image_url || DEFAULT_NEWS_IMAGE,
+          image: sanitizeImageUrl(item.image_url), // <--- UBAH BARIS INI
           category: item.category || 'umum'
         }));
 
