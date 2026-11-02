@@ -39,31 +39,23 @@ COMMON_HEADERS = {
     "Accept": "application/json, application/rss+xml, application/xml, text/xml, */*",
 }
 
-
 def make_slug(url: str) -> str:
     return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
-
 # ==========================================
-# ENDPOINT CONFIG
+# ENDPOINT CONFIG & LAINNYA
 # ==========================================
 @app.get("/api/config")
 def get_config():
     return {"supabaseUrl": SUPABASE_URL, "supabaseAnonKey": SUPABASE_ANON_KEY}
 
-
 @app.get("/api/inflasi")
 def get_inflasi():
     return {"nilai": 2.56, "tahun": 2026}
 
-
-# ==========================================
-# AI CHAT
-# ==========================================
 class ChatRequest(BaseModel):
     message: str
     context: str
-
 
 @app.post("/api/chat")
 def chat_with_deepseek(req: ChatRequest):
@@ -82,18 +74,14 @@ def chat_with_deepseek(req: ChatRequest):
     }
 
     try:
-        response = requests.post(
-            "https://api.deepseek.com/chat/completions",
-            json=payload, headers=headers, timeout=30
-        )
+        response = requests.post("https://api.deepseek.com/chat/completions", json=payload, headers=headers, timeout=30)
         response.raise_for_status()
         return {"reply": response.json()['choices'][0]['message']['content']}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal: {str(e)}")
 
-
 # ==========================================
-# HELPER: FETCH RSS (content lengkap)
+# HELPER: FETCH RSS
 # ==========================================
 def fetch_from_rss(max_per_feed=10):
     articles = []
@@ -103,7 +91,6 @@ def fetch_from_rss(max_per_feed=10):
         try:
             r = requests.get(feed["url"], timeout=5, headers=COMMON_HEADERS)
             if r.status_code != 200:
-                print(f"[RSS] {feed['source']} -> HTTP {r.status_code}")
                 continue
 
             root = ET.fromstring(r.content)
@@ -131,7 +118,6 @@ def fetch_from_rss(max_per_feed=10):
                     if not title or not link:
                         continue
 
-                    # Bersihkan HTML tapi PERTAHANKAN paragraf
                     desc_clean = re.sub(r"<br\s*/?>", "\n", desc, flags=re.IGNORECASE)
                     desc_clean = re.sub(r"</p>", "\n\n", desc_clean, flags=re.IGNORECASE)
                     desc_clean = re.sub(r"<[^>]+>", "", desc_clean)
@@ -140,8 +126,8 @@ def fetch_from_rss(max_per_feed=10):
                     articles.append({
                         "title": title,
                         "url": link,
-                        "content": desc_clean[:5000],       # ← ISI LENGKAP dari RSS
-                        "description": desc_clean[:500],
+                        "content": desc_clean[:5000],
+                        "description": desc_clean[:300],
                         "image": image,
                         "source": feed["source"],
                         "published_at": pubdate or datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -151,12 +137,10 @@ def fetch_from_rss(max_per_feed=10):
         except Exception as e:
             print(f"[RSS] {feed['source']} error: {e}")
             continue
-
     return articles
 
-
 # ==========================================
-# SYNC BERITA
+# SYNC BERITA (AI GENERATE FULL CONTENT)
 # ==========================================
 @app.get("/api/news/sync")
 def sync_news():
@@ -178,7 +162,7 @@ def sync_news():
     if not articles:
         return {"status": "success", "source": "rss", "inserted": 0, "message": "Tidak ada artikel dari RSS."}
 
-    # Batch check duplikat
+    # Cek duplikat
     all_urls = [a["url"] for a in articles]
     existing_urls = set()
     try:
@@ -205,33 +189,57 @@ def sync_news():
     inserted_count = 0
     insert_errors = []
 
-    for article in new_articles[:3]:
+    # Hanya proses maks 2 artikel per sync agar tidak timeout (karena AI generate full text)
+    for article in new_articles[:2]:
         try:
             content = article.get("content") or article.get("description") or ""
 
-            # AI Summary
-            summary = content or article["title"]
+            # Nilai default (fallback jika AI gagal)
+            full_content = content
+            summary = content[:250] + "..." if content else article["title"]
+            
             if content:
+                # AI DIMINTA MENULIS ULANG ARTIKEL LENGKAP & RAPI
+                prompt = f"""Anda adalah jurnalis ekonomi senior. Tugas Anda adalah menulis ulang berita mentah berikut menjadi artikel berita ekonomi yang rapi, terstruktur, dan enak dibaca (minimal 3 paragraf).
+                
+Aturan Penulisan:
+1. Awali paragraf pertama dengan dateline yang sesuai (misal "Jakarta - " atau "Jakarta, CNBC Indonesia - ").
+2. Jangan menambahkan opini, tetap pada fakta. Rapikan tata bahasa yang berantakan dari data mentah.
+3. Setelah artikel selesai, buat ringkasan padat dalam 2 paragraf pendek.
+
+Gunakan format output PERSIS seperti ini:
+=== ISI_LENGKAP ===
+[artikel lengkap di sini]
+
+=== RINGKASAN ===
+[ringkasan 2 paragraf di sini]
+
+Data Mentah:
+Judul: {article['title']}
+Konten: {content[:2500]}
+"""
                 ai_payload = {
                     "model": "deepseek-chat",
-                    "messages": [{
-                        "role": "user",
-                        "content": (
-                            f"Ringkas berita ini dalam 2 paragraf singkat (maks 120 kata):\n"
-                            f"Judul: {article['title']}\nKonten: {content[:2500]}"
-                        ),
-                    }],
-                    "max_tokens": 250,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 1000,
                 }
                 try:
                     ai_res = requests.post(
                         "https://api.deepseek.com/chat/completions",
                         json=ai_payload,
                         headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
-                        timeout=10,
+                        timeout=25, # Timeout AI
                     )
                     ai_res.raise_for_status()
-                    summary = ai_res.json()["choices"][0]["message"]["content"]
+                    reply = ai_res.json()["choices"][0]["message"]["content"]
+                    
+                    if "=== ISI_LENGKAP ===" in reply and "=== RINGKASAN ===" in reply:
+                        parts = reply.split("=== RINGKASAN ===")
+                        full_content = parts[0].replace("=== ISI_LENGKAP ===", "").strip()
+                        summary = parts[1].strip()
+                    else:
+                        full_content = reply
+                        summary = reply[:250]
                 except Exception as ai_err:
                     print(f"[AI] fallback: {ai_err}")
 
@@ -252,7 +260,7 @@ def sync_news():
                 "title": article["title"],
                 "description": article["description"][:300],
                 "summary": summary,
-                "content": content,                  # ← ISI LENGKAP
+                "content": full_content, # ISI LENGKAP YANG SUDAH DIRAPIKAN AI
                 "image_url": article.get("image") or "",
                 "source_name": article.get("source", "Media"),
                 "original_url": article["url"],
@@ -265,9 +273,7 @@ def sync_news():
                 json=data, headers=headers_supabase, timeout=6,
             )
 
-            # Fallback: kalau kolom `content` tidak ada, retry tanpa content
             if insert_res.status_code == 400 and "content" in insert_res.text.lower():
-                print(f"[Supabase] kolom 'content' tidak ada, retry tanpa content")
                 del data["content"]
                 insert_res = requests.post(
                     f"{SUPABASE_URL}/rest/v1/news_archive",
@@ -295,65 +301,6 @@ def sync_news():
         "errors": insert_errors[:3] if insert_errors else [],
         "message": f"{inserted_count} berita baru disimpan." if inserted_count else "Tidak ada berita baru.",
     }
-
-
-# ==========================================
-# 🆕 AMBIL ISI LENGKAP DARI SUMBER (via Jina Reader)
-# ==========================================
-@app.get("/api/news/content")
-def get_full_article(url: str):
-    """
-    Ambil isi artikel lengkap dari URL sumber via Jina AI Reader.
-    Frontend memanggil ini saat user klik "Muat Isi Lengkap".
-    """
-    if not url:
-        raise HTTPException(status_code=400, detail="Parameter 'url' wajib diisi.")
-
-    if not url.startswith(("http://", "https://")):
-        raise HTTPException(status_code=400, detail="URL tidak valid.")
-
-    try:
-        jina_url = f"https://r.jina.ai/{url}"
-        r = requests.get(jina_url, timeout=20, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; EconomicInsightBot/1.0)",
-            "Accept": "text/plain",
-        })
-
-        if r.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"Jina Reader HTTP {r.status_code}")
-
-        text = (r.text or "").strip()
-
-        # Jina format: "Title: ...\n\nURL Source: ...\n\nMarkdown Content:\n\n<isi>"
-        if "Markdown Content:" in text:
-            text = text.split("Markdown Content:", 1)[1].strip()
-
-        # Bersihkan markdown image/link sintaks
-        text = re.sub(r"!\[.*?\]\(.*?\)", "", text)
-        text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
-        text = re.sub(r"\n{3,}", "\n\n", text).strip()
-
-        if len(text) < 100:
-            raise HTTPException(status_code=502, detail="Konten artikel terlalu pendek / gagal diekstrak.")
-
-        max_len = 15000
-        if len(text) > max_len:
-            text = text[:max_len] + "\n\n[... artikel dipotong karena batas panjang ...]"
-
-        return {
-            "status": "success",
-            "url": url,
-            "content": text,
-            "length": len(text),
-        }
-
-    except requests.exceptions.Timeout:
-        raise HTTPException(status_code=504, detail="Timeout saat mengambil artikel.")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal: {type(e).__name__}: {str(e)[:200]}")
-
 
 # ==========================================
 # PREVIEW SHARE
@@ -398,7 +345,6 @@ def preview_link(id: str = ""):
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
         return HTMLResponse(content=f"<h1>Error: {str(e)}</h1>", status_code=500)
-
 
 @app.get("/api")
 def read_root():
