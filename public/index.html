@@ -325,6 +325,8 @@
         <div>
           <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Berita Ekonomi Terbaru</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Informasi terkini dan ringkasan eksklusif dari AI. <span id="news-timestamp" class="text-xs text-blue-500 dark:text-blue-400 ml-2 block sm:inline"></span></p>
+          <!-- INFO TOTAL BERITA -->
+          <span id="news-count-info" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1 block"></span>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
@@ -662,13 +664,13 @@
     }
 
     function updateSEOWebArticle(news) {
-        document.title = `${news.title} - Economic Insight`;
+        document.title = `${news.title || 'Berita'} - Economic Insight`;
         
         const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute('content', news.description || news.title);
+        if (metaDesc) metaDesc.setAttribute('content', news.description || news.title || 'Baca berita terbaru');
         
-        document.getElementById('og-title').setAttribute('content', news.title);
-        document.getElementById('og-description').setAttribute('content', news.description || news.title);
+        document.getElementById('og-title').setAttribute('content', news.title || 'Economic Insight');
+        document.getElementById('og-description').setAttribute('content', news.description || news.title || 'Baca berita terbaru');
         document.getElementById('og-image').setAttribute('content', news.image || DEFAULT_NEWS_IMAGE);
 
         let articleSchema = document.getElementById('article-schema');
@@ -682,10 +684,10 @@
         const schemaData = {
             "@context": "https://schema.org",
             "@type": "NewsArticle",
-            "headline": news.title,
-            "image": [news.image],
-            "datePublished": news.published_at,
-            "description": news.description,
+            "headline": news.title || 'Berita',
+            "image": [news.image || DEFAULT_NEWS_IMAGE],
+            "datePublished": news.published_at || new Date().toISOString(),
+            "description": news.description || '',
             "author": {
                 "@type": "Organization",
                 "name": news.source || "Economic Insight"
@@ -710,7 +712,6 @@
     function formatTanggalAman(dateString, withDay = false) {
       if (!dateString) return '-';
       try {
-        // Handle jika dateString berupa object Date dari Supabase
         const cleanDateStr = typeof dateString === 'string' ? dateString.replace(' ', 'T') : dateString;
         const dateObj = new Date(cleanDateStr);
         if (isNaN(dateObj.getTime())) return String(dateString);
@@ -1160,6 +1161,7 @@
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
       const iconRefresh = document.getElementById('icon-refresh');
+      const countInfo = document.getElementById('news-count-info');
 
       if (manualRefresh && btnRefresh && iconRefresh) {
         btnRefresh.classList.add('opacity-50', 'cursor-wait');
@@ -1178,11 +1180,12 @@
 
         if (!supabaseClient) throw new Error('Supabase belum siap.');
 
+        // ✅ TANPA BATAS (Limit dinaikkan sangat tinggi untuk menarik semua data lama & baru)
         const { data, error } = await supabaseClient
           .from('news_archive')
           .select('*')
-          .order('published_at', { ascending: false })
-          .limit(50);
+          .order('id', { ascending: false }) // Urutkan berdasarkan ID terbaru agar berita baru selalu di atas
+          .limit(2000); 
 
         if (error) throw error;
 
@@ -1197,20 +1200,30 @@
           return;
         }
 
+        // ✅ MAPPING AMAN
         const newNews = data.map(item => ({
-          title: item.title,
-          url: item.original_url,
+          id: item.id,
+          title: String(item.title || 'Tanpa Judul'),
+          url: String(item.original_url || '#'),
           published_at: item.published_at,
-          description: item.description || '',
-          summary: item.summary || item.description || '',
-          content: item.content || '',
-          source: item.source_name || 'Ekonomi',
+          description: String(item.description || ''),
+          summary: String(item.summary || item.description || ''),
+          content: String(item.content || ''),
+          source: String(item.source_name || 'Ekonomi'),
           image: item.image_url || DEFAULT_NEWS_IMAGE,
-          category: item.category || 'umum',
-          views: parseInt(item.views, 10) || 0 // ✅ Parse ke angka
+          category: String(item.category || 'umum'),
+          views: parseInt(item.views, 10) || 0
         }));
 
-        const hash = newNews.map(n => n.url + '|' + n.published_at).join('::');
+        // ✅ SORTING TAMBAHAN: Jika tanggal valid, urutkan berdasarkan tanggal. Jika tidak, biarkan urutan ID.
+        newNews.sort((a, b) => {
+            const dateA = new Date(a.published_at).getTime() || 0;
+            const dateB = new Date(b.published_at).getTime() || 0;
+            if (dateA !== dateB) return dateB - dateA;
+            return b.id - a.id; 
+        });
+
+        const hash = newNews.map(n => n.id + '|' + n.published_at).join('::');
         if (hash === lastRenderedNewsHash && allNews.length > 0) {
           document.getElementById('news-timestamp').innerHTML =
             `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
@@ -1222,6 +1235,11 @@
 
         document.getElementById('news-timestamp').innerHTML =
           `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
+          
+        // ✅ TAMPILKAN INFO JUMLAH BERITA
+        if (countInfo) {
+            countInfo.innerHTML = `Menampilkan <strong>${allNews.length}</strong> berita dari database.`;
+        }
 
         applyNewsFilters();
         renderKebijakan(allNews);
@@ -1273,7 +1291,7 @@
       container.innerHTML = newsArray.map((item) => `
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover flex flex-col h-full group relative overflow-hidden transition-colors duration-300">
           <div class="overflow-hidden h-48 rounded-t-2xl cursor-pointer" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">
-            <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="${item.title.replace(/"/g, '&quot;')}">
+            <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="${(item.title || '').replace(/"/g, '&quot;')}">
           </div>
           <div class="p-5 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-3">
@@ -1344,7 +1362,6 @@
       if (!supabaseClient) return;
       
       try {
-        // Gunakan encodeURIComponent sebagai pengganti btoa agar aman dari karakter aneh
         const safeKey = 'viewed_art_' + encodeURIComponent(url).substring(0, 100);
         if (localStorage.getItem(safeKey)) return; 
 
@@ -1352,7 +1369,7 @@
           .from('news_archive')
           .select('views')
           .eq('original_url', url)
-          .maybeSingle(); // Gunakan maybeSingle untuk mencegah error jika berita tak ditemukan
+          .maybeSingle();
 
         if (error) throw error;
 
@@ -1398,7 +1415,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Isi konten
-      document.getElementById('detail-title').innerText = news.title;
+      document.getElementById('detail-title').innerText = news.title || 'Tanpa Judul';
       document.getElementById('detail-date').innerText = formatTanggalAman(news.published_at, true);
       document.getElementById('detail-source').innerText = news.source || 'Economic Insight';
       document.getElementById('detail-link').href = news.url || '#';
@@ -1503,7 +1520,7 @@
       const originalHtml = btn.innerHTML;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
       
-      const title = currentModalNews.title;
+      const title = currentModalNews.title || 'Berita Ekonomi';
       const desc = currentModalNews.description || 'Baca berita selengkapnya.';
       
       let img = currentModalNews.image;
