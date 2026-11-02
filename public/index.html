@@ -439,9 +439,8 @@
     let currentModalNews = null;
     let allNews = [];
     
-    // ✅ STATE MODAL VIEW (full vs summary) + Cache artikel
+    // ✅ STATE MODAL VIEW (full vs summary)
     let currentModalView = 'full';
-    let articleContentCache = new Map();
     
     const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
     const NEWS_SYNC_COOLDOWN_MS = 3 * 60 * 1000;
@@ -1210,14 +1209,12 @@
       document.getElementById('modal-link').href = news.url || '#';
       document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
 
-      let fullContent = news.content || articleContentCache.get(news.url) || '';
+      let fullContent = news.content || '';
       if (!fullContent) {
         fullContent = news.description || '';
       }
-      const alreadyLoadedFull = articleContentCache.has(news.url);
-      news._fullLoaded = alreadyLoadedFull;
 
-      renderModalContent(fullContent, news.summary || '', alreadyLoadedFull);
+      renderModalContent(fullContent, news.summary || '');
 
       const modal = document.getElementById('news-modal');
       modal.classList.remove('hidden');
@@ -1227,7 +1224,7 @@
       modalBox.classList.add('animate-fade-in-up');
     }
 
-    function renderModalContent(fullContent, summary, alreadyLoadedFull = false) {
+    function renderModalContent(fullContent, summary) {
       const descEl = document.getElementById('modal-desc');
       const btnFull = document.getElementById('btn-view-full');
       const btnSummary = document.getElementById('btn-view-summary');
@@ -1239,264 +1236,4 @@
         btnFull.className = activeClass;
         btnSummary.className = inactiveClass;
       } else {
-        btnFull.className = inactiveClass;
-        btnSummary.className = activeClass;
-      }
-
-      let content;
-      if (currentModalView === 'summary') {
-        content = summary || fullContent || 'Tidak ada ringkasan.';
-      } else {
-        content = fullContent || 'Isi berita belum tersedia. Klik "Muat Isi Lengkap" di bawah.';
-      }
-
-      const paragraphs = content
-        .split(/\n\n+/)
-        .filter(p => p.trim())
-        .map(p => `<p class="mb-3">${p.replace(/\n/g, '<br>')}</p>`)
-        .join('');
-
-      let loadMoreBtn = '';
-      if (currentModalView === 'full' && !alreadyLoadedFull) {
-        loadMoreBtn = `
-          <button onclick="loadFullArticle()" class="mt-4 w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-sm transition-all">
-            <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Muat Isi Lengkap dari Sumber
-          </button>`;
-      }
-
-      descEl.innerHTML = paragraphs + loadMoreBtn;
-    }
-
-    function switchModalView(mode) {
-      if (!currentModalNews) return;
-      currentModalView = mode;
-      const fullContent = currentModalNews.content || articleContentCache.get(currentModalNews.url) || currentModalNews.description || '';
-      renderModalContent(fullContent, currentModalNews.summary || '', currentModalNews._fullLoaded || articleContentCache.has(currentModalNews.url));
-    }
-
-    async function loadFullArticle() {
-      if (!currentModalNews || !currentModalNews.url) return;
-
-      const descEl = document.getElementById('modal-desc');
-      const originalHtml = descEl.innerHTML;
-      descEl.innerHTML = `<div class="text-center py-8 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Mengambil isi lengkap dari sumber...</div>`;
-
-      try {
-        const res = await fetch(`/api/news/content?url=${encodeURIComponent(currentModalNews.url)}`);
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.detail || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-
-        if (!data.content || data.content.length < 100) {
-          throw new Error('Konten terlalu pendek / gagal diekstrak.');
-        }
-
-        currentModalNews.content = data.content;
-        currentModalNews._fullLoaded = true;
-        articleContentCache.set(currentModalNews.url, data.content);
-
-        renderModalContent(data.content, currentModalNews.summary || '', true);
-
-      } catch (err) {
-        descEl.innerHTML = originalHtml +
-          `<div class="mt-4 p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 rounded-lg text-xs font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Gagal memuat: ${err.message}</div>`;
-      }
-    }
-
-    function closeNewsModal(event) {
-      if (event && event.target.id !== 'news-modal') return;
-      document.getElementById('news-modal').classList.add('hidden');
-    }
-
-    async function shareCurrentNews(event) {
-      if (!currentModalNews) return;
-      
-      const btn = event.currentTarget;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses...`;
-      
-      const title = currentModalNews.title;
-      const desc = currentModalNews.description || 'Baca berita selengkapnya.';
-      
-      let img = currentModalNews.image;
-      if (!img || img.startsWith('data:')) img = 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight';
-      if (img.startsWith('http://')) img = img.replace('http://', 'https://');
-      
-      const originalUrl = currentModalNews.url;
-      const shortId = Math.random().toString(36).substring(2, 8);
-      
-      try {
-        const { error } = await supabaseClient
-          .from('share_links')
-          .insert([{ 
-            id: shortId,
-            title: title, 
-            description: desc, 
-            image_url: img, 
-            original_url: originalUrl 
-          }]);
-
-        if (error) throw error;
-
-        const shortUrl = `${window.location.origin}/api/preview?id=${shortId}`;
-        
-        navigator.clipboard.writeText(shortUrl).then(() => {
-          btn.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Link Tersalin!`;
-          setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
-        });
-        
-      } catch (err) {
-        console.error("Gagal membuat link pendek:", err);
-        alert("Gagal membuat link share. Silakan coba lagi.");
-        btn.innerHTML = originalHtml;
-      }
-    }
-
-    const searchInput = document.getElementById('search-news');
-    if (searchInput) searchInput.addEventListener('input', (e) => { currentSearchQuery = e.target.value.toLowerCase(); applyNewsFilters(); });
-
-    let currentPopupVersion = null;
-
-    async function checkFloatingPopup() {
-      if (!supabaseClient) return;
-      try {
-        const { data, error } = await supabaseClient.from('popup_settings').select('*').limit(1).single();
-        
-        if (!error && data && data.is_active) {
-          currentPopupVersion = data.updated_at || data.id;
-          
-          if (localStorage.getItem('dismissed_popup_version') === String(currentPopupVersion)) {
-            return;
-          }
-
-          document.getElementById('popup-title').innerText = data.title || 'Pengumuman';
-          document.getElementById('popup-content').innerText = data.content || '';
-          
-          if (data.image_url) {
-            document.getElementById('popup-img').src = data.image_url;
-            document.getElementById('popup-img-container').classList.remove('hidden');
-          }
-          
-          const btn = document.getElementById('popup-btn');
-          if (data.link_url) {
-            btn.href = data.link_url;
-            btn.style.display = 'block';
-          } else {
-            btn.style.display = 'none'; 
-          }
-          btn.innerText = data.button_text || 'Lihat Selengkapnya';
-
-          setTimeout(() => {
-            const popup = document.getElementById('floating-popup');
-            popup.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
-            popup.classList.add('translate-y-0', 'opacity-100');
-          }, 1500);
-        }
-      } catch (err) {
-        console.log("Popup tidak aktif atau gagal dimuat.");
-      }
-    }
-
-    function closePopup() {
-      const popup = document.getElementById('floating-popup');
-      popup.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
-      popup.classList.remove('translate-y-0', 'opacity-100');
-      
-      if (currentPopupVersion) {
-        localStorage.setItem('dismissed_popup_version', String(currentPopupVersion));
-      }
-    }
-
-    window.onload = async () => {
-      updateThemeIcon();
-      
-      const hashTab = window.location.hash.replace('#', '');
-      if (hashTab && VALID_TABS.includes(hashTab)) {
-        switchTab(hashTab);
-      }
-      
-      const isConfigLoaded = await initConfig();
-
-      try { fetchCurrenciesForTicker(); } catch(e) {}
-      try { initTradingViewChart(); } catch(e) {} 
-      try { fetchUS10Y(); } catch(e) {}
-      try { fetchEconomicCalendar(); } catch(e) {} 
-      
-      try { 
-        fetch('/api/inflasi')
-          .then(r => r.json())
-          .then(data => {
-             document.getElementById('inflasi-terakhir').innerText = data.nilai + '%';
-             document.getElementById('source-inflasi').innerText = `Sumber: BPS`;
-             document.getElementById('update-inflasi').innerText = `Rilis: ${data.tahun}`;
-          })
-          .catch(() => {
-             document.getElementById('source-inflasi').innerText = `Sumber: World Bank`;
-             document.getElementById('update-inflasi').innerText = `Data Tahunan`;
-          });
-      } catch(e) {}
-
-      try { fetchGlobalData(); } catch(e) {}
-      try { fetchFearGreedIndex(); } catch(e) {} 
-
-      if (isConfigLoaded) {
-        try { logVisitor(); } catch(e) {} 
-        autoSyncAndLoadNews().catch(err => console.error('Init news:', err));
-        try { checkFloatingPopup(); } catch(e) {}
-      } else {
-        document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Gagal memuat konfigurasi database. Coba refresh halaman.</div>`;
-      }
-
-      setInterval(fetchCurrenciesForTicker, 3600000);
-      if (isConfigLoaded) {
-        setInterval(() => fetchNews(false).catch(e => console.warn('Auto refresh news gagal:', e)), 300000);
-      }
-    };
-
-    window.addEventListener('hashchange', () => {
-      const hashTab = window.location.hash.replace('#', '');
-      if (hashTab && VALID_TABS.includes(hashTab)) {
-        switchTab(hashTab);
-      }
-    });
-
-    function checkSharedUrl() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sharedUrl = urlParams.get('news_url');
-      const sharedTitle = urlParams.get('title');
-      const sharedDesc = urlParams.get('desc');
-      const sharedImg = urlParams.get('img');
-
-      if (!sharedUrl) return;
-
-      switchTab('berita');
-      
-      if (sharedTitle) {
-          const fallbackNews = {
-              title: sharedTitle,
-              description: sharedDesc || 'Baca berita selengkapnya...',
-              summary: sharedDesc || '',
-              content: sharedDesc || '',
-              image: sharedImg || DEFAULT_NEWS_IMAGE,
-              url: sharedUrl,
-              source: 'Economic Insight',
-              published_at: new Date().toISOString()
-          };
-          openNewsModalByObject(fallbackNews);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          return;
-      }
-
-      const sharedNews = allNews.find(n => n.url === sharedUrl);
-      if (sharedNews) {
-          openNewsModalByObject(sharedNews);
-          window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    try { checkSharedUrl(); } catch(e) { console.error(e); }
-  </script>
-</body>
-</html>
+        btnFull.class
