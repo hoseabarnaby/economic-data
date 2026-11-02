@@ -1037,20 +1037,62 @@
       renderNews(filtered);
     }
 
+    // ✅ HELPER: TOAST NOTIFIKASI
+    function showNewsToast(msg, color = 'slate') {
+      const existing = document.getElementById('news-toast');
+      if (existing) existing.remove();
+      
+      const el = document.createElement('div');
+      el.id = 'news-toast';
+      el.className = 'fixed bottom-24 right-6 z-[200] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold text-white transition-all duration-300 translate-y-4 opacity-0';
+      el.style.backgroundColor = ({
+        emerald: '#059669', amber: '#d97706', rose: '#e11d48', slate: '#334155'
+      })[color] || '#334155';
+      el.innerHTML = msg;
+      document.body.appendChild(el);
+      
+      requestAnimationFrame(() => {
+        el.classList.remove('translate-y-4', 'opacity-0');
+      });
+      
+      setTimeout(() => {
+        el.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => el.remove(), 400);
+      }, 4000);
+    }
+
+    // ✅ FUNGSI fetchNews BARU (dengan error handling lengkap)
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
       const iconRefresh = document.getElementById('icon-refresh');
-      
+
       if (manualRefresh && btnRefresh && iconRefresh) {
-        btnRefresh.classList.add('opacity-50');
+        btnRefresh.classList.add('opacity-50', 'cursor-wait');
         iconRefresh.classList.add('fa-spin');
       }
 
       try {
+        // ---- 1. SYNC DENGAN PROPER ERROR CHECK ----
         if (manualRefresh) {
-          await fetch('/api/news/sync').catch(e => console.log('Sync pending...'));
+          try {
+            const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
+            if (!syncRes.ok) {
+              const txt = await syncRes.text().catch(() => '');
+              console.warn('Sync gagal:', syncRes.status, txt.slice(0, 200));
+              showNewsToast(
+                `⚠️ Sync server gagal (HTTP ${syncRes.status}). Menampilkan data lama.`,
+                'amber'
+              );
+            }
+          } catch (e) {
+            console.warn('Sync network error:', e);
+            showNewsToast('❌ Tidak dapat terhubung ke server sync. Menampilkan data lama.', 'rose');
+          }
         }
+
+        // ---- 2. QUERY SUPABASE ----
+        if (!supabaseClient) throw new Error('Supabase belum siap.');
 
         const { data, error } = await supabaseClient
           .from('news_archive')
@@ -1059,14 +1101,20 @@
           .limit(50);
 
         if (error) throw error;
-        
+
         if (!data || data.length === 0) {
-          gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
-            <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 dark:text-slate-600 block"></i>
-            Belum ada berita. Klik tombol refresh untuk mengambil berita terbaru.
-          </div>`;
+          gridContainer.innerHTML = `
+            <div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 dark:text-slate-600 block"></i>
+              Belum ada berita di database.
+              ${manualRefresh ? '<br><span class="text-xs">Sync berjalan tapi belum ada data baru masuk.</span>' : ''}
+            </div>`;
           return;
         }
+
+        // ---- 3. DETEKSI BERITA BARU ----
+        const prevIds = new Set(allNews.map(n => n.url));
+        const newCount = data.filter(d => !prevIds.has(d.original_url)).length;
 
         allNews = data.map(item => ({
           title: item.title,
@@ -1079,16 +1127,31 @@
           category: item.category || 'umum'
         }));
 
-        document.getElementById('news-timestamp').innerHTML = `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
+        document.getElementById('news-timestamp').innerHTML =
+          `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
+
         applyNewsFilters();
         renderKebijakan(allNews);
 
+        // ---- 4. FEEDBACK KE USER ----
+        if (manualRefresh) {
+          if (newCount > 0) {
+            showNewsToast(`✅ ${newCount} berita baru dimuat.`, 'emerald');
+          } else {
+            showNewsToast('ℹ️ Sync selesai — belum ada berita baru dari sumber eksternal.', 'slate');
+          }
+        }
+
       } catch (err) {
-        console.error(err);
-        gridContainer.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">Gagal memuat berita.</div>`;
+        console.error('fetchNews error:', err);
+        gridContainer.innerHTML = `
+          <div class="col-span-full text-center py-10 text-rose-500 dark:text-rose-400">
+            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i>
+            Gagal memuat berita: ${err.message || 'Unknown error'}
+          </div>`;
       } finally {
         if (btnRefresh && iconRefresh) {
-          btnRefresh.classList.remove('opacity-50');
+          btnRefresh.classList.remove('opacity-50', 'cursor-wait');
           iconRefresh.classList.remove('fa-spin');
         }
       }
@@ -1311,7 +1374,8 @@
 
       if (isConfigLoaded) {
         try { logVisitor(); } catch(e) {} 
-        try { fetchNews(); } catch(e) {}
+        // ✅ FIX: fetchNews async, jadi pakai .catch bukan try/catch
+        fetchNews().catch(err => console.error('Init fetchNews:', err));
         try { checkFloatingPopup(); } catch(e) {}
       } else {
         document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Gagal memuat konfigurasi database. Coba refresh halaman.</div>`;
@@ -1319,7 +1383,7 @@
 
       setInterval(fetchCurrenciesForTicker, 3600000);
       if (isConfigLoaded) {
-        setInterval(() => fetchNews(false), 300000);
+        setInterval(() => fetchNews(false).catch(e => console.warn('Auto refresh news gagal:', e)), 300000);
       }
     };
 
