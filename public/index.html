@@ -138,12 +138,28 @@
     .dark .ticker-item { border-right-color: #1e293b; }
     @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     
-    /* Article Typography */
-    .article-content p { margin-bottom: 1.5rem; line-height: 1.9; color: #334155; font-size: 1.125rem; text-align: justify; }
+    /* Article Typography (Mobile & Desktop Optimization) */
+    .article-content p { 
+        margin-bottom: 1.25rem; 
+        line-height: 1.7; 
+        color: #334155; 
+        font-size: 1rem; /* 16px di Mobile */
+        text-align: left;
+    }
     .dark .article-content p { color: #cbd5e1; }
-    .article-content h1, .article-content h2, .article-content h3 { font-weight: 800; color: #0f172a; margin-top: 2rem; margin-bottom: 1rem; }
+    
+    @media (min-width: 768px) {
+        .article-content p { 
+            margin-bottom: 1.5rem; 
+            line-height: 1.9; 
+            font-size: 1.125rem; /* 18px di Desktop */
+            text-align: justify; 
+        }
+    }
+    
+    .article-content h1, .article-content h2, .article-content h3 { font-weight: 800; color: #0f172a; margin-top: 1.5rem; margin-bottom: 1rem; }
     .dark .article-content h1, .dark .article-content h2, .dark .article-content h3 { color: #f8fafc; }
-    .article-content img { border-radius: 1rem; margin: 2rem 0; width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .article-content img { border-radius: 0.5rem; margin: 1.5rem 0; width: 100%; height: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
     .article-content a { color: #2563eb; text-decoration: underline; }
     .dark .article-content a { color: #60a5fa; }
   </style>
@@ -151,7 +167,7 @@
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-blue-200 dark:selection:bg-blue-800 selection:text-blue-900 dark:selection:text-blue-100 overflow-x-hidden transition-colors duration-300">
 
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90 dark:bg-slate-900/90 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-20">
         
         <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('kurs')">
@@ -190,7 +206,7 @@
     </div>
   </header>
 
-  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+  <main class="flex-grow max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
     
     <!-- TAB 1: KURS & PASAR -->
     <div id="content-kurs" class="tab-content space-y-6 block animate-fade-in-up">
@@ -374,57 +390,58 @@
 
     <!-- PAGE: FULL NEWS DETAIL (Tampilan Profesional dengan Sidebar) -->
     <div id="content-news-detail" class="hidden animate-fade-in-up w-full">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Grid/Flex Layout: Mobile = Stack ke Bawah, Desktop = Kiri-Kanan -->
+      <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8">
         
         <!-- Kolom Kiri: Artikel Utama -->
-        <div class="lg:col-span-8">
-          <article class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-10">
+        <div class="lg:col-span-8 w-full">
+          <article class="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6 sm:mb-10">
             <!-- Thumbnail -->
-            <div id="detail-image-container" class="w-full h-64 sm:h-96 bg-slate-100 dark:bg-slate-800 relative"></div>
+            <div id="detail-image-container" class="w-full h-48 sm:h-96 bg-slate-100 dark:bg-slate-800 relative"></div>
             
-            <div class="p-6 sm:p-10">
+            <div class="p-4 sm:p-10">
               <!-- Meta Data -->
-              <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 mb-4">
-                <span id="detail-category" class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-md border border-blue-100 dark:border-blue-900 uppercase tracking-wide">KATEGORI</span>
-                <span class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="detail-date">Tanggal</span></span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="detail-source">Sumber</span></span>
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 sm:mb-4">
+                <span id="detail-category" class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-blue-100 dark:border-blue-900 uppercase tracking-wide">KATEGORI</span>
+                <span class="flex items-center gap-1 sm:gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="detail-date">Tanggal</span></span>
+                <span class="flex items-center gap-1 sm:gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="detail-source">Sumber</span></span>
               </div>
 
               <!-- Judul -->
-              <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight mb-8" id="detail-title">Judul Berita</h1>
+              <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight mb-4 sm:mb-8" id="detail-title">Judul Berita</h1>
               
               <!-- Ringkasan AI -->
-              <div id="detail-summary-box" class="bg-blue-50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700 p-5 rounded-xl mb-8 hidden">
-                <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Ringkasan AI</div>
-                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic" id="detail-summary-text"></p>
+              <div id="detail-summary-box" class="bg-blue-50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700 p-4 sm:p-5 rounded-lg sm:rounded-xl mb-6 sm:mb-8 hidden">
+                <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Ringkasan AI</div>
+                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic" id="detail-summary-text"></p>
               </div>
 
               <!-- Konten Utama -->
               <div class="article-content" id="detail-content">
                 <div class="text-center py-10 text-slate-500 dark:text-slate-400">
-                  <i class="fa-solid fa-spinner fa-spin mr-2 text-2xl mb-2"></i>
-                  <p>Memuat isi lengkap berita...</p>
+                  <i class="fa-solid fa-spinner fa-spin mr-2 text-xl sm:text-2xl mb-2"></i>
+                  <p class="text-sm">Memuat isi lengkap berita...</p>
                 </div>
               </div>
             </div>
 
             <!-- Footer Action (Share & Source) -->
-            <div class="p-6 sm:p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <button onclick="shareCurrentNews(event)" id="detail-share-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-sm">
+            <div class="p-4 sm:p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+              <button onclick="shareCurrentNews(event)" id="detail-share-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-sm">
                 <i class="fa-solid fa-share-nodes text-blue-500"></i> Bagikan Berita
               </button>
-              <a href="#" id="detail-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20">
+              <a href="#" id="detail-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20">
                 Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
               </a>
             </div>
           </article>
         </div>
 
-        <!-- Kolom Kanan: Sidebar Trending -->
-        <aside class="lg:col-span-4 hidden lg:block">
-          <div class="sticky top-28">
-            <h3 class="text-lg font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 border-b-2 border-blue-600 pb-2">Trending Now</h3>
-            <div id="trending-list" class="space-y-5">
+        <!-- Kolom Kanan: Sidebar Trending (Tampil di Mobile Bawah, Desktop Kanan) -->
+        <aside class="lg:col-span-4 w-full">
+          <div class="sticky top-28 bg-white dark:bg-slate-900 sm:bg-transparent sm:dark:bg-transparent p-4 sm:p-0 rounded-xl sm:rounded-none border border-slate-200 sm:border-0 dark:border-slate-800 shadow-sm sm:shadow-none">
+            <h3 class="text-base sm:text-lg font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-3 sm:mb-4 border-b-2 border-blue-600 pb-2">Trending Now</h3>
+            <div id="trending-list" class="space-y-4">
               <!-- Diisi via Javascript -->
             </div>
           </div>
@@ -479,7 +496,6 @@
     const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
     const NEWS_SYNC_COOLDOWN_MS = 3 * 60 * 1000;
     
-    // Simpan SEO Default untuk di-reset nanti
     const DEFAULT_SEO = {
         title: 'Economic Insight - Harga USD, Harga Emas, Berita Ekonomi & AI Analisis',
         desc: 'Pantau harga USD/IDR, harga emas hari ini, berita ekonomi terbaru, kebijakan fiskal, dan analisis keuangan AI secara real-time di Economic Insight.',
@@ -612,7 +628,6 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('content-news-detail').classList.add('hidden');
 
-      // Reset SEO to Default when leaving an article
       resetSEOWebArticle();
 
       const targetTab = document.getElementById(`content-${tabId}`);
@@ -643,7 +658,6 @@
       }
     }
 
-    // ✅ SEO UNTUK ARTIKEL
     function updateSEOWebArticle(news) {
         document.title = `${news.title} - Economic Insight`;
         
@@ -654,7 +668,6 @@
         document.getElementById('og-description').setAttribute('content', news.description || news.title);
         document.getElementById('og-image').setAttribute('content', news.image || DEFAULT_NEWS_IMAGE);
 
-        // JSON-LD
         let articleSchema = document.getElementById('article-schema');
         if (!articleSchema) {
             articleSchema = document.createElement('script');
@@ -1359,8 +1372,8 @@
       const contentEl = document.getElementById('detail-content');
       contentEl.innerHTML = `
         <div class="text-center py-10 text-slate-500 dark:text-slate-400">
-          <i class="fa-solid fa-spinner fa-spin mr-2 text-2xl mb-2"></i>
-          <p>Memuat isi lengkap berita...</p>
+          <i class="fa-solid fa-spinner fa-spin mr-2 text-xl sm:text-2xl mb-2"></i>
+          <p class="text-sm">Memuat isi lengkap berita...</p>
         </div>`;
 
       // Render Sidebar Trending
@@ -1376,14 +1389,14 @@
       const trending = allNews.filter(n => n.url !== currentUrl).slice(0, 4);
       
       container.innerHTML = trending.map((item, index) => `
-        <div class="flex gap-4 group cursor-pointer" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">
-          <div class="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800">
+        <div class="flex gap-3 sm:gap-4 group cursor-pointer items-center" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+          <div class="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800">
              <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';">
-             <div class="absolute bottom-0 left-0 bg-blue-600 text-white font-black px-2.5 py-1 text-xs rounded-tr-lg z-10 shadow-md">${index + 1}</div>
+             <div class="absolute bottom-0 left-0 bg-blue-600 text-white font-black px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs rounded-tr-lg z-10 shadow-md">${index + 1}</div>
           </div>
           <div class="flex flex-col justify-center">
-             <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">${item.category || 'BERITA'}</span>
-             <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 leading-snug line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${item.title}</h4>
+             <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 hidden sm:block">${item.category || 'BERITA'}</span>
+             <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 leading-snug line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${item.title}</h4>
           </div>
         </div>
       `).join('');
