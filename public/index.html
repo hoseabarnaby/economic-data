@@ -406,6 +406,8 @@
                 <span id="detail-category" class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-blue-100 dark:border-blue-900 uppercase tracking-wide">KATEGORI</span>
                 <span class="flex items-center gap-1 sm:gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="detail-date">Tanggal</span></span>
                 <span class="flex items-center gap-1 sm:gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="detail-source">Sumber</span></span>
+                <!-- VIEW COUNTER -->
+                <span class="flex items-center gap-1 sm:gap-1.5 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md"><i class="fa-regular fa-eye"></i> <span id="detail-views">0</span> kali dibaca</span>
               </div>
 
               <!-- Judul -->
@@ -1203,7 +1205,8 @@
           content: item.content || '',
           source: item.source_name || 'Ekonomi',
           image: item.image_url || DEFAULT_NEWS_IMAGE,
-          category: item.category || 'umum'
+          category: item.category || 'umum',
+          views: item.views || 0 // ✅ Ambil data views
         }));
 
         const hash = newNews.map(n => n.url + '|' + n.published_at).join('::');
@@ -1274,14 +1277,18 @@
           <div class="p-5 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-3">
               <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-md border border-blue-100 dark:border-blue-900">${(item.category || 'umum').toUpperCase()}</span>
-              <div class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
+              <!-- VIEW COUNTER DI CARD -->
+              <div class="text-[10px] text-slate-400 dark:text-slate-500 font-bold flex items-center gap-1">
+                <span title="Dilihat"><i class="fa-regular fa-eye"></i> ${item.views}</span>
+              </div>
             </div>
             <h3 class="text-base font-extrabold text-slate-900 dark:text-white leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">${item.title}</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow">${item.description.substring(0, 100)}...</p>
             
-            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-2">
-              <button onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all w-full">
-                Baca Detail
+            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center gap-2">
+              <div class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
+              <button onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">
+                Baca
               </button>
             </div>
           </div>
@@ -1307,7 +1314,10 @@
           <div onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 p-4 rounded-xl cursor-pointer flex gap-4 items-center card-hover">
             <img src="${item.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-16 h-16 object-cover rounded-lg shrink-0 border border-slate-200 dark:border-slate-700">
             <div>
-              <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-calendar"></i> ${formatTanggalAman(item.published_at)}</span>
+              <div class="flex gap-2 items-center mb-1">
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-calendar"></i> ${formatTanggalAman(item.published_at)}</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-eye"></i> ${item.views}</span>
+              </div>
               <h3 class="text-sm text-slate-900 dark:text-slate-100 mt-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${item.title}</h3>
             </div>
           </div>
@@ -1326,6 +1336,46 @@
         cleaned = cleaned.replace(/^[A-Z]{3,}(?:\s*\([A-Z]+\))?\s*[-–—:]\s*/, '');
         
         return cleaned.trim();
+    }
+
+    // ✅ FUNGSI INCREMENT VIEWS (Menambah pembaca +1)
+    async function incrementArticleViews(url) {
+      if (!supabaseClient) return;
+      
+      // Buat ID unik berdasarkan URL untuk mencegah spam refresh
+      const localKey = 'viewed_art_' + btoa(url).substring(0, 20);
+      if (localStorage.getItem(localKey)) return; // Jika sudah dibaca, jangan tambah lagi
+
+      try {
+        // Dapatkan jumlah views saat ini
+        const { data, error } = await supabaseClient
+          .from('news_archive')
+          .select('views')
+          .eq('original_url', url)
+          .single();
+
+        if (data && !error) {
+          const newViews = (data.views || 0) + 1;
+          // Update jumlah views ke database
+          await supabaseClient
+            .from('news_archive')
+            .update({ views: newViews })
+            .eq('original_url', url);
+            
+          localStorage.setItem(localKey, 'true'); // Tandai sudah dibaca
+          
+          // Update tampilan di layar tanpa perlu reload
+          const viewEl = document.getElementById('detail-views');
+          if (viewEl) viewEl.innerText = newViews;
+          
+          // Update state agar jika kembali ke halaman utama angkanya sinkron
+          const newsIndex = allNews.findIndex(n => n.url === url);
+          if (newsIndex !== -1) allNews[newsIndex].views = newViews;
+
+        }
+      } catch (err) {
+        console.warn("Gagal update views:", err);
+      }
     }
 
     // ✅ FUNGSI HALAMAN PENUH (FULL PAGE VIEW)
@@ -1354,6 +1404,12 @@
       document.getElementById('detail-link').href = news.url || '#';
       document.getElementById('detail-category').innerText = (news.category || 'umum').toUpperCase();
       
+      // Tampilkan views awal
+      document.getElementById('detail-views').innerText = news.views || 0;
+      
+      // Panggil fungsi increment di background
+      incrementArticleViews(news.url);
+
       // Gambar
       document.getElementById('detail-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
 
