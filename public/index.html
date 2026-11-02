@@ -710,14 +710,15 @@
     function formatTanggalAman(dateString, withDay = false) {
       if (!dateString) return '-';
       try {
-        const cleanDateStr = dateString.replace(' ', 'T');
+        // Handle jika dateString berupa object Date dari Supabase
+        const cleanDateStr = typeof dateString === 'string' ? dateString.replace(' ', 'T') : dateString;
         const dateObj = new Date(cleanDateStr);
-        if (isNaN(dateObj.getTime())) return dateString;
+        if (isNaN(dateObj.getTime())) return String(dateString);
         const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta', hour12: false };
         if (withDay) options.weekday = 'long';
         let formatted = dateObj.toLocaleString('id-ID', options);
         return formatted.replace('.', ':') + ' WIB';
-      } catch (e) { return dateString; }
+      } catch (e) { return String(dateString); }
     }
 
     function getCurrentTimeStr() {
@@ -1206,7 +1207,7 @@
           source: item.source_name || 'Ekonomi',
           image: item.image_url || DEFAULT_NEWS_IMAGE,
           category: item.category || 'umum',
-          views: item.views || 0 // ✅ Ambil data views
+          views: parseInt(item.views, 10) || 0 // ✅ Parse ke angka
         }));
 
         const hash = newNews.map(n => n.url + '|' + n.published_at).join('::');
@@ -1283,7 +1284,7 @@
               </div>
             </div>
             <h3 class="text-base font-extrabold text-slate-900 dark:text-white leading-snug mb-2 line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">${item.title}</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow">${item.description.substring(0, 100)}...</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow">${(item.description || '').substring(0, 100)}...</p>
             
             <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center gap-2">
               <div class="text-[10px] text-slate-400 dark:text-slate-500 font-bold"><i class="fa-regular fa-clock"></i> ${formatTanggalAman(item.published_at)}</div>
@@ -1338,40 +1339,39 @@
         return cleaned.trim();
     }
 
-    // ✅ FUNGSI INCREMENT VIEWS (Menambah pembaca +1)
+    // ✅ FUNGSI INCREMENT VIEWS (Aman tanpa btoa)
     async function incrementArticleViews(url) {
       if (!supabaseClient) return;
       
-      // Buat ID unik berdasarkan URL untuk mencegah spam refresh
-      const localKey = 'viewed_art_' + btoa(url).substring(0, 20);
-      if (localStorage.getItem(localKey)) return; // Jika sudah dibaca, jangan tambah lagi
-
       try {
-        // Dapatkan jumlah views saat ini
+        // Gunakan encodeURIComponent sebagai pengganti btoa agar aman dari karakter aneh
+        const safeKey = 'viewed_art_' + encodeURIComponent(url).substring(0, 100);
+        if (localStorage.getItem(safeKey)) return; 
+
         const { data, error } = await supabaseClient
           .from('news_archive')
           .select('views')
           .eq('original_url', url)
-          .single();
+          .maybeSingle(); // Gunakan maybeSingle untuk mencegah error jika berita tak ditemukan
 
-        if (data && !error) {
-          const newViews = (data.views || 0) + 1;
-          // Update jumlah views ke database
+        if (error) throw error;
+
+        if (data) {
+          const currentViews = parseInt(data.views, 10) || 0;
+          const newViews = currentViews + 1;
+          
           await supabaseClient
             .from('news_archive')
             .update({ views: newViews })
             .eq('original_url', url);
             
-          localStorage.setItem(localKey, 'true'); // Tandai sudah dibaca
+          localStorage.setItem(safeKey, 'true');
           
-          // Update tampilan di layar tanpa perlu reload
           const viewEl = document.getElementById('detail-views');
           if (viewEl) viewEl.innerText = newViews;
           
-          // Update state agar jika kembali ke halaman utama angkanya sinkron
           const newsIndex = allNews.findIndex(n => n.url === url);
           if (newsIndex !== -1) allNews[newsIndex].views = newViews;
-
         }
       } catch (err) {
         console.warn("Gagal update views:", err);
@@ -1404,10 +1404,10 @@
       document.getElementById('detail-link').href = news.url || '#';
       document.getElementById('detail-category').innerText = (news.category || 'umum').toUpperCase();
       
-      // Tampilkan views awal (jika fallback, nilainya 0)
+      // Tampilkan views awal
       document.getElementById('detail-views').innerText = news.views || 0;
       
-      // Panggil fungsi increment di background
+      // Panggil fungsi increment
       incrementArticleViews(news.url);
 
       // Gambar
@@ -1595,7 +1595,6 @@
       }
     }
 
-    // ✅ FUNGSI BARU CHECK SHARED URL (Menunggu DB selesai load)
     async function checkSharedUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedUrl = urlParams.get('news_url');
@@ -1672,7 +1671,11 @@
         try { logVisitor(); } catch(e) {} 
         
         // ✅ TUNGGU sampai berita selesai dimuat (termasuk auto-sync)
-        await autoSyncAndLoadNews();
+        try {
+          await autoSyncAndLoadNews();
+        } catch(e) {
+          console.warn("Gagal memuat berita awal:", e);
+        }
         
         try { checkFloatingPopup(); } catch(e) {}
         
