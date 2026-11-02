@@ -438,6 +438,7 @@
     let supabaseClient = null;
     let currentModalNews = null;
     let allNews = [];
+    let lastRenderedNewsHash = ''; // ✅ untuk skip re-render kalau data sama
     
     // ✅ STATE MODAL VIEW (full vs summary) + Cache artikel
     let currentModalView = 'full';
@@ -1044,6 +1045,8 @@
       renderNews(filtered);
     }
 
+    // ✅ FETCH NEWS — query DB langsung (cepat), tanpa nunggu sync internet
+    // manualRefresh=true → tarik berita baru dari internet DULU, lalu query DB
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -1055,6 +1058,7 @@
       }
 
       try {
+        // Sync manual saja yang narik berita baru dari internet
         if (manualRefresh) {
           try {
             const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
@@ -1066,6 +1070,7 @@
 
         if (!supabaseClient) throw new Error('Supabase belum siap.');
 
+        // ✅ Query database — ini yang cepat, langsung tampil
         const { data, error } = await supabaseClient
           .from('news_archive')
           .select('*')
@@ -1075,15 +1080,17 @@
         if (error) throw error;
 
         if (!data || data.length === 0) {
-          gridContainer.innerHTML = `
-            <div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
-              <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 dark:text-slate-600 block"></i>
-              Belum ada berita di database.
-            </div>`;
+          if (allNews.length === 0) {
+            gridContainer.innerHTML = `
+              <div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 dark:text-slate-600 block"></i>
+                Belum ada berita di database.
+              </div>`;
+          }
           return;
         }
 
-        allNews = data.map(item => ({
+        const newNews = data.map(item => ({
           title: item.title,
           url: item.original_url,
           published_at: item.published_at,
@@ -1095,6 +1102,17 @@
           category: item.category || 'umum'
         }));
 
+        // ✅ Skip re-render kalau isinya sama persis
+        const hash = newNews.map(n => n.url + '|' + n.published_at).join('::');
+        if (hash === lastRenderedNewsHash && allNews.length > 0) {
+          document.getElementById('news-timestamp').innerHTML =
+            `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
+          return;
+        }
+
+        allNews = newNews;
+        lastRenderedNewsHash = hash;
+
         document.getElementById('news-timestamp').innerHTML =
           `<i class="fa-solid fa-rotate-right mr-1"></i> Diperbarui: ${new Date().toLocaleTimeString('id-ID')}`;
 
@@ -1103,11 +1121,13 @@
 
       } catch (err) {
         console.error('fetchNews error:', err);
-        gridContainer.innerHTML = `
-          <div class="col-span-full text-center py-10 text-rose-500 dark:text-rose-400">
-            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i>
-            Gagal memuat berita: ${err.message || 'Unknown error'}
-          </div>`;
+        if (allNews.length === 0) {
+          gridContainer.innerHTML = `
+            <div class="col-span-full text-center py-10 text-rose-500 dark:text-rose-400">
+              <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i>
+              Gagal memuat berita: ${err.message || 'Unknown error'}
+            </div>`;
+        }
       } finally {
         if (btnRefresh && iconRefresh) {
           btnRefresh.classList.remove('opacity-50', 'cursor-wait');
@@ -1116,31 +1136,30 @@
       }
     }
 
+    // ✅ AUTO-LOAD — DB dulu (langsung tampil), sync internet di background
     async function autoSyncAndLoadNews() {
-      try {
-        const lastSync = parseInt(localStorage.getItem('last_news_sync_ts') || '0', 10);
-        const now = Date.now();
-
-        if (now - lastSync > NEWS_SYNC_COOLDOWN_MS) {
-          localStorage.setItem('last_news_sync_ts', String(now));
-          try {
-            const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
-            if (!syncRes.ok) console.warn('Auto sync HTTP', syncRes.status);
-            else {
-              const syncData = await syncRes.json().catch(() => ({}));
-              if (syncData.inserted > 0) {
-                console.log(`[Auto-sync] ${syncData.inserted} berita baru dari ${syncData.source}`);
-              }
-            }
-          } catch (e) {
-            console.warn('Auto sync gagal:', e);
-          }
-        }
-      } catch (e) {
-        console.warn('Auto sync throttle error:', e);
-      }
-
+      // 1) Tampilkan data dari DB SEKARANG (cepat)
       await fetchNews(false);
+
+      // 2) Sync ke internet di background — kalau ada berita baru, refresh UI diam-diam
+      (async () => {
+        try {
+          const lastSync = parseInt(localStorage.getItem('last_news_sync_ts') || '0', 10);
+          if (Date.now() - lastSync <= NEWS_SYNC_COOLDOWN_MS) return;
+
+          localStorage.setItem('last_news_sync_ts', String(Date.now()));
+          const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
+          if (!syncRes.ok) return;
+
+          const syncData = await syncRes.json().catch(() => ({}));
+          if (syncData.inserted > 0) {
+            console.log(`[Auto-sync] ${syncData.inserted} berita baru masuk`);
+            await fetchNews(false); // hash check → hanya re-render kalau ada baru
+          }
+        } catch (e) {
+          console.warn('Auto sync gagal:', e);
+        }
+      })();
     }
 
     function renderNews(newsArray) {
