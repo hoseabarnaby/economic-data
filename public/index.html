@@ -1404,7 +1404,7 @@
       document.getElementById('detail-link').href = news.url || '#';
       document.getElementById('detail-category').innerText = (news.category || 'umum').toUpperCase();
       
-      // Tampilkan views awal
+      // Tampilkan views awal (jika fallback, nilainya 0)
       document.getElementById('detail-views').innerText = news.views || 0;
       
       // Panggil fungsi increment di background
@@ -1595,6 +1595,47 @@
       }
     }
 
+    // ✅ FUNGSI BARU CHECK SHARED URL (Menunggu DB selesai load)
+    async function checkSharedUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedUrl = urlParams.get('news_url');
+      const sharedTitle = urlParams.get('title');
+      const sharedDesc = urlParams.get('desc');
+      const sharedImg = urlParams.get('img');
+
+      if (!sharedUrl) return;
+
+      // 1. Pastikan berita sudah dimuat ke dalam array
+      if (allNews.length === 0) {
+        await fetchNews(false);
+      }
+
+      // 2. Cari berita di database berdasarkan URL
+      const foundNews = allNews.find(n => n.url === sharedUrl);
+
+      if (foundNews) {
+        // Jika ditemukan di DB, buka dengan data lengkap (views, konten, dll)
+        openNewsPage(foundNews);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (sharedTitle) {
+        // 3. Fallback jika berita tidak ada di DB (misal karena dihapus/manual link)
+        // Data akan dilengkapi oleh fetchFullArticleInline
+        const fallbackNews = {
+            title: sharedTitle,
+            description: sharedDesc || 'Baca berita selengkapnya...',
+            summary: sharedDesc || '',
+            content: sharedDesc || '', 
+            image: sharedImg || DEFAULT_NEWS_IMAGE,
+            url: sharedUrl,
+            source: 'Economic Insight',
+            published_at: new Date().toISOString(),
+            views: 0
+        };
+        openNewsPage(fallbackNews);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     window.onload = async () => {
       updateThemeIcon();
       
@@ -1629,8 +1670,15 @@
 
       if (isConfigLoaded) {
         try { logVisitor(); } catch(e) {} 
-        autoSyncAndLoadNews().catch(err => console.error('Init news:', err));
+        
+        // ✅ TUNGGU sampai berita selesai dimuat (termasuk auto-sync)
+        await autoSyncAndLoadNews();
+        
         try { checkFloatingPopup(); } catch(e) {}
+        
+        // ✅ BARU panggil fungsi cek URL share setelah allNews terisi
+        try { await checkSharedUrl(); } catch(e) { console.error(e); }
+
       } else {
         document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Gagal memuat konfigurasi database. Coba refresh halaman.</div>`;
       }
@@ -1647,40 +1695,6 @@
         switchTab(hashTab);
       }
     });
-
-    function checkSharedUrl() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sharedUrl = urlParams.get('news_url');
-      const sharedTitle = urlParams.get('title');
-      const sharedDesc = urlParams.get('desc');
-      const sharedImg = urlParams.get('img');
-
-      if (!sharedUrl) return;
-
-      if (sharedTitle) {
-          const fallbackNews = {
-              title: sharedTitle,
-              description: sharedDesc || 'Baca berita selengkapnya...',
-              summary: sharedDesc || '',
-              content: sharedDesc || '',
-              image: sharedImg || DEFAULT_NEWS_IMAGE,
-              url: sharedUrl,
-              source: 'Economic Insight',
-              published_at: new Date().toISOString()
-          };
-          openNewsPage(fallbackNews);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          return;
-      }
-
-      const sharedNews = allNews.find(n => n.url === sharedUrl);
-      if (sharedNews) {
-          openNewsPage(sharedNews);
-          window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    try { checkSharedUrl(); } catch(e) { console.error(e); }
   </script>
 </body>
 </html>
