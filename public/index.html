@@ -139,6 +139,7 @@
     @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     
     .summary-content p { margin-bottom: 1rem; line-height: 1.7; }
+    .summary-content { max-height: 50vh; overflow-y: auto; }
   </style>
 </head>
 <body class="antialiased relative flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 selection:bg-blue-200 dark:selection:bg-blue-800 selection:text-blue-900 dark:selection:text-blue-100 overflow-x-hidden transition-colors duration-300">
@@ -382,7 +383,7 @@
   <div id="news-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeNewsModal(event)">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl relative animate-fade-in-up overflow-hidden transition-colors duration-300" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Ringkasan Eksklusif AI</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Detail Berita</span>
         <button onclick="closeNewsModal()" class="text-slate-400 dark:text-slate-500 hover:text-rose-500 bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div class="overflow-y-auto">
@@ -392,6 +393,14 @@
           <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="modal-date">Tanggal</span></div>
             <div class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="modal-source">Sumber</span></div>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <button id="btn-view-full" onclick="switchModalView('full')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition">
+              <i class="fa-solid fa-file-lines mr-1"></i> Isi Lengkap
+            </button>
+            <button id="btn-view-summary" onclick="switchModalView('summary')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition">
+              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Ringkas oleh AI
+            </button>
           </div>
           <div class="text-slate-700 dark:text-slate-300 leading-relaxed text-sm summary-content" id="modal-desc">Deskripsi...</div>
         </div>
@@ -430,9 +439,11 @@
     let currentModalNews = null;
     let allNews = [];
     
-    const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
+    // ✅ STATE MODAL VIEW (full vs summary) + Cache artikel
+    let currentModalView = 'full';
+    let articleContentCache = new Map();
     
-    // ✅ THROTTLE: auto-sync berita maks 1× per 3 menit per browser
+    const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
     const NEWS_SYNC_COOLDOWN_MS = 3 * 60 * 1000;
     
     const SEO_DATA = {
@@ -1033,7 +1044,6 @@
       renderNews(filtered);
     }
 
-    // ✅ FUNGSI: Baca berita dari Supabase (TANPA toast)
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -1045,7 +1055,6 @@
       }
 
       try {
-        // Manual refresh → sync dulu ke server
         if (manualRefresh) {
           try {
             const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
@@ -1080,6 +1089,7 @@
           published_at: item.published_at,
           description: item.description || '',
           summary: item.summary || item.description || '',
+          content: item.content || '',
           source: item.source_name || 'Ekonomi',
           image: item.image_url || DEFAULT_NEWS_IMAGE,
           category: item.category || 'umum'
@@ -1106,14 +1116,12 @@
       }
     }
 
-    // ✅ FUNGSI BARU: Auto-sync saat website dibuka (throttled 3 menit)
     async function autoSyncAndLoadNews() {
       try {
         const lastSync = parseInt(localStorage.getItem('last_news_sync_ts') || '0', 10);
         const now = Date.now();
 
         if (now - lastSync > NEWS_SYNC_COOLDOWN_MS) {
-          // Tandai dulu supaya tab lain tidak ikut sync
           localStorage.setItem('last_news_sync_ts', String(now));
           try {
             const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
@@ -1132,7 +1140,6 @@
         console.warn('Auto sync throttle error:', e);
       }
 
-      // Load berita dari Supabase (setelah sync kalau ada)
       await fetchNews(false);
     }
 
@@ -1155,7 +1162,7 @@
             
             <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-2">
               <button onclick="openNewsModalByObject(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">
-                Ringkasan
+                Baca Detail
               </button>
               <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-xs font-bold rounded-xl transition-all">
                 Sumber <i class="fa-solid fa-arrow-up-right-from-square"></i>
@@ -1192,27 +1199,110 @@
       `).join('') + `</div>`;
     }
 
+    // ✅ MODAL — Buka berita dengan isi lengkap default
     function openNewsModalByObject(news) {
+      currentModalNews = news;
+      currentModalView = 'full';
+
       document.getElementById('modal-title').innerText = news.title;
       document.getElementById('modal-date').innerText = formatTanggalAman(news.published_at, true);
       document.getElementById('modal-source').innerText = news.source || 'Economic Insight';
       document.getElementById('modal-link').href = news.url || '#';
-      
-      const content = news.summary || news.description || 'Tidak ada ringkasan.';
-      const paragraphs = content.split('\n\n').filter(p => p.trim()).map(p => 
-        `<p class="mb-3">${p.replace(/\n/g, '<br>')}</p>`
-      ).join('');
-      
-      document.getElementById('modal-desc').innerHTML = paragraphs;
       document.getElementById('modal-image-container').innerHTML = `<img src="${news.image}" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';" class="w-full h-full object-cover">`;
-      
-      currentModalNews = news;
+
+      let fullContent = news.content || articleContentCache.get(news.url) || '';
+      if (!fullContent) {
+        fullContent = news.description || '';
+      }
+      const alreadyLoadedFull = articleContentCache.has(news.url);
+      news._fullLoaded = alreadyLoadedFull;
+
+      renderModalContent(fullContent, news.summary || '', alreadyLoadedFull);
+
       const modal = document.getElementById('news-modal');
       modal.classList.remove('hidden');
       const modalBox = modal.querySelector('.bg-white, .dark\\:bg-slate-900');
       modalBox.classList.remove('animate-fade-in-up');
-      void modalBox.offsetWidth; 
+      void modalBox.offsetWidth;
       modalBox.classList.add('animate-fade-in-up');
+    }
+
+    function renderModalContent(fullContent, summary, alreadyLoadedFull = false) {
+      const descEl = document.getElementById('modal-desc');
+      const btnFull = document.getElementById('btn-view-full');
+      const btnSummary = document.getElementById('btn-view-summary');
+
+      const activeClass = 'px-3 py-1.5 text-xs font-bold rounded-lg transition bg-blue-600 text-white shadow-sm';
+      const inactiveClass = 'px-3 py-1.5 text-xs font-bold rounded-lg transition border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800';
+
+      if (currentModalView === 'full') {
+        btnFull.className = activeClass;
+        btnSummary.className = inactiveClass;
+      } else {
+        btnFull.className = inactiveClass;
+        btnSummary.className = activeClass;
+      }
+
+      let content;
+      if (currentModalView === 'summary') {
+        content = summary || fullContent || 'Tidak ada ringkasan.';
+      } else {
+        content = fullContent || 'Isi berita belum tersedia. Klik "Muat Isi Lengkap" di bawah.';
+      }
+
+      const paragraphs = content
+        .split(/\n\n+/)
+        .filter(p => p.trim())
+        .map(p => `<p class="mb-3">${p.replace(/\n/g, '<br>')}</p>`)
+        .join('');
+
+      let loadMoreBtn = '';
+      if (currentModalView === 'full' && !alreadyLoadedFull) {
+        loadMoreBtn = `
+          <button onclick="loadFullArticle()" class="mt-4 w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl shadow-sm transition-all">
+            <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Muat Isi Lengkap dari Sumber
+          </button>`;
+      }
+
+      descEl.innerHTML = paragraphs + loadMoreBtn;
+    }
+
+    function switchModalView(mode) {
+      if (!currentModalNews) return;
+      currentModalView = mode;
+      const fullContent = currentModalNews.content || articleContentCache.get(currentModalNews.url) || currentModalNews.description || '';
+      renderModalContent(fullContent, currentModalNews.summary || '', currentModalNews._fullLoaded || articleContentCache.has(currentModalNews.url));
+    }
+
+    async function loadFullArticle() {
+      if (!currentModalNews || !currentModalNews.url) return;
+
+      const descEl = document.getElementById('modal-desc');
+      const originalHtml = descEl.innerHTML;
+      descEl.innerHTML = `<div class="text-center py-8 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Mengambil isi lengkap dari sumber...</div>`;
+
+      try {
+        const res = await fetch(`/api/news/content?url=${encodeURIComponent(currentModalNews.url)}`);
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.detail || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+
+        if (!data.content || data.content.length < 100) {
+          throw new Error('Konten terlalu pendek / gagal diekstrak.');
+        }
+
+        currentModalNews.content = data.content;
+        currentModalNews._fullLoaded = true;
+        articleContentCache.set(currentModalNews.url, data.content);
+
+        renderModalContent(data.content, currentModalNews.summary || '', true);
+
+      } catch (err) {
+        descEl.innerHTML = originalHtml +
+          `<div class="mt-4 p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 rounded-lg text-xs font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Gagal memuat: ${err.message}</div>`;
+      }
     }
 
     function closeNewsModal(event) {
@@ -1353,7 +1443,6 @@
 
       if (isConfigLoaded) {
         try { logVisitor(); } catch(e) {} 
-        // ✅ Auto-sync + load berita saat website dibuka
         autoSyncAndLoadNews().catch(err => console.error('Init news:', err));
         try { checkFloatingPopup(); } catch(e) {}
       } else {
@@ -1362,7 +1451,6 @@
 
       setInterval(fetchCurrenciesForTicker, 3600000);
       if (isConfigLoaded) {
-        // Setiap 5 menit cuma load (tanpa sync) — sync sudah di-handle autoSyncAndLoadNews saat page load
         setInterval(() => fetchNews(false).catch(e => console.warn('Auto refresh news gagal:', e)), 300000);
       }
     };
@@ -1389,6 +1477,8 @@
           const fallbackNews = {
               title: sharedTitle,
               description: sharedDesc || 'Baca berita selengkapnya...',
+              summary: sharedDesc || '',
+              content: sharedDesc || '',
               image: sharedImg || DEFAULT_NEWS_IMAGE,
               url: sharedUrl,
               source: 'Economic Insight',
