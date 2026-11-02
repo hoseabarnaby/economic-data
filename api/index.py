@@ -6,6 +6,7 @@ from urllib.parse import urlencode, quote
 import requests
 import os
 import base64
+import hashlib
 import datetime
 import re
 import xml.etree.ElementTree as ET
@@ -30,12 +31,11 @@ SUPABASE_ANON_KEY = os.getenv(
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3a3FtaHNtbG1temNtcWNxcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDYwMzcsImV4cCI6MjEwODU4MjAzN30.AXKbMO3dQw8mEWbmDsSVxSMMjthBxyJWfZUpC8_afWI'
 )
 
-# RSS fallback (kalau freenewsapi gagal)
+# RSS fallback (Kompas dihapus karena 404)
 RSS_FEEDS = [
     {"url": "https://www.antaranews.com/rss/ekonomi.xml", "source": "Antara News"},
     {"url": "https://finance.detik.com/rss",               "source": "Detik Finance"},
     {"url": "https://www.cnbcindonesia.com/rss",          "source": "CNBC Indonesia"},
-    {"url": "https://biz.kompas.com/rss",                 "source": "Kompas Ekonomi"},
 ]
 
 COMMON_HEADERS = {
@@ -45,14 +45,21 @@ COMMON_HEADERS = {
 
 
 # ==========================================
+# ✅ HELPER: SLUG UNIK (SHA-256)
+# ==========================================
+def make_slug(url: str) -> str:
+    """
+    Generate slug unik dari URL menggunakan SHA-256.
+    Jauh lebih aman daripada base64[:40] yang rawan bentrok.
+    """
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+
+
+# ==========================================
 # ✅ ENDPOINT CONFIG (dibutuhkan index.html)
 # ==========================================
 @app.get("/api/config")
 def get_config():
-    """
-    Dipanggil index.html & admin.html untuk mendapatkan URL dan Anon Key Supabase.
-    JANGAN dihapus — frontend butuh ini untuk konek ke Supabase.
-    """
     return {
         "supabaseUrl": SUPABASE_URL,
         "supabaseAnonKey": SUPABASE_ANON_KEY,
@@ -106,7 +113,6 @@ def chat_with_deepseek(req: ChatRequest):
 # HELPER: FETCH DARI FREENEWSAPI (PRIMARY)
 # ==========================================
 def fetch_from_freenewsapi():
-    """Coba ambil berita dari freenewsapi.ai. Return (articles, error)."""
     try:
         url = "https://freenewsapi.ai/v1/search?lang=id&q=ekonomi+indonesia&size=20"
         r = requests.get(url, timeout=15, headers=COMMON_HEADERS)
@@ -121,7 +127,7 @@ def fetch_from_freenewsapi():
 
         results = data.get('results', [])
         if not results:
-            return [], f"freenewsapi 0 results (rate-limit / query berubah). Keys: {list(data.keys())[:5]}"
+            return [], f"freenewsapi 0 results. Keys: {list(data.keys())[:5]}"
 
         articles = []
         for a in results:
@@ -150,13 +156,13 @@ def fetch_from_freenewsapi():
 # ==========================================
 # HELPER: FETCH DARI RSS (FALLBACK)
 # ==========================================
-def fetch_from_rss(max_per_feed=8):
+def fetch_from_rss(max_per_feed=10):
     articles = []
     ns = {"atom": "http://www.w3.org/2005/Atom"}
 
     for feed in RSS_FEEDS:
         try:
-            r = requests.get(feed["url"], timeout=4, headers=COMMON_HEADERS)
+            r = requests.get(feed["url"], timeout=5, headers=COMMON_HEADERS)
             if r.status_code != 200:
                 print(f"[RSS] {feed['source']} -> HTTP {r.status_code}")
                 continue
@@ -206,18 +212,19 @@ def fetch_from_rss(max_per_feed=8):
 
 
 # ==========================================
-# ✅ ENDPOINT SYNC BERITA (HYBRID: freenewsapi → RSS)
+# ✅ ENDPOINT SYNC BERITA (HYBRID + UPSERT)
 # ==========================================
 @app.get("/api/news/sync")
 def sync_news():
     if not DEEPSEEK_API_KEY:
         raise HTTPException(status_code=500, detail="DEEPSEEK_API_KEY belum diset di Vercel.")
 
+    # ⚠️ PENTING: resolution=ignore-duplicates mencegah error 409 saat slug/URL bentrok
     headers_supabase = {
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
         "Content-Type": "application/json",
-        "Prefer": "return=representation",
+        "Prefer": "resolution=ignore-duplicates,return=representation",
     }
 
     # ─── 1. AMBIL BERITA (primary → fallback) ──────────────
@@ -240,14 +247,15 @@ def sync_news():
             detail={"message": "Semua sumber berita gagal.", "errors": errors_log},
         )
 
-    # ─── 2. BATCH CHECK DUPLIKAT (1 request) ───────────────
+    # ─── 2. BATCH CHECK DUPLIKAT (by URL) ──────────────────
     all_urls = [a["url"] for a in articles]
     existing_urls = set()
     try:
         urls_param = "(" + ",".join(quote(u, safe="") for u in all_urls) + ")"
         check_res = requests.get(
             f"{SUPABASE_URL}/rest/v1/news_archive?select=original_url&original_url=in.{urls_param}",
-            headers=headers_supabase, timeout=6,
+            headers={**headers_supabase, "Prefer": "return=representation"},
+            timeout=6,
         )
         if check_res.status_code == 200:
             existing_urls = {row["original_url"] for row in check_res.json()}
@@ -263,12 +271,14 @@ def sync_news():
             "status": "success",
             "source": source_used,
             "inserted": 0,
+            "ignored": 0,
             "checked": len(articles),
             "message": f"Semua {len(articles)} artikel ({source_used}) sudah ada di database.",
         }
 
     # ─── 3. PROSES MAKS 3 ARTIKEL BARU (anti timeout) ──────
     inserted_count = 0
+    ignored_count = 0
     insert_errors = []
 
     for article in new_articles[:3]:
@@ -316,7 +326,8 @@ def sync_news():
             elif any(k in text_lower for k in ["pajak", "apbn", "fiskal", "bi rate", "inflasi"]):
                 category = "kebijakan"
 
-            slug = base64.urlsafe_b64encode(article["url"].encode()).decode()[:40]
+            # ✅ SLUG UNIK pakai SHA-256
+            slug = make_slug(article["url"])
 
             data = {
                 "slug": slug,
@@ -336,7 +347,17 @@ def sync_news():
             )
 
             if insert_res.status_code in (200, 201):
-                inserted_count += 1
+                # Deteksi apakah benar-benar inserted atau ignored
+                # (ignore-duplicates + return=representation → array kosong kalau ignored)
+                try:
+                    body = insert_res.json() if insert_res.text else []
+                except Exception:
+                    body = []
+
+                if isinstance(body, list) and len(body) > 0:
+                    inserted_count += 1
+                else:
+                    ignored_count += 1
             else:
                 insert_errors.append(
                     f"{article['title'][:40]}... -> HTTP {insert_res.status_code}: {insert_res.text[:120]}"
@@ -344,10 +365,12 @@ def sync_news():
         except Exception as e:
             insert_errors.append(str(e))
 
+    # ─── 4. RETURN INFORMATIF ─────────────────────────────
     return {
         "status": "success" if inserted_count > 0 else ("partial" if insert_errors else "no_new"),
         "source": source_used,
         "inserted": inserted_count,
+        "ignored": ignored_count,
         "checked": len(articles),
         "new_found": len(new_articles),
         "fallback_used": source_used == "rss",
@@ -355,14 +378,142 @@ def sync_news():
         "errors": insert_errors[:3] if insert_errors else [],
         "message": (
             f"{inserted_count} berita baru disimpan dari {source_used}."
+            + (f" ({ignored_count} dilewati karena duplikat)" if ignored_count else "")
             if inserted_count
-            else "Tidak ada berita yang berhasil disimpan."
+            else ("Semua berita duplikat, tidak ada yang baru." if ignored_count else "Tidak ada berita yang berhasil disimpan.")
         ),
     }
 
 
 # ==========================================
-# ✅ ENDPOINT PREVIEW SHARE (tidak berubah)
+# 🆕 ENDPOINT DEBUG NEWS
+# ==========================================
+@app.get("/api/debug/news")
+def debug_news():
+    result = {
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "supabase_config": {
+            "url_loaded": bool(SUPABASE_URL),
+            "key_loaded": bool(SUPABASE_ANON_KEY),
+        },
+        "freenewsapi": {},
+        "rss": {},
+    }
+
+    try:
+        r = requests.get(
+            "https://freenewsapi.ai/v1/search?lang=id&q=ekonomi+indonesia&size=5",
+            timeout=15, headers=COMMON_HEADERS,
+        )
+        result["freenewsapi"]["status_code"] = r.status_code
+        result["freenewsapi"]["content_type"] = r.headers.get("content-type", "?")
+        result["freenewsapi"]["body_preview"] = r.text[:300]
+        try:
+            j = r.json()
+            result["freenewsapi"]["is_json"] = True
+            result["freenewsapi"]["keys"] = list(j.keys())[:10]
+            result["freenewsapi"]["results_count"] = len(j.get("results", []))
+        except Exception:
+            result["freenewsapi"]["is_json"] = False
+    except Exception as e:
+        result["freenewsapi"]["error"] = f"{type(e).__name__}: {str(e)[:200]}"
+
+    for feed in RSS_FEEDS:
+        try:
+            r = requests.get(feed["url"], timeout=5, headers=COMMON_HEADERS)
+            result["rss"][feed["source"]] = {
+                "status_code": r.status_code,
+                "size_bytes": len(r.content),
+            }
+        except Exception as e:
+            result["rss"][feed["source"]] = {"error": str(e)[:100]}
+
+    return result
+
+
+# ==========================================
+# 🆕 ENDPOINT DEBUG SUPABASE
+# ==========================================
+@app.get("/api/debug/supabase")
+def debug_supabase():
+    """Test apakah anon key bisa baca & insert ke news_archive."""
+    headers = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+    result = {"url": SUPABASE_URL, "read": {}, "insert_test": {}}
+
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/news_archive?select=slug,title,published_at&limit=3&order=published_at.desc",
+            headers=headers, timeout=8,
+        )
+        result["read"]["status_code"] = r.status_code
+        result["read"]["body"] = r.text[:500]
+        if r.status_code == 200:
+            data = r.json()
+            result["read"]["row_count_in_sample"] = len(data)
+            result["read"]["has_data"] = len(data) > 0
+            if data:
+                result["read"]["first_row_preview"] = {
+                    "slug": data[0].get("slug"),
+                    "title": (data[0].get("title") or "")[:60],
+                    "published_at": data[0].get("published_at"),
+                }
+    except Exception as e:
+        result["read"]["error"] = str(e)
+
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/news_archive?select=slug",
+            headers={**headers, "Prefer": "count=exact", "Range": "0-0"},
+            timeout=8,
+        )
+        result["read"]["total_count_header"] = r.headers.get("content-range", "?")
+    except Exception as e:
+        result["read"]["count_error"] = str(e)
+
+    # Test insert dengan slug SHA-256 (pasti unik)
+    test_url = f"https://debug.test/{datetime.datetime.now().timestamp()}"
+    test_slug = make_slug(test_url)
+    test_data = {
+        "slug": test_slug,
+        "title": "TEST DEBUG - akan dihapus otomatis",
+        "description": "Test",
+        "summary": "Test",
+        "image_url": "",
+        "source_name": "Debug",
+        "original_url": test_url,
+        "published_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "category": "umum",
+    }
+    try:
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/news_archive",
+            json=test_data,
+            headers={**headers, "Prefer": "resolution=ignore-duplicates,return=representation"},
+            timeout=8,
+        )
+        result["insert_test"]["status_code"] = r.status_code
+        result["insert_test"]["body"] = r.text[:400]
+        result["insert_test"]["success"] = r.status_code in (200, 201)
+
+        if r.status_code in (200, 201):
+            requests.delete(
+                f"{SUPABASE_URL}/rest/v1/news_archive?slug=eq.{test_slug}",
+                headers=headers, timeout=5,
+            )
+            result["insert_test"]["cleaned_up"] = True
+    except Exception as e:
+        result["insert_test"]["error"] = str(e)
+
+    return result
+
+
+# ==========================================
+# ✅ ENDPOINT PREVIEW SHARE
 # ==========================================
 @app.get("/api/preview")
 def preview_link(id: str = ""):
@@ -415,55 +566,6 @@ def preview_link(id: str = ""):
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
         return HTMLResponse(content=f"<h1>Error: {str(e)}</h1>", status_code=500)
-
-
-# ==========================================
-# 🆕 ENDPOINT DEBUG (opsional, untuk diagnosa)
-# ==========================================
-@app.get("/api/debug/news")
-def debug_news():
-    """Cek status freenewsapi & RSS tanpa mengubah database."""
-    result = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "supabase_config": {
-            "url_loaded": bool(SUPABASE_URL),
-            "key_loaded": bool(SUPABASE_ANON_KEY),
-        },
-        "freenewsapi": {},
-        "rss": {},
-    }
-
-    # Test freenewsapi
-    try:
-        r = requests.get(
-            "https://freenewsapi.ai/v1/search?lang=id&q=ekonomi+indonesia&size=5",
-            timeout=15, headers=COMMON_HEADERS,
-        )
-        result["freenewsapi"]["status_code"] = r.status_code
-        result["freenewsapi"]["content_type"] = r.headers.get("content-type", "?")
-        result["freenewsapi"]["body_preview"] = r.text[:300]
-        try:
-            j = r.json()
-            result["freenewsapi"]["is_json"] = True
-            result["freenewsapi"]["keys"] = list(j.keys())[:10]
-            result["freenewsapi"]["results_count"] = len(j.get("results", []))
-        except Exception:
-            result["freenewsapi"]["is_json"] = False
-    except Exception as e:
-        result["freenewsapi"]["error"] = f"{type(e).__name__}: {str(e)[:200]}"
-
-    # Test RSS
-    for feed in RSS_FEEDS:
-        try:
-            r = requests.get(feed["url"], timeout=4, headers=COMMON_HEADERS)
-            result["rss"][feed["source"]] = {
-                "status_code": r.status_code,
-                "size_bytes": len(r.content),
-            }
-        except Exception as e:
-            result["rss"][feed["source"]] = {"error": str(e)[:100]}
-
-    return result
 
 
 # ==========================================
