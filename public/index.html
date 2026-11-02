@@ -460,7 +460,7 @@
     const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
-    let currentModalNews = null; // Tetap dipakai sebagai state untuk berita yang sedang dibuka
+    let currentModalNews = null; 
     let allNews = [];
     let lastRenderedNewsHash = ''; 
     
@@ -590,7 +590,6 @@
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     
     function switchTab(tabId) {
-      // Sembunyikan semua tab content, termasuk halaman detail
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('content-news-detail').classList.add('hidden');
 
@@ -1082,7 +1081,6 @@
       }
 
       try {
-        // Sync manual saja yang narik berita baru dari internet
         if (manualRefresh) {
           try {
             const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
@@ -1094,7 +1092,6 @@
 
         if (!supabaseClient) throw new Error('Supabase belum siap.');
 
-        // ✅ Query database — ini yang cepat, langsung tampil
         const { data, error } = await supabaseClient
           .from('news_archive')
           .select('*')
@@ -1126,7 +1123,6 @@
           category: item.category || 'umum'
         }));
 
-        // ✅ Skip re-render kalau isinya sama persis
         const hash = newNews.map(n => n.url + '|' + n.published_at).join('::');
         if (hash === lastRenderedNewsHash && allNews.length > 0) {
           document.getElementById('news-timestamp').innerHTML =
@@ -1162,10 +1158,8 @@
 
     // ✅ AUTO-LOAD — DB dulu (langsung tampil), sync internet di background
     async function autoSyncAndLoadNews() {
-      // 1) Tampilkan data dari DB SEKARANG (cepat)
       await fetchNews(false);
 
-      // 2) Sync ke internet di background — kalau ada berita baru, refresh UI diam-diam
       (async () => {
         try {
           const lastSync = parseInt(localStorage.getItem('last_news_sync_ts') || '0', 10);
@@ -1178,7 +1172,7 @@
           const syncData = await syncRes.json().catch(() => ({}));
           if (syncData.inserted > 0) {
             console.log(`[Auto-sync] ${syncData.inserted} berita baru masuk`);
-            await fetchNews(false); // hash check → hanya re-render kalau ada baru
+            await fetchNews(false); 
           }
         } catch (e) {
           console.warn('Auto sync gagal:', e);
@@ -1239,9 +1233,28 @@
       `).join('') + `</div>`;
     }
 
+    // ✅ FUNGSI PEMBERSIH DATELINE (Menghapus "JAKARTA - " dll)
+    function cleanArticleContent(text) {
+        if (!text) return '';
+        
+        // Daftar kota/wilayah umum di Indonesia
+        const cities = "JAKARTA|Jakarta|BANDUNG|Bandung|SURABAYA|Surabaya|MEDAN|Medan|SEMARANG|Semarang|MAKASSAR|Makassar|YOGYAKARTA|Yogyakarta|DENPASAR|Denpasar|PALEMBANG|Palembang|BATAM|Batam|MALANG|Malang|SOLO|Solo|BOGOR|Bogor|DEPOK|Depok|TANGERANG|Tangerang|BEKASI|Bekasi|BALI|Bali|ACEH|Aceh|PAPUA|Papua|KALIMANTAN|Kalimantan|SULAWESI|Sulawesi|SUMATERA|Sumatera|JAWA|Jawa|PUSAT|Pusat|DAERAH|Daerah";
+        
+        // 1. Hapus format "KOTA - " atau "KOTA, PORTAL - "
+        let cleaned = text.replace(new RegExp(`^(${cities})(?:\\s*,\\s*[A-Za-z0-9\\s\\.]+)?\\s*[-–—:]\\s*`, 'i'), '');
+        
+        // 2. Hapus format portal berita di depan seperti "Bisnis.com, JAKARTA - "
+        cleaned = cleaned.replace(/^[A-Za-z0-9\.\s]+,\s*[A-Z\s]+\s*[-–—:]\s*/, '');
+        
+        // 3. Hapus format umum "KOTA (ANTARA) - "
+        cleaned = cleaned.replace(/^[A-Z]{3,}(?:\s*\([A-Z]+\))?\s*[-–—:]\s*/, '');
+        
+        return cleaned.trim();
+    }
+
     // ✅ FUNGSI HALAMAN PENUH (FULL PAGE VIEW)
     function openNewsPage(news) {
-      currentModalNews = news; // Simpan state untuk fungsi Share
+      currentModalNews = news; 
 
       // Sembunyikan semua tab
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1294,7 +1307,6 @@
       
       let fullContent = articleContentCache.get(news.url) || news.content;
       
-      // Jika belum ada di cache/database, ambil dari API
       if (!fullContent || fullContent.length < 100) {
         try {
           const res = await fetch(`/api/news/content?url=${encodeURIComponent(news.url)}`);
@@ -1302,7 +1314,7 @@
             const data = await res.json();
             if (data.content && data.content.length > 100) {
               fullContent = data.content;
-              articleContentCache.set(news.url, fullContent); // Simpan ke cache
+              articleContentCache.set(news.url, fullContent); 
             }
           }
         } catch (e) {
@@ -1310,10 +1322,12 @@
         }
       }
 
-      // Fallback ke deskripsi jika tetap gagal
       if (!fullContent || fullContent.length < 100) {
          fullContent = news.description || news.summary || 'Isi berita belum tersedia.';
       }
+
+      // ✅ BERSIHKAN DATELINE (JAKARTA - ...)
+      fullContent = cleanArticleContent(fullContent);
 
       // Render paragraf
       const paragraphs = fullContent
@@ -1327,7 +1341,6 @@
 
     function closeNewsPage() {
       document.getElementById('content-news-detail').classList.add('hidden');
-      // Kembali ke tab berita
       switchTab('berita');
     }
 
@@ -1492,7 +1505,6 @@
 
       if (!sharedUrl) return;
 
-      // Tampilkan halaman berita (bukan modal lagi)
       if (sharedTitle) {
           const fallbackNews = {
               title: sharedTitle,
