@@ -17,8 +17,8 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.economicinsight.my.id/">
 
-  <!-- JSON-LD untuk SEO Google -->
-  <script type="application/ld+json">
+  <!-- JSON-LD Default untuk SEO Google -->
+  <script type="application/ld+json" id="website-schema">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -139,7 +139,7 @@
     @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     
     /* Article Typography */
-    .article-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #334155; font-size: 1.05rem; }
+    .article-content p { margin-bottom: 1.5rem; line-height: 1.9; color: #334155; font-size: 1.125rem; text-align: justify; }
     .dark .article-content p { color: #cbd5e1; }
     .article-content h1, .article-content h2, .article-content h3 { font-weight: 800; color: #0f172a; margin-top: 2rem; margin-bottom: 1rem; }
     .dark .article-content h1, .dark .article-content h2, .dark .article-content h3 { color: #f8fafc; }
@@ -372,55 +372,65 @@
       </div>
     </div>
 
-    <!-- PAGE: FULL NEWS DETAIL (Menggantikan Modal) -->
-    <div id="content-news-detail" class="hidden animate-fade-in-up w-full max-w-4xl mx-auto">
-      <!-- Tombol Kembali -->
-      <div class="mb-6">
-        <button onclick="closeNewsPage()" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-          <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar Berita
-        </button>
-      </div>
-
-      <article class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-10">
-        <!-- Thumbnail -->
-        <div id="detail-image-container" class="w-full h-64 sm:h-96 bg-slate-100 dark:bg-slate-800 relative"></div>
+    <!-- PAGE: FULL NEWS DETAIL (Tampilan Profesional dengan Sidebar) -->
+    <div id="content-news-detail" class="hidden animate-fade-in-up w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <div class="p-6 sm:p-10">
-          <!-- Meta Data -->
-          <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 mb-4">
-            <span id="detail-category" class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-md border border-blue-100 dark:border-blue-900 uppercase tracking-wide">KATEGORI</span>
-            <span class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="detail-date">Tanggal</span></span>
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="detail-source">Sumber</span></span>
-          </div>
+        <!-- Kolom Kiri: Artikel Utama -->
+        <div class="lg:col-span-8">
+          <article class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-10">
+            <!-- Thumbnail -->
+            <div id="detail-image-container" class="w-full h-64 sm:h-96 bg-slate-100 dark:bg-slate-800 relative"></div>
+            
+            <div class="p-6 sm:p-10">
+              <!-- Meta Data -->
+              <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 mb-4">
+                <span id="detail-category" class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-md border border-blue-100 dark:border-blue-900 uppercase tracking-wide">KATEGORI</span>
+                <span class="flex items-center gap-1.5"><i class="fa-regular fa-calendar"></i> <span id="detail-date">Tanggal</span></span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-newspaper"></i> <span id="detail-source">Sumber</span></span>
+              </div>
 
-          <!-- Judul -->
-          <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight mb-6" id="detail-title">Judul Berita</h1>
-          
-          <!-- Ringkasan AI (Opsional, ditempatkan di atas) -->
-          <div id="detail-summary-box" class="bg-blue-50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700 p-5 rounded-xl mb-8 hidden">
-            <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Ringkasan AI</div>
-            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic" id="detail-summary-text"></p>
-          </div>
+              <!-- Judul -->
+              <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight mb-8" id="detail-title">Judul Berita</h1>
+              
+              <!-- Ringkasan AI -->
+              <div id="detail-summary-box" class="bg-blue-50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700 p-5 rounded-xl mb-8 hidden">
+                <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm mb-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Ringkasan AI</div>
+                <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic" id="detail-summary-text"></p>
+              </div>
 
-          <!-- Konten Utama -->
-          <div class="article-content" id="detail-content">
-            <div class="text-center py-10 text-slate-500 dark:text-slate-400">
-              <i class="fa-solid fa-spinner fa-spin mr-2 text-2xl mb-2"></i>
-              <p>Memuat isi lengkap berita...</p>
+              <!-- Konten Utama -->
+              <div class="article-content" id="detail-content">
+                <div class="text-center py-10 text-slate-500 dark:text-slate-400">
+                  <i class="fa-solid fa-spinner fa-spin mr-2 text-2xl mb-2"></i>
+                  <p>Memuat isi lengkap berita...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Action (Share & Source) -->
+            <div class="p-6 sm:p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <button onclick="shareCurrentNews(event)" id="detail-share-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-sm">
+                <i class="fa-solid fa-share-nodes text-blue-500"></i> Bagikan Berita
+              </button>
+              <a href="#" id="detail-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20">
+                Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Kolom Kanan: Sidebar Trending -->
+        <aside class="lg:col-span-4 hidden lg:block">
+          <div class="sticky top-28">
+            <h3 class="text-lg font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 border-b-2 border-blue-600 pb-2">Trending Now</h3>
+            <div id="trending-list" class="space-y-5">
+              <!-- Diisi via Javascript -->
             </div>
           </div>
-        </div>
+        </aside>
 
-        <!-- Footer Action (Share & Source) -->
-        <div class="p-6 sm:p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <button onclick="shareCurrentNews(event)" id="detail-share-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-sm">
-            <i class="fa-solid fa-share-nodes text-blue-500"></i> Bagikan Berita
-          </button>
-          <a href="#" id="detail-link" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-blue-500/20">
-            Baca Artikel Asli <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-          </a>
-        </div>
-      </article>
+      </div>
     </div>
 
   </main>
@@ -469,6 +479,15 @@
     const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
     const NEWS_SYNC_COOLDOWN_MS = 3 * 60 * 1000;
     
+    // Simpan SEO Default untuk di-reset nanti
+    const DEFAULT_SEO = {
+        title: 'Economic Insight - Harga USD, Harga Emas, Berita Ekonomi & AI Analisis',
+        desc: 'Pantau harga USD/IDR, harga emas hari ini, berita ekonomi terbaru, kebijakan fiskal, dan analisis keuangan AI secara real-time di Economic Insight.',
+        ogTitle: 'Economic Insight - Global Economic Intelligence',
+        ogDesc: 'Pantau berita ekonomi, kurs, dan kebijakan terbaru secara real-time.',
+        ogImage: 'https://placehold.co/1200x630/2563eb/ffffff/png?text=Economic+Insight%0A%0ABerita+Ekonomi+Terbaru&font=Montserrat'
+    };
+
     const SEO_DATA = {
       'kurs': { 
         title: 'Harga USD, Emas & Ringkasan Pasar - Economic Insight', 
@@ -593,6 +612,9 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('content-news-detail').classList.add('hidden');
 
+      // Reset SEO to Default when leaving an article
+      resetSEOWebArticle();
+
       const targetTab = document.getElementById(`content-${tabId}`);
       if (targetTab) {
           targetTab.classList.remove('hidden');
@@ -619,6 +641,54 @@
         if(ogTitle) ogTitle.setAttribute('content', SEO_DATA[tabId].title);
         if(ogDesc) ogDesc.setAttribute('content', SEO_DATA[tabId].desc);
       }
+    }
+
+    // ✅ SEO UNTUK ARTIKEL
+    function updateSEOWebArticle(news) {
+        document.title = `${news.title} - Economic Insight`;
+        
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', news.description || news.title);
+        
+        document.getElementById('og-title').setAttribute('content', news.title);
+        document.getElementById('og-description').setAttribute('content', news.description || news.title);
+        document.getElementById('og-image').setAttribute('content', news.image || DEFAULT_NEWS_IMAGE);
+
+        // JSON-LD
+        let articleSchema = document.getElementById('article-schema');
+        if (!articleSchema) {
+            articleSchema = document.createElement('script');
+            articleSchema.id = 'article-schema';
+            articleSchema.type = 'application/ld+json';
+            document.head.appendChild(articleSchema);
+        }
+        
+        const schemaData = {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": news.title,
+            "image": [news.image],
+            "datePublished": news.published_at,
+            "description": news.description,
+            "author": {
+                "@type": "Organization",
+                "name": news.source || "Economic Insight"
+            }
+        };
+        articleSchema.textContent = JSON.stringify(schemaData);
+    }
+
+    function resetSEOWebArticle() {
+        document.title = DEFAULT_SEO.title;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', DEFAULT_SEO.desc);
+        
+        document.getElementById('og-title').setAttribute('content', DEFAULT_SEO.ogTitle);
+        document.getElementById('og-description').setAttribute('content', DEFAULT_SEO.ogDesc);
+        document.getElementById('og-image').setAttribute('content', DEFAULT_SEO.ogImage);
+
+        const articleSchema = document.getElementById('article-schema');
+        if (articleSchema) articleSchema.remove();
     }
 
     function formatTanggalAman(dateString, withDay = false) {
@@ -1069,7 +1139,6 @@
       renderNews(filtered);
     }
 
-    // ✅ FETCH NEWS — query DB langsung (cepat), tanpa nunggu sync internet
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -1156,7 +1225,6 @@
       }
     }
 
-    // ✅ AUTO-LOAD — DB dulu (langsung tampil), sync internet di background
     async function autoSyncAndLoadNews() {
       await fetchNews(false);
 
@@ -1237,16 +1305,10 @@
     function cleanArticleContent(text) {
         if (!text) return '';
         
-        // Daftar kota/wilayah umum di Indonesia
         const cities = "JAKARTA|Jakarta|BANDUNG|Bandung|SURABAYA|Surabaya|MEDAN|Medan|SEMARANG|Semarang|MAKASSAR|Makassar|YOGYAKARTA|Yogyakarta|DENPASAR|Denpasar|PALEMBANG|Palembang|BATAM|Batam|MALANG|Malang|SOLO|Solo|BOGOR|Bogor|DEPOK|Depok|TANGERANG|Tangerang|BEKASI|Bekasi|BALI|Bali|ACEH|Aceh|PAPUA|Papua|KALIMANTAN|Kalimantan|SULAWESI|Sulawesi|SUMATERA|Sumatera|JAWA|Jawa|PUSAT|Pusat|DAERAH|Daerah";
         
-        // 1. Hapus format "KOTA - " atau "KOTA, PORTAL - "
         let cleaned = text.replace(new RegExp(`^(${cities})(?:\\s*,\\s*[A-Za-z0-9\\s\\.]+)?\\s*[-–—:]\\s*`, 'i'), '');
-        
-        // 2. Hapus format portal berita di depan seperti "Bisnis.com, JAKARTA - "
         cleaned = cleaned.replace(/^[A-Za-z0-9\.\s]+,\s*[A-Z\s]+\s*[-–—:]\s*/, '');
-        
-        // 3. Hapus format umum "KOTA (ANTARA) - "
         cleaned = cleaned.replace(/^[A-Z]{3,}(?:\s*\([A-Z]+\))?\s*[-–—:]\s*/, '');
         
         return cleaned.trim();
@@ -1290,6 +1352,9 @@
         summaryBox.classList.add('hidden');
       }
 
+      // SEO ON
+      updateSEOWebArticle(news);
+
       // Isi Konten (Tampilkan loading dulu)
       const contentEl = document.getElementById('detail-content');
       contentEl.innerHTML = `
@@ -1298,8 +1363,30 @@
           <p>Memuat isi lengkap berita...</p>
         </div>`;
 
+      // Render Sidebar Trending
+      renderTrendingSidebar(news.url);
+
       // Tarik isi lengkap secara otomatis
       fetchFullArticleInline(news);
+    }
+
+    function renderTrendingSidebar(currentUrl) {
+      const container = document.getElementById('trending-list');
+      // Ambil 4 berita teratas (selain yang sedang dibuka)
+      const trending = allNews.filter(n => n.url !== currentUrl).slice(0, 4);
+      
+      container.innerHTML = trending.map((item, index) => `
+        <div class="flex gap-4 group cursor-pointer" onclick="openNewsPage(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+          <div class="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800">
+             <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='${DEFAULT_NEWS_IMAGE}';">
+             <div class="absolute bottom-0 left-0 bg-blue-600 text-white font-black px-2.5 py-1 text-xs rounded-tr-lg z-10 shadow-md">${index + 1}</div>
+          </div>
+          <div class="flex flex-col justify-center">
+             <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">${item.category || 'BERITA'}</span>
+             <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 leading-snug line-clamp-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${item.title}</h4>
+          </div>
+        </div>
+      `).join('');
     }
 
     async function fetchFullArticleInline(news) {
@@ -1326,7 +1413,7 @@
          fullContent = news.description || news.summary || 'Isi berita belum tersedia.';
       }
 
-      // ✅ BERSIHKAN DATELINE (JAKARTA - ...)
+      // Bersihkan dateline
       fullContent = cleanArticleContent(fullContent);
 
       // Render paragraf
@@ -1337,11 +1424,6 @@
         .join('');
 
       contentEl.innerHTML = paragraphs;
-    }
-
-    function closeNewsPage() {
-      document.getElementById('content-news-detail').classList.add('hidden');
-      switchTab('berita');
     }
 
     async function shareCurrentNews(event) {
