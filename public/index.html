@@ -406,17 +406,14 @@
   <!-- FLOATING POPUP (IKLAN/PENGUMUMAN) -->
   <div id="floating-popup" class="fixed bottom-6 right-6 z-[100] w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transform translate-y-10 opacity-0 pointer-events-none transition-all duration-500 ease-out">
     <div class="relative">
-      <!-- Tombol Close -->
       <button onclick="closePopup()" class="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-sm">
         <i class="fa-solid fa-xmark"></i>
       </button>
       
-      <!-- Gambar (Jika ada) -->
       <div id="popup-img-container" class="w-full h-40 bg-slate-100 dark:bg-slate-800 hidden">
         <img id="popup-img" src="" class="w-full h-full object-cover">
       </div>
 
-      <!-- Konten -->
       <div class="p-5">
         <h3 id="popup-title" class="font-extrabold text-slate-900 dark:text-white text-lg mb-2 leading-tight">Judul Pengumuman</h3>
         <p id="popup-content" class="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mb-4">Deskripsi pengumuman akan muncul di sini.</p>
@@ -426,7 +423,7 @@
   </div>
 
   <script>
-    // ✅ KONFIGURASI (URL & KEY DIAMBIL DARI VERCEL /api/config)
+    // ✅ KONFIGURASI
     const FXFEED_API_KEY = 'fxf_2Y1RB9I_WzJCMIMJJE4jQ7kAQIrQHgwK';
     
     let supabaseClient = null;
@@ -435,7 +432,9 @@
     
     const VALID_TABS = ['kurs', 'global', 'berita', 'kebijakan', 'ai-chat'];
     
-    // ✅ DYNAMIC SEO DATA (Berdasarkan Tab)
+    // ✅ THROTTLE: auto-sync berita maks 1× per 3 menit per browser
+    const NEWS_SYNC_COOLDOWN_MS = 3 * 60 * 1000;
+    
     const SEO_DATA = {
       'kurs': { 
         title: 'Harga USD, Emas & Ringkasan Pasar - Economic Insight', 
@@ -556,7 +555,6 @@
 
     function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
     
-    // ✅ FUNGSI switchTab DENGAN OPTIMASI SEO DINAMIS
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       const targetTab = document.getElementById(`content-${tabId}`);
@@ -575,13 +573,11 @@
         history.replaceState(null, '', '#' + tabId);
       }
 
-      // ✅ UPDATE META TAGS (SEO)
       if (SEO_DATA[tabId]) {
         document.title = SEO_DATA[tabId].title;
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) metaDesc.setAttribute('content', SEO_DATA[tabId].desc);
         
-        // Update OG Tags
         const ogTitle = document.getElementById('og-title');
         const ogDesc = document.getElementById('og-description');
         if(ogTitle) ogTitle.setAttribute('content', SEO_DATA[tabId].title);
@@ -1037,31 +1033,7 @@
       renderNews(filtered);
     }
 
-    // ✅ HELPER: TOAST NOTIFIKASI
-    function showNewsToast(msg, color = 'slate') {
-      const existing = document.getElementById('news-toast');
-      if (existing) existing.remove();
-      
-      const el = document.createElement('div');
-      el.id = 'news-toast';
-      el.className = 'fixed bottom-24 right-6 z-[200] max-w-sm px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold text-white transition-all duration-300 translate-y-4 opacity-0';
-      el.style.backgroundColor = ({
-        emerald: '#059669', amber: '#d97706', rose: '#e11d48', slate: '#334155'
-      })[color] || '#334155';
-      el.innerHTML = msg;
-      document.body.appendChild(el);
-      
-      requestAnimationFrame(() => {
-        el.classList.remove('translate-y-4', 'opacity-0');
-      });
-      
-      setTimeout(() => {
-        el.classList.add('translate-y-4', 'opacity-0');
-        setTimeout(() => el.remove(), 400);
-      }, 4000);
-    }
-
-    // ✅ FUNGSI fetchNews BARU (dengan error handling lengkap)
+    // ✅ FUNGSI: Baca berita dari Supabase (TANPA toast)
     async function fetchNews(manualRefresh = false) {
       const gridContainer = document.getElementById('news-grid');
       const btnRefresh = document.getElementById('btn-refresh-news');
@@ -1073,25 +1045,16 @@
       }
 
       try {
-        // ---- 1. SYNC DENGAN PROPER ERROR CHECK ----
+        // Manual refresh → sync dulu ke server
         if (manualRefresh) {
           try {
             const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
-            if (!syncRes.ok) {
-              const txt = await syncRes.text().catch(() => '');
-              console.warn('Sync gagal:', syncRes.status, txt.slice(0, 200));
-              showNewsToast(
-                `⚠️ Sync server gagal (HTTP ${syncRes.status}). Menampilkan data lama.`,
-                'amber'
-              );
-            }
+            if (!syncRes.ok) console.warn('Sync gagal:', syncRes.status);
           } catch (e) {
             console.warn('Sync network error:', e);
-            showNewsToast('❌ Tidak dapat terhubung ke server sync. Menampilkan data lama.', 'rose');
           }
         }
 
-        // ---- 2. QUERY SUPABASE ----
         if (!supabaseClient) throw new Error('Supabase belum siap.');
 
         const { data, error } = await supabaseClient
@@ -1107,14 +1070,9 @@
             <div class="col-span-full text-center py-10 text-slate-500 dark:text-slate-400">
               <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-300 dark:text-slate-600 block"></i>
               Belum ada berita di database.
-              ${manualRefresh ? '<br><span class="text-xs">Sync berjalan tapi belum ada data baru masuk.</span>' : ''}
             </div>`;
           return;
         }
-
-        // ---- 3. DETEKSI BERITA BARU ----
-        const prevIds = new Set(allNews.map(n => n.url));
-        const newCount = data.filter(d => !prevIds.has(d.original_url)).length;
 
         allNews = data.map(item => ({
           title: item.title,
@@ -1133,15 +1091,6 @@
         applyNewsFilters();
         renderKebijakan(allNews);
 
-        // ---- 4. FEEDBACK KE USER ----
-        if (manualRefresh) {
-          if (newCount > 0) {
-            showNewsToast(`✅ ${newCount} berita baru dimuat.`, 'emerald');
-          } else {
-            showNewsToast('ℹ️ Sync selesai — belum ada berita baru dari sumber eksternal.', 'slate');
-          }
-        }
-
       } catch (err) {
         console.error('fetchNews error:', err);
         gridContainer.innerHTML = `
@@ -1155,6 +1104,36 @@
           iconRefresh.classList.remove('fa-spin');
         }
       }
+    }
+
+    // ✅ FUNGSI BARU: Auto-sync saat website dibuka (throttled 3 menit)
+    async function autoSyncAndLoadNews() {
+      try {
+        const lastSync = parseInt(localStorage.getItem('last_news_sync_ts') || '0', 10);
+        const now = Date.now();
+
+        if (now - lastSync > NEWS_SYNC_COOLDOWN_MS) {
+          // Tandai dulu supaya tab lain tidak ikut sync
+          localStorage.setItem('last_news_sync_ts', String(now));
+          try {
+            const syncRes = await fetch('/api/news/sync', { cache: 'no-store' });
+            if (!syncRes.ok) console.warn('Auto sync HTTP', syncRes.status);
+            else {
+              const syncData = await syncRes.json().catch(() => ({}));
+              if (syncData.inserted > 0) {
+                console.log(`[Auto-sync] ${syncData.inserted} berita baru dari ${syncData.source}`);
+              }
+            }
+          } catch (e) {
+            console.warn('Auto sync gagal:', e);
+          }
+        }
+      } catch (e) {
+        console.warn('Auto sync throttle error:', e);
+      }
+
+      // Load berita dari Supabase (setelah sync kalau ada)
+      await fetchNews(false);
     }
 
     function renderNews(newsArray) {
@@ -1374,8 +1353,8 @@
 
       if (isConfigLoaded) {
         try { logVisitor(); } catch(e) {} 
-        // ✅ FIX: fetchNews async, jadi pakai .catch bukan try/catch
-        fetchNews().catch(err => console.error('Init fetchNews:', err));
+        // ✅ Auto-sync + load berita saat website dibuka
+        autoSyncAndLoadNews().catch(err => console.error('Init news:', err));
         try { checkFloatingPopup(); } catch(e) {}
       } else {
         document.getElementById('news-grid').innerHTML = `<div class="col-span-full text-center py-10 text-rose-500">Gagal memuat konfigurasi database. Coba refresh halaman.</div>`;
@@ -1383,6 +1362,7 @@
 
       setInterval(fetchCurrenciesForTicker, 3600000);
       if (isConfigLoaded) {
+        // Setiap 5 menit cuma load (tanpa sync) — sync sudah di-handle autoSyncAndLoadNews saat page load
         setInterval(() => fetchNews(false).catch(e => console.warn('Auto refresh news gagal:', e)), 300000);
       }
     };
